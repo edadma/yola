@@ -17,13 +17,13 @@ case class VarAST(pos: Position, var name: String, init: Option[(Position, Expre
     extends DeclarationStatementAST
 case class DataAST(pos: Position, name: String, constructors: List[(String, List[Symbol])])
     extends DeclarationStatementAST
-case class DefAST(oname: String, func: FunctionExpressionAST) extends DeclarationStatementAST
+case class DefAST(pos: Position, name: String, func: FunctionExpressionAST) extends DeclarationStatementAST
 
 case class DeclarationBlockAST(decls: List[DeclarationStatementAST]) extends DeclarationStatementAST
 
 trait ExpressionAST extends StatementAST
-case class FunctionExpressionAST(var name: String,
-                                 pos: Position,
+case class FunctionExpressionAST(pos: Position,
+                                 name: String,
                                  parms: List[StructureAST],
                                  arb: Boolean,
                                  parts: List[FunctionPartExpressionAST],

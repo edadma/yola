@@ -371,9 +371,9 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
 
   lazy val definition =
     pos ~ ident ~ opt("(" ~> rep1sep(structure, ",") ~ opt("...") <~ ")") ~ (optionallyGuardedPart | guardedParts) ^^ {
-      case p ~ n ~ None ~ ((gs, w)) => DefAST(n, FunctionExpressionAST(n, p, Nil, false, gs, WhereClauseAST(w)))
+      case p ~ n ~ None ~ ((gs, w)) => DefAST(p, n, FunctionExpressionAST(p, n, Nil, false, gs, WhereClauseAST(w)))
       case p ~ n ~ Some(parms ~ a) ~ ((gs, w)) =>
-        DefAST(n, FunctionExpressionAST(n, p, parms, a isDefined, gs, WhereClauseAST(w)))
+        DefAST(p, n, FunctionExpressionAST(p, n, parms, a isDefined, gs, WhereClauseAST(w)))
     }
 
   lazy val optionallyGuardedPart: PackratParser[(List[FunctionPartExpressionAST], List[DeclarationStatementAST])] =
@@ -411,7 +411,7 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
   lazy val whereDefinition: PackratParser[DeclarationStatementAST] =
     pos ~ ident ~ ("(" ~> (rep1sep(structure, ",") ~ opt("...")) <~ ")") ~ (optionallyGuardedPart | guardedParts) ^^ {
       case p ~ n ~ (parms ~ a) ~ ((gs, w)) =>
-        DefAST(n, FunctionExpressionAST(n, p, parms, a isDefined, gs, WhereClauseAST(w)))
+        DefAST(p, n, FunctionExpressionAST(p, n, parms, a isDefined, gs, WhereClauseAST(w)))
     } |
       constant
 
@@ -517,8 +517,8 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
   lazy val lambdaExpression =
     pos ~ parameters ~ opt("|" ~> guardExpression) ~ ("->" ~> opt(expressionOrBlock)) ^^ {
       case p ~ ((parms, a)) ~ g ~ b =>
-        FunctionExpressionAST("$" + p.toString,
-                              p,
+        FunctionExpressionAST(p,
+                              "$" + p.toString,
                               parms,
                               a,
                               List(FunctionPartExpressionAST(g, b.getOrElse(LiteralExpressionAST(())))),
