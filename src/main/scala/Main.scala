@@ -1,7 +1,17 @@
-package xyz.hyperreal._scala_native
+package xyz.hyperreal.yola
+
 
 object Main extends App {
 
-  println("Scala Native is awesome!")
+  val program =
+    """
+      |val a = 123
+      |
+      |println( a + 1 )
+      |""".stripMargin
+  val parser = new YolaParser
+  val ast = parser.parseFromString( program, parser.source )
+
+  println(ast)
 
 }

@@ -19,7 +19,7 @@ object Interpolation {
   val INTERPOLATION_EXPRESSION = '\ue002'
 }
 
-class FunLLexical extends IndentationLexical(false, true, List("{", "[", "("), List("}", "]", ")"), ";;", "/*", "*/") {
+class YolaLexical extends IndentationLexical(false, true, List("{", "[", "("), List("}", "]", ")"), ";;", "/*", "*/") {
 
   import Interpolation._
 
@@ -171,7 +171,7 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
 
   import Interpolation._
 
-  override val lexical = new FunLLexical
+  override val lexical = new YolaLexical
 
   def parse[T]( grammar: PackratParser[T], r: Reader[Char] ) = phrase(grammar)(lexical.read(r))
 
@@ -335,7 +335,7 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
 
   lazy val notExpression1: PackratParser[ExpressionAST] =
     "not" ~> notExpression1 ^^ NotExpressionAST |
-      scanExpression
+      constructExpression
 
   lazy val compoundExpression: PackratParser[ExpressionAST] =
     ("(" ~> compoundExpressionStatement <~ ";") ~ (rep1sep( compoundExpressionStatement, ";" ) <~ ")") ^^ {
