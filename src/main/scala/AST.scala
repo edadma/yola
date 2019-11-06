@@ -23,6 +23,23 @@ case class DeclarationBlockAST( decls: List[DeclarationStatementAST] ) extends D
 trait ExpressionAST extends StatementAST
 case class FunctionExpressionAST( var name: String, pos: Position, parms: List[StructureAST], arb: Boolean, parts: List[FunctionPartExpressionAST], where: WhereClauseAST ) extends ExpressionAST
 case class PartialFunctionExpressionAST( cases: List[FunctionExpressionAST] ) extends ExpressionAST
+case class ApplyExpressionAST( epos: Position, f: ExpressionAST, apos: Position, args: List[(Position, ExpressionAST)], var tailrecursive: Boolean ) extends ExpressionAST
+case class DotExpressionAST( epos: Position, expr: ExpressionAST, apos: Position, field: Symbol ) extends ExpressionAST
+case class LiteralExpressionAST( v: Any ) extends ExpressionAST
+case class VariableExpressionAST( pos: Position, var name: String, oname: String ) extends ExpressionAST
+case class BinaryExpressionAST( lpos: Position, left: ExpressionAST, op: Symbol, rpos: Position, right: ExpressionAST ) extends ExpressionAST
+case class UnaryExpressionAST( op: Symbol, pos: Position, expr: ExpressionAST ) extends ExpressionAST
+case class AssignmentExpressionAST( lhs: List[(Position, ExpressionAST)], op: Symbol, rhs: List[(Position, ExpressionAST)] ) extends ExpressionAST
+case class BlockExpressionAST( l: List[StatementAST] ) extends ExpressionAST
+case class ListExpressionAST( l: List[ExpressionAST] ) extends ExpressionAST
+case class OrExpressionAST( left: ExpressionAST, right: ExpressionAST ) extends ExpressionAST
+case class AndExpressionAST( left: ExpressionAST, right: ExpressionAST ) extends ExpressionAST
+case class NotExpressionAST( expr: ExpressionAST ) extends ExpressionAST
+case class ConditionalExpressionAST( cond: Seq[(ExpressionAST, ExpressionAST)], els: Option[ExpressionAST] ) extends ExpressionAST
+case class WhileExpressionAST( label: Option[String], cond: ExpressionAST, body: Option[ExpressionAST], els: Option[ExpressionAST] ) extends ExpressionAST
+case class BreakExpressionAST( pos: Position, label: Option[String], expr: Option[ExpressionAST] ) extends ExpressionAST
+case class ContinueExpressionAST( pos: Position, label: Option[String] ) extends ExpressionAST
+case class ReturnExpressionAST( expr: ExpressionAST ) extends ExpressionAST
 
 case class FunctionPartExpressionAST( guard: Option[ExpressionAST], body: ExpressionAST )
 
