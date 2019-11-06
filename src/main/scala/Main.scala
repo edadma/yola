@@ -1,6 +1,5 @@
 package xyz.hyperreal.yola
 
-
 object Main extends App {
 
   val program =
@@ -8,9 +7,11 @@ object Main extends App {
       |val a = 123
       |
       |println( a + 1 )
-      |""".stripMargin
+      |
+      |def f(x) = x + 3
+    """.stripMargin
   val parser = new YolaParser
-  val ast = parser.parseFromString( program, parser.source )
+  val ast    = parser.parseFromString(program, parser.source)
 
   println(ast)
 
