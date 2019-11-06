@@ -346,41 +346,30 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
 
   lazy val orExpression: PackratParser[ExpressionAST] =
     orExpression ~ ("or" ~> andExpression) ^^ { case lhs ~ rhs => OrExpressionAST( lhs, rhs ) } |
-      andExpression
+    andExpression
 
   lazy val andExpression: PackratParser[ExpressionAST] =
     andExpression ~ ("and" ~> notExpression) ^^ { case lhs ~ rhs => AndExpressionAST( lhs, rhs ) } |
-      notExpression
+    notExpression
 
   lazy val notExpression: PackratParser[ExpressionAST] =
     "not" ~> notExpression ^^ NotExpressionAST |
-      assignmentExpression
+    assignmentExpression
 
   lazy val assignmentExpression: PackratParser[ExpressionAST] =
     rep1sep(pos ~ lvalueExpression, ",") ~ assignment ~ (rep1sep(pos ~ assignmentExpression, ",") | pos ~ blockExpression ^^ (List( _ ))) ^^ {
-      case lhs ~ op ~ rhs => AssignmentExpressionAST( lhs map {case p ~ e => (p, e)}, Symbol(op dropRight 1), lookup(Symbol(op.head.toString)), rhs map {case p ~ e => (p, e)} )} |
-      pos ~ (lvalueExpression <~ "?=") ~ (assignmentExpression | blockExpression) ^^ {
-        case pl ~ lhs ~ rhs => ScanAssignmentExpressionAST( pl, lhs, rhs ) } |
-      pos ~ (lvalueExpression <~ "<-") ~ (assignmentExpression | blockExpression) ^^ {
-        case pl ~ lhs ~ rhs => ReversableAssignmentExpressionAST( pl, lhs, rhs ) } |
-      scanExpression
-
-  lazy val scanExpression: PackratParser[ExpressionAST] =
-    pos ~ (constructExpression <~ "?") ~ expressionOrBlock ^^ {
-      case sp ~ s ~ e => ScanExpressionAST( sp, s, e ) } |
-      constructExpression
+      case lhs ~ op ~ rhs => AssignmentExpressionAST( lhs map {case p ~ e => (p, e)}, Symbol(op dropRight 1), rhs map {case p ~ e => (p, e)} )} |
+    constructExpression
 
   lazy val constructExpression: PackratParser[ExpressionAST] =
     "if" ~> expression ~ ("then" ~> expressionOrBlock | blockExpression) ~ rep(elif) ~ elsePart ^^ {
       case c ~ t ~ ei ~ e => ConditionalExpressionAST( (c, t) +: ei, e ) } |
-      opt(ident <~ ":") ~ ("for" ~> generators) ~ ("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
-        case l ~ g ~ b ~ e => ForExpressionAST( l, g, b, e ) } |
+//      opt(ident <~ ":") ~ ("for" ~> generators) ~ ("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
+//        case l ~ g ~ b ~ e => ForExpressionAST( l, g, b, e ) } |
       opt(ident <~ ":") ~ ("while" ~> expression) ~ opt("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
         case l ~ c ~ b ~ e => WhileExpressionAST( l, c, b, e ) } |
-      opt(ident <~ ":") ~ ("every" ~> expression) ~ opt("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
-        case l ~ c ~ b ~ e => EveryExpressionAST( l, c, b, e ) } |
-      opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
-        case l ~ b => RepeatExpressionAST( l, b ) } |
+//      opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
+//        case l ~ b => RepeatExpressionAST( l, b ) } |
       functionExpression
 
   lazy val elsePart: PackratParser[Option[ExpressionAST]] = opt(onl ~> "else" ~> expressionOrBlock)
@@ -388,12 +377,12 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
   lazy val elif = onl ~> "elif" ~> expression ~ ("then" ~> expressionOrBlock | blockExpression) ^^ {
     case c ~ t => (c, t) }
 
-  lazy val generator = (structure <~ "<-") ~ pos ~ expression ~ opt("if" ~> logicalExpression) ^^ {
-    case s ~ p ~ t ~ f => GeneratorExpressionAST( s, p, t, f ) }
+//  lazy val generator = (structure <~ "<-") ~ pos ~ expression ~ opt("if" ~> logicalExpression) ^^ {
+//    case s ~ p ~ t ~ f => GeneratorExpressionAST( s, p, t, f ) }
+//
+//  lazy val generators = rep1sep(generator, ",")
 
-  lazy val generators = rep1sep(generator, ",")
-
-  lazy val lvalueExpression = generateDefinedExpression
+  lazy val lvalueExpression = applyExpression//generateDefinedExpression
 
   lazy val assignment = "=" | "+=" | "++=" | "-=" | "--=" | "*=" | "/=" | "//=" | "\\=" | "^=" | "<:=" | ">:="
 
@@ -418,76 +407,69 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
 
   private lazy val mathSymbols = Set( Symbol("+"), Symbol("-"), Symbol("*"), Symbol("/"), Symbol("//"), Symbol("\\"), Symbol("\\%"), Symbol("^"), Symbol("%"), Symbol("mod"), Symbol("div"), Symbol("=="), Symbol("!="), Symbol("<"), Symbol(">"), Symbol("<="), Symbol(">=") )
 
-  private def lookup( s: Symbol ) =
-    if (mathSymbols contains s)
-      Math.lookup( if (s == Symbol("div")) Symbol("|") else s )
-    else
-      null
-
   lazy val comparisonExpression: PackratParser[ExpressionAST] =
     pos ~ comparisonExpression ~ ("==" | "!=" | "<" | ">" | "<=" | ">=") ~ pos ~ alternationExpression ^^ {
       case pl ~ l ~ op ~ pr ~ r =>
         val s = Symbol( op )
 
-        BinaryExpressionAST( pl, l, s, lookup(s), pr, r ) } |
+        BinaryExpressionAST( pl, l, s, pr, r ) } |
       pos ~ alternationExpression ~ ("in" | "not" ~ "in" ^^^ "notin") ~ pos ~ alternationExpression ^^ {
         case pl ~ l ~ op ~ pr ~ r =>
           val s = Symbol( op )
 
-          BinaryExpressionAST( pl, l, s, null, pr, r ) } |
-      alternationExpression ~ "is" ~ ident ^^ { case e ~ _ ~ t => TypeExpressionAST( e, t ) } |
-      alternationExpression ~ ("is" ~> "not" ~> ident) ^^ { case e ~ t => NotExpressionAST( TypeExpressionAST(e, t) ) } |
+          BinaryExpressionAST( pl, l, s, pr, r ) } |
+//      alternationExpression ~ "is" ~ ident ^^ { case e ~ _ ~ t => TypeExpressionAST( e, t ) } |
+//      alternationExpression ~ ("is" ~> "not" ~> ident) ^^ { case e ~ t => NotExpressionAST( TypeExpressionAST(e, t) ) } |
       alternationExpression
 
   lazy val alternationExpression: PackratParser[ExpressionAST] =
-    "|" ~> concatenationExpression ^^ RepeatedAlternationExpressionAST |
-      alternationExpression ~ ("|" ~> concatenationExpression) ^^ { case lhs ~ rhs => OrExpressionAST( lhs, rhs ) } |
-      concatenationExpression
+    alternationExpression ~ ("|" ~> concatenationExpression) ^^ { case lhs ~ rhs => OrExpressionAST( lhs, rhs ) } |
+    concatenationExpression
 
   lazy val concatenationExpression: PackratParser[ExpressionAST] =
     concatenationExpression ~ ("&" ~> controlExpression) ^^ { case lhs ~ rhs => AndExpressionAST( lhs, rhs ) } |
-      controlExpression
+    controlExpression
 
   lazy val controlExpression: PackratParser[ExpressionAST] =
-    "fail" ^^^ FailExpressionAST |
-      "break" ~> pos ~ opt(ident) ~ opt("(" ~> consExpression <~ ")") ^^ { case p ~ l ~ e => BreakExpressionAST( p, l, e ) } |
-      "continue" ~> pos ~ opt(ident) ^^ { case p ~ l => ContinueExpressionAST( p, l ) } |
-      "return" ~> opt(expression) ^^ (e => ReturnExpressionAST( e.getOrElse(LiteralExpressionAST(())) )) |
-      ("yield" ~> consExpression) ~ opt("do" ~> consExpression) ^^ { case e ~ r => YieldExpressionAST( e, r ) } |
-      consExpression
+    "break" ~> pos ~ opt(ident) ~ opt("(" ~> additiveExpression/*consExpression*/ <~ ")") ^^ { case p ~ l ~ e => BreakExpressionAST( p, l, e ) } |
+    "continue" ~> pos ~ opt(ident) ^^ { case p ~ l => ContinueExpressionAST( p, l ) } |
+    "return" ~> opt(expression) ^^ (e => ReturnExpressionAST( e.getOrElse(LiteralExpressionAST(())) )) |
+    additiveExpression
+//      ("yield" ~> consExpression) ~ opt("do" ~> consExpression) ^^ { case e ~ r => YieldExpressionAST( e, r ) } |
+//      consExpression
 
-  lazy val consExpression: PackratParser[ExpressionAST] =
-    pos ~ rangeExpression ~ (":" ~> pos) ~ consExpression ^^ {
-      case ph ~ h ~ pt ~ t => BinaryExpressionAST( ph, h, Symbol(":"), null, pt, t ) } |
-      rangeExpression
-
-  lazy val rangeExpression: PackratParser[ExpressionAST] =
-    pos ~ (additiveExpression <~ "..") ~ pos ~ additiveExpression ~ opt("by" ~> pos ~ additiveExpression) ^^ {
-      case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST( pf, f, pt, t, pb, b, true )
-      case pf ~ f ~ pt ~ t ~ None => RangeExpressionAST( pf, f, pt, t, null, LiteralExpressionAST(1), true ) } |
-      pos ~ (additiveExpression <~ "..<") ~ pos ~ additiveExpression ~ opt("by" ~> pos ~ additiveExpression) ^^ {
-        case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST( pf, f, pt, t, pb, b, false )
-        case pf ~ f ~ pt ~ t ~ None => RangeExpressionAST( pf, f, pt, t, null, LiteralExpressionAST(1), false ) } |
-      pos ~ (additiveExpression <~ "..+") ~ pos ~ additiveExpression ~ opt("by" ~> pos ~ additiveExpression) ^^ {
-        case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST( pf, f, pt, BinaryExpressionAST(null, f, Symbol("+"), lookup(Symbol("+")), null, t), pb, b, false )
-        case pf ~ f ~ pt ~ t ~ None => RangeExpressionAST( pf, f, pt, BinaryExpressionAST(null, f, Symbol("+"), lookup(Symbol("+")), null, t), null, LiteralExpressionAST(1), false ) } |
-      pos ~ (additiveExpression <~ "..-") ~ pos ~ additiveExpression ~ opt("by" ~> pos ~ additiveExpression) ^^ {
-        case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST( pf, f, pt, BinaryExpressionAST(null, f, Symbol("-"), lookup(Symbol("-")), null, t), pb, b, false )
-        case pf ~ f ~ pt ~ t ~ None => RangeExpressionAST( pf, f, pt, BinaryExpressionAST(null, f, Symbol("-"), lookup(Symbol("-")), null, t), null, LiteralExpressionAST(-1), false ) } |
-      pos ~ (additiveExpression <~ "..") ~ opt("by" ~> pos ~ additiveExpression) ^^ {
-        case pf ~ f ~ None => UnboundedLazyListExpressionAST( pf, f, null, LiteralExpressionAST(1) )
-        case pf ~ f ~ Some(pb ~ b) => UnboundedLazyListExpressionAST( pf, f, pb, b ) } |
-      pos ~ additiveExpression ~ ("to" | "until") ~ pos ~ additiveExpression ~ opt("by" ~> pos ~ additiveExpression) ^^ {
-        case pf ~ f ~ op ~ pt ~ t ~ Some(pb ~ b) => SequenceExpressionAST( pf, f, pt, t, pb, b, if (op == "to") true else false )
-        case pf ~ f ~ op ~ pt ~ t ~ None => SequenceExpressionAST( pf, f, pt, t, null, LiteralExpressionAST(1), if (op == "to") true else false ) } |
-      additiveExpression
+//  lazy val consExpression: PackratParser[ExpressionAST] =
+//    pos ~ rangeExpression ~ (":" ~> pos) ~ consExpression ^^ {
+//      case ph ~ h ~ pt ~ t => BinaryExpressionAST( ph, h, Symbol(":"), pt, t ) } |
+//      rangeExpression
+//
+//  lazy val rangeExpression: PackratParser[ExpressionAST] =
+//    pos ~ (additiveExpression <~ "..") ~ pos ~ additiveExpression ~ opt("by" ~> pos ~ additiveExpression) ^^ {
+//      case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST( pf, f, pt, t, pb, b, true )
+//      case pf ~ f ~ pt ~ t ~ None => RangeExpressionAST( pf, f, pt, t, null, LiteralExpressionAST(1), true ) } |
+//      pos ~ (additiveExpression <~ "..<") ~ pos ~ additiveExpression ~ opt("by" ~> pos ~ additiveExpression) ^^ {
+//        case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST( pf, f, pt, t, pb, b, false )
+//        case pf ~ f ~ pt ~ t ~ None => RangeExpressionAST( pf, f, pt, t, null, LiteralExpressionAST(1), false ) } |
+//      pos ~ (additiveExpression <~ "..+") ~ pos ~ additiveExpression ~ opt("by" ~> pos ~ additiveExpression) ^^ {
+//        case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST( pf, f, pt, BinaryExpressionAST(null, f, Symbol("+"), lookup(Symbol("+")), null, t), pb, b, false )
+//        case pf ~ f ~ pt ~ t ~ None => RangeExpressionAST( pf, f, pt, BinaryExpressionAST(null, f, Symbol("+"), lookup(Symbol("+")), null, t), null, LiteralExpressionAST(1), false ) } |
+//      pos ~ (additiveExpression <~ "..-") ~ pos ~ additiveExpression ~ opt("by" ~> pos ~ additiveExpression) ^^ {
+//        case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST( pf, f, pt, BinaryExpressionAST(null, f, Symbol("-"), lookup(Symbol("-")), null, t), pb, b, false )
+//        case pf ~ f ~ pt ~ t ~ None => RangeExpressionAST( pf, f, pt, BinaryExpressionAST(null, f, Symbol("-"), lookup(Symbol("-")), null, t), null, LiteralExpressionAST(-1), false ) } |
+//      pos ~ (additiveExpression <~ "..") ~ opt("by" ~> pos ~ additiveExpression) ^^ {
+//        case pf ~ f ~ None => UnboundedLazyListExpressionAST( pf, f, null, LiteralExpressionAST(1) )
+//        case pf ~ f ~ Some(pb ~ b) => UnboundedLazyListExpressionAST( pf, f, pb, b ) } |
+//      pos ~ additiveExpression ~ ("to" | "until") ~ pos ~ additiveExpression ~ opt("by" ~> pos ~ additiveExpression) ^^ {
+//        case pf ~ f ~ op ~ pt ~ t ~ Some(pb ~ b) => SequenceExpressionAST( pf, f, pt, t, pb, b, if (op == "to") true else false )
+//        case pf ~ f ~ op ~ pt ~ t ~ None => SequenceExpressionAST( pf, f, pt, t, null, LiteralExpressionAST(1), if (op == "to") true else false ) } |
+//      additiveExpression
 
   lazy val additiveExpression: PackratParser[ExpressionAST] =
     pos ~ additiveExpression ~ ("+" | "-") ~ pos ~ multiplicativeExpression ^^ {
       case pl ~ l ~ o ~ pr ~ r =>
         val s = Symbol(o)
 
-        BinaryExpressionAST( pl, l, s, lookup(s), pr, r ) } |
+        BinaryExpressionAST( pl, l, s, pr, r ) } |
       multiplicativeExpression
 
   lazy val multiplicativeExpression: PackratParser[ExpressionAST] =
@@ -495,109 +477,109 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
       case pl ~ l ~ o ~ pr ~ r =>
         val s = Symbol(o)
 
-        BinaryExpressionAST( pl, l, s, lookup(s), pr, r ) } |
+        BinaryExpressionAST( pl, l, s, pr, r ) } |
       pos ~ multiplicativeExpression ~ pos ~ applyExpression ^^ {
-        case pl ~ l ~ pr ~ r => BinaryExpressionAST( pl, l, Symbol("adj"), lookup(Symbol("*")), pr, r ) } |
+        case pl ~ l ~ pr ~ r => BinaryExpressionAST( pl, l, Symbol("adj"), pr, r ) } |
       exponentialExpression
 
   lazy val exponentialExpression: PackratParser[ExpressionAST] =
     pos ~ unaryExpression ~ "^" ~ pos ~ exponentialExpression ^^ {
-      case pl ~ l ~ _ ~ pr ~ r => BinaryExpressionAST( pl, l, Symbol("^"), lookup(Symbol("^")), pr, r ) } |
+      case pl ~ l ~ _ ~ pr ~ r => BinaryExpressionAST( pl, l, Symbol("^"), pr, r ) } |
       unaryExpression
 
   lazy val unaryExpression: PackratParser[ExpressionAST] =
-    "-" ~> pos ~ incrementExpression ^^ {
-      case _ ~ LiteralExpressionAST( n: Number ) => LiteralExpressionAST( Math(Symbol("-"), n) )
-      case p ~ v                                 => UnaryExpressionAST( Symbol("-"), null, p, v ) } |
-      "." ~> incrementExpression ^^ DereferenceExpressionAST |
-      incrementExpression
-
-  lazy val incrementExpression: PackratParser[ExpressionAST] =
-    ("++" | "--") ~ pos ~ generateDefinedExpression ^^ {
-      case o ~ p ~ e => UnaryExpressionAST( Symbol(o + "*"), lookup(Symbol(o.last.toString)), p, e ) } |
-      pos ~ generateDefinedExpression ~ ("++" | "--") ^^ {
-        case p ~ e ~ o => UnaryExpressionAST( Symbol("*" + o), lookup(Symbol(o.last.toString)), p, e ) } |
-      generateDefinedExpression
-
-  lazy val generateDefinedExpression: PackratParser[ExpressionAST] =
-    "!" ~> pos ~ applyExpression ^^ {
-      case p ~ c => GenerateExpressionAST( p, c ) } |
-      "\\" ~> applyExpression ^^ DefinedExpressionAST |
-      "\\?" ~> applyExpression ^^ DefinedOptionExpressionAST |
-      "/" ~> applyExpression ^^ UndefinedExpressionAST |
+    "-" ~> pos ~ applyExpression/*incrementExpression*/ ^^ {
+      case _ ~ LiteralExpressionAST( n: Number ) => LiteralExpressionAST( n )// todo: negate
+      case p ~ v                                 => UnaryExpressionAST( Symbol("-"), p, v ) } |
+//      "." ~> incrementExpression ^^ DereferenceExpressionAST |
+//      incrementExpression
+//
+//  lazy val incrementExpression: PackratParser[ExpressionAST] =
+//    ("++" | "--") ~ pos ~ generateDefinedExpression ^^ {
+//      case o ~ p ~ e => UnaryExpressionAST( Symbol(o + "*"), p, e ) } |
+//      pos ~ generateDefinedExpression ~ ("++" | "--") ^^ {
+//        case p ~ e ~ o => UnaryExpressionAST( Symbol("*" + o), p, e ) } |
+//      generateDefinedExpression
+//
+//  lazy val generateDefinedExpression: PackratParser[ExpressionAST] =
+//    "!" ~> pos ~ applyExpression ^^ {
+//      case p ~ c => GenerateExpressionAST( p, c ) } |
+//      "\\" ~> applyExpression ^^ DefinedExpressionAST |
+//      "\\?" ~> applyExpression ^^ DefinedOptionExpressionAST |
+//      "/" ~> applyExpression ^^ UndefinedExpressionAST |
       applyExpression
 
   lazy val applyExpression: PackratParser[ExpressionAST] =
     pos ~ applyExpression ~ pos ~ ("(" ~> repsep(pos ~ expression, ",") <~ ")") ^^ {
       case fp ~ f ~ ap ~ args => ApplyExpressionAST( fp, f, ap, args map {case p ~ e => (p, e)}, false ) } |
-      pos ~ applyExpression ~ ("." ~> pos) ~ (ident|stringLit) ^^ {
-        case fp ~ e ~ ap ~ f => DotExpressionAST( fp, e, ap, Symbol(f) ) } |
-      pos ~ applyExpression ~ ("[" ~> pos) ~ (expression <~ "]") ^^ {
-        case fp ~ f ~ ap ~ arg => BracketExpressionAST( fp, f, ap, arg ) } |
+//      pos ~ applyExpression ~ ("." ~> pos) ~ (ident|stringLit) ^^ {
+//        case fp ~ e ~ ap ~ f => DotExpressionAST( fp, e, ap, Symbol(f) ) } |
+//      pos ~ applyExpression ~ ("[" ~> pos) ~ (expression <~ "]") ^^ {
+//        case fp ~ f ~ ap ~ arg => BracketExpressionAST( fp, f, ap, arg ) } |
       primaryExpression
-
-  lazy val mapEntry = keyExpression ~ (":" ~> expression) ^^ {
-    case VariableExpressionAST( _, k, _ ) ~ v => LiteralExpressionAST( k ) -> v
-    case k ~ v => (k, v)
-  }
-
-  lazy val keyExpression = rangeExpression
-
-  lazy val comprehension: PackratParser[ComprehensionAST] = (consExpression <~ "|") ~ generators ^^ { case e ~ g => ComprehensionAST( e, g ) }
+//
+//  lazy val mapEntry = keyExpression ~ (":" ~> expression) ^^ {
+//    case VariableExpressionAST( _, k, _ ) ~ v => LiteralExpressionAST( k ) -> v
+//    case k ~ v => (k, v)
+//  }
+//
+//  lazy val keyExpression = rangeExpression
+//
+//  lazy val comprehension: PackratParser[ComprehensionAST] = (consExpression <~ "|") ~ generators ^^ { case e ~ g => ComprehensionAST( e, g ) }
 
   lazy val primaryExpression: PackratParser[ExpressionAST] =
-    pos ~ regexLit ^^ {
-      case p ~ r => RegexLiteralAST( p, r ) } |
+//    pos ~ regexLit ^^ {
+//      case p ~ r => RegexLiteralAST( p, r ) } |
       number ^^ LiteralExpressionAST |
       pos ~ stringLit ^^ {
         case p ~ s =>
-          if (s.length > 0 && s.charAt(0) >= INTERPOLATION_DELIMITER) {
-            val buf = new ListBuffer[ExpressionAST]
-
-            for (m <- INTERPOLATED_PATTERN.findAllMatchIn( s ))
-              m.matched.charAt( 0 ) match {
-                case INTERPOLATION_LITERAL => buf.append( LiteralExpressionAST(m.group(1)) )
-                case INTERPOLATION_VARIABLE => buf.append( VariableExpressionAST(p, m.group(1), m.group(1)) )
-                case INTERPOLATION_EXPRESSION =>
-                  val parser = new FunLParser
-                  buf += parser.parseFromString( m.group(1), parser.expressionStatement ).asInstanceOf[ExpressionAST]
-              }
-
-            InterpolationExpressionAST( buf.toList )
-          } else
+//          if (s.length > 0 && s.charAt(0) >= INTERPOLATION_DELIMITER) {
+//            val buf = new ListBuffer[ExpressionAST]
+//
+//            for (m <- INTERPOLATED_PATTERN.findAllMatchIn( s ))
+//              m.matched.charAt( 0 ) match {
+//                case INTERPOLATION_LITERAL => buf.append( LiteralExpressionAST(m.group(1)) )
+//                case INTERPOLATION_VARIABLE => buf.append( VariableExpressionAST(p, m.group(1), m.group(1)) )
+//                case INTERPOLATION_EXPRESSION =>
+//                  val parser = new YolaParser
+//                  buf += parser.parseFromString( m.group(1), parser.expressionStatement ).asInstanceOf[ExpressionAST]
+//              }
+//
+//            InterpolationExpressionAST( buf.toList )
+//          } else
             LiteralExpressionAST( s )
       } |
-      "undefined" ^^^ LiteralExpressionAST( undefined ) |
-      "(" ~> infix <~ ")" ^^ {
-        o =>
-          val s = Symbol(o)
-
-          SectionExpressionAST( s, lookup(s) )} |
-      "(" ~> pos ~ applyExpression ~ infix <~ ")" ^^ {
-        case p ~ e ~ o =>
-          val s = Symbol(o)
-
-          LeftSectionExpressionAST( p, e, FunctionExpressionAST("$" + p.toString, p, List(VariableStructureAST(p, "$", "$")), false, List(FunctionPartExpressionAST(None, BinaryExpressionAST(null, e, s, lookup(s), p, VariableExpressionAST(null, "$", "$")))), WhereClauseAST(Nil)), s, lookup(s) )} |
-      "(" ~> infix ~ pos ~ applyExpression <~ ")" ^^ {
-        case o ~ p ~ e =>
-          val s = Symbol(o)
-
-          RightSectionExpressionAST( s, lookup(s), p, e, FunctionExpressionAST("$" + p.toString, p, List(VariableStructureAST(p, "$", "$")), false, List(FunctionPartExpressionAST(None, BinaryExpressionAST(p, VariableExpressionAST(null, "$", "$"), s, lookup(s), null, e))), WhereClauseAST(Nil)) )} |
+//      "undefined" ^^^ LiteralExpressionAST( undefined ) |
+//      "(" ~> infix <~ ")" ^^ {
+//        o =>
+//          val s = Symbol(o)
+//
+//          SectionExpressionAST( s, lookup(s) )} |
+//      "(" ~> pos ~ applyExpression ~ infix <~ ")" ^^ {
+//        case p ~ e ~ o =>
+//          val s = Symbol(o)
+//
+//          LeftSectionExpressionAST( p, e, FunctionExpressionAST("$" + p.toString, p, List(VariableStructureAST(p, "$", "$")), false, List(FunctionPartExpressionAST(None, BinaryExpressionAST(null, e, s, lookup(s), p, VariableExpressionAST(null, "$", "$")))), WhereClauseAST(Nil)), s, lookup(s) )} |
+//      "(" ~> infix ~ pos ~ applyExpression <~ ")" ^^ {
+//        case o ~ p ~ e =>
+//          val s = Symbol(o)
+//
+//          RightSectionExpressionAST( s, lookup(s), p, e, FunctionExpressionAST("$" + p.toString, p, List(VariableStructureAST(p, "$", "$")), false, List(FunctionPartExpressionAST(None, BinaryExpressionAST(p, VariableExpressionAST(null, "$", "$"), s, lookup(s), null, e))), WhereClauseAST(Nil)) )} |
       ("true" | "false") ^^ (b => LiteralExpressionAST( b.toBoolean )) |
-      "(" ~ ")" ^^^ LiteralExpressionAST( () ) |
+//      "(" ~ ")" ^^^ LiteralExpressionAST( () ) |
       "null" ^^^ LiteralExpressionAST( null ) |
-      "{" ~ "}" ^^^ LiteralExpressionAST( Set() ) |
-      "{" ~ ":" ~ "}" ^^^ LiteralExpressionAST( Map() ) |
+//      "{" ~ "}" ^^^ LiteralExpressionAST( Set() ) |
+//      "{" ~ ":" ~ "}" ^^^ LiteralExpressionAST( Map() ) |
       pos ~ ident ^^ { case p ~ n => VariableExpressionAST( p, n, n ) } |
       "[" ~ "]" ^^^ LiteralExpressionAST( Nil ) |
       "[" ~> rep1sep(expression, ",") <~ "]" ^^ { l => ListExpressionAST( l ) } |
-      "[" ~> comprehension <~ "]" ^^ ListComprehensionExpressionAST |
-      ("(" ~> expression <~ ",") ~ (rep1sep(expression, ",") <~ ")") ^^ { case e ~ l => TupleExpressionAST( e +: l ) } |
-      "{" ~> repsep(keyExpression, ",") <~ "}" ^^ SetExpressionAST |
-      "{" ~> rep1sep(mapEntry, ",") <~ "}" ^^ MapExpressionAST |
-      "{" ~> comprehension <~ "}" ^^ SetComprehensionExpressionAST |
-      "$" ~> pos ~ ident ^^ {
-        case p ~ n => SysvarExpressionAST( p, n ) } |
+//      "[" ~> comprehension <~ "]" ^^ ListComprehensionExpressionAST |
+//      ("(" ~> expression <~ ",") ~ (rep1sep(expression, ",") <~ ")") ^^ { case e ~ l => TupleExpressionAST( e +: l ) } |
+//      "{" ~> repsep(keyExpression, ",") <~ "}" ^^ SetExpressionAST |
+//      "{" ~> rep1sep(mapEntry, ",") <~ "}" ^^ MapExpressionAST |
+//      "{" ~> comprehension <~ "}" ^^ SetComprehensionExpressionAST |
+//      "$" ~> pos ~ ident ^^ {
+//        case p ~ n => SysvarExpressionAST( p, n ) } |
       "(" ~> expression <~ ")"
 
   lazy val infix =
@@ -605,36 +587,36 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
       "mod" | "div" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "in" | "not" ~ "in" ^^^ "notin" |
       ":"	//todo: add support for ranges
 
-  lazy val structure: PackratParser[StructureAST] = altStructure
+  lazy val structure: PackratParser[StructureAST] = //altStructure
 
-  lazy val altStructure: PackratParser[StructureAST] =
-    (altStructure <~ "|") ~ rep1sep(altStructure, "|") ^^ { case e ~ l => AlternationStructureAST( e +: l ) } |
-      namedStructure
-
-  lazy val namedStructure: PackratParser[StructureAST] =
-    pos ~ (ident <~ "@") ~ typeStructure ^^ { case p ~ name ~ pat => NamedStructureAST( p, name, pat ) } |
-      typeStructure
-
-  lazy val typeStructure: PackratParser[StructureAST] =
-    consStructure ~ ("::" ~> ident) ^^ { case pat ~ typename => TypeStructureAST( pat, typename ) } |
-      consStructure
-
-  lazy val consStructure: PackratParser[StructureAST] =
-    pos ~ primaryStructure ~ (":" ~> consStructure) ^^ { case p ~ h ~ t => ConsStructureAST( p, h, t ) } |
+//  lazy val altStructure: PackratParser[StructureAST] =
+//    (altStructure <~ "|") ~ rep1sep(altStructure, "|") ^^ { case e ~ l => AlternationStructureAST( e +: l ) } |
+//      namedStructure
+//
+//  lazy val namedStructure: PackratParser[StructureAST] =
+//    pos ~ (ident <~ "@") ~ typeStructure ^^ { case p ~ name ~ pat => NamedStructureAST( p, name, pat ) } |
+//      typeStructure
+//
+//  lazy val typeStructure: PackratParser[StructureAST] =
+//    consStructure ~ ("::" ~> ident) ^^ { case pat ~ typename => TypeStructureAST( pat, typename ) } |
+//      consStructure
+//
+//  lazy val consStructure: PackratParser[StructureAST] =
+//    pos ~ primaryStructure ~ (":" ~> consStructure) ^^ { case p ~ h ~ t => ConsStructureAST( p, h, t ) } |
       primaryStructure
 
   lazy val primaryStructure: PackratParser[StructureAST] =
-    number ^^ LiteralStructureAST |
-      stringLit ^^ LiteralStructureAST |
-      "undefined" ^^^ LiteralStructureAST( undefined ) |
-      "(" ~ ")" ^^^ LiteralStructureAST( () ) |
-      "null" ^^^ LiteralStructureAST( null ) |
-      pos ~ ident ~ ("(" ~> rep1sep(structure, ",") <~ ")") ^^ { case p ~ n ~ l => RecordStructureAST( p, n, l.toVector ) } |
+//    number ^^ LiteralStructureAST |
+//      stringLit ^^ LiteralStructureAST |
+//      "undefined" ^^^ LiteralStructureAST( undefined ) |
+//      "(" ~ ")" ^^^ LiteralStructureAST( () ) |
+//      "null" ^^^ LiteralStructureAST( null ) |
+//      pos ~ ident ~ ("(" ~> rep1sep(structure, ",") <~ ")") ^^ { case p ~ n ~ l => RecordStructureAST( p, n, l.toVector ) } |
       pos ~ ident ^^ { case p ~ n => VariableStructureAST( p, n, n ) } |
-      pos ~ ("(" ~> structure <~ ",") ~ (rep1sep(structure, ",") <~ ")") ^^ { case p ~ e ~ l => TupleStructureAST( p, e +: l ) } |
-      "[" ~ "]" ^^^ NilStructureAST |
-      pos ~ ("[" ~> rep1sep(structure, ",") <~ "]") ^^ { case p ~ l => ListStructureAST( p, l ) } |
-      "{" ~ "}" ^^^ LiteralStructureAST( Set() ) |
+//      pos ~ ("(" ~> structure <~ ",") ~ (rep1sep(structure, ",") <~ ")") ^^ { case p ~ e ~ l => TupleStructureAST( p, e +: l ) } |
+//      "[" ~ "]" ^^^ NilStructureAST |
+//      pos ~ ("[" ~> rep1sep(structure, ",") <~ "]") ^^ { case p ~ l => ListStructureAST( p, l ) } |
+//      "{" ~ "}" ^^^ LiteralStructureAST( Set() ) |
       "(" ~> structure <~ ")"
 
 }

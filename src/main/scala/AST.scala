@@ -47,4 +47,5 @@ case class WhereClauseAST( where: List[DeclarationStatementAST] ) extends AST
 
 trait StructureAST extends AST
 case class NamedStructureAST( pos: Position, var alias: String, s: StructureAST ) extends StructureAST
+case class VariableStructureAST( pos: Position, var name: String, oname: String ) extends StructureAST
 case class TypeStructureAST( s: StructureAST, typename: String ) extends StructureAST
