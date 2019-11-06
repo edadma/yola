@@ -13,7 +13,7 @@ trait DeclarationStatementAST extends StatementAST
 //case class NativeAST( pkg: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
 //case class FunctionAST( cls: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
 case class ValAST(struc: StructureAST, pos: Position, exp: ExpressionAST) extends DeclarationStatementAST
-case class VarAST(pos: Position, var name: String, oname: String, init: Option[ExpressionAST])
+case class VarAST(pos: Position, var name: String, init: Option[(Position, ExpressionAST)])
     extends DeclarationStatementAST
 case class DataAST(pos: Position, name: String, constructors: List[(String, List[Symbol])])
     extends DeclarationStatementAST
@@ -38,10 +38,10 @@ case class ApplyExpressionAST(epos: Position,
     extends ExpressionAST
 case class DotExpressionAST(epos: Position, expr: ExpressionAST, apos: Position, field: Symbol) extends ExpressionAST
 case class LiteralExpressionAST(v: Any)                                                         extends ExpressionAST
-case class VariableExpressionAST(pos: Position, var name: String, oname: String)                extends ExpressionAST
-case class BinaryExpressionAST(lpos: Position, left: ExpressionAST, op: Symbol, rpos: Position, right: ExpressionAST)
+case class VariableExpressionAST(pos: Position, var name: String)                               extends ExpressionAST
+case class BinaryExpressionAST(lpos: Position, left: ExpressionAST, op: String, rpos: Position, right: ExpressionAST)
     extends ExpressionAST
-case class UnaryExpressionAST(op: Symbol, pos: Position, expr: ExpressionAST) extends ExpressionAST
+case class UnaryExpressionAST(op: String, pos: Position, expr: ExpressionAST) extends ExpressionAST
 case class AssignmentExpressionAST(lhs: List[(Position, ExpressionAST)],
                                    op: Symbol,
                                    rhs: List[(Position, ExpressionAST)])

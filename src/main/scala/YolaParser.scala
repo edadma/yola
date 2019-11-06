@@ -347,7 +347,9 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
       "var" ~> Indent ~> rep1(variable <~ Newline) <~ Dedent ^^ DeclarationBlockAST
 
   lazy val variable =
-    pos ~ ident ~ opt("=" ~> noAssignmentExpressionOrBlock) ^^ { case p ~ n ~ v => VarAST(p, n, n, v) }
+    pos ~ ident ~ opt("=" ~> pos ~ noAssignmentExpressionOrBlock) ^^ {
+      case p ~ n ~ Some(pe ~ e) => VarAST(p, n, Some((pe, e)))
+    }
 
   lazy val datatypes =
     "data" ~> datatype |
@@ -547,16 +549,10 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
 
   lazy val comparisonExpression: PackratParser[ExpressionAST] =
     pos ~ comparisonExpression ~ ("==" | "!=" | "<" | ">" | "<=" | ">=") ~ pos ~ alternationExpression ^^ {
-      case pl ~ l ~ op ~ pr ~ r =>
-        val s = Symbol(op)
-
-        BinaryExpressionAST(pl, l, s, pr, r)
+      case pl ~ l ~ op ~ pr ~ r => BinaryExpressionAST(pl, l, op, pr, r)
     } |
       pos ~ alternationExpression ~ ("in" | "not" ~ "in" ^^^ "notin") ~ pos ~ alternationExpression ^^ {
-        case pl ~ l ~ op ~ pr ~ r =>
-          val s = Symbol(op)
-
-          BinaryExpressionAST(pl, l, s, pr, r)
+        case pl ~ l ~ op ~ pr ~ r => BinaryExpressionAST(pl, l, op, pr, r)
       } |
 //      alternationExpression ~ "is" ~ ident ^^ { case e ~ _ ~ t => TypeExpressionAST( e, t ) } |
 //      alternationExpression ~ ("is" ~> "not" ~> ident) ^^ { case e ~ t => NotExpressionAST( TypeExpressionAST(e, t) ) } |
@@ -608,35 +604,29 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
 
   lazy val additiveExpression: PackratParser[ExpressionAST] =
     pos ~ additiveExpression ~ ("+" | "-") ~ pos ~ multiplicativeExpression ^^ {
-      case pl ~ l ~ o ~ pr ~ r =>
-        val s = Symbol(o)
-
-        BinaryExpressionAST(pl, l, s, pr, r)
+      case pl ~ l ~ o ~ pr ~ r => BinaryExpressionAST(pl, l, o, pr, r)
     } |
       multiplicativeExpression
 
   lazy val multiplicativeExpression: PackratParser[ExpressionAST] =
     pos ~ multiplicativeExpression ~ ("*" | "/" | """\""" | "%" | "\\%" | "//" | "mod" | "div" | "rotateright" | "rotateleft" | ">>>" | "<<") ~ pos ~ exponentialExpression ^^ {
-      case pl ~ l ~ o ~ pr ~ r =>
-        val s = Symbol(o)
-
-        BinaryExpressionAST(pl, l, s, pr, r)
+      case pl ~ l ~ o ~ pr ~ r => BinaryExpressionAST(pl, l, o, pr, r)
     } |
       pos ~ multiplicativeExpression ~ pos ~ applyExpression ^^ {
-        case pl ~ l ~ pr ~ r => BinaryExpressionAST(pl, l, Symbol("adj"), pr, r)
+        case pl ~ l ~ pr ~ r => BinaryExpressionAST(pl, l, "adj", pr, r)
       } |
       exponentialExpression
 
   lazy val exponentialExpression: PackratParser[ExpressionAST] =
     pos ~ unaryExpression ~ "^" ~ pos ~ exponentialExpression ^^ {
-      case pl ~ l ~ _ ~ pr ~ r => BinaryExpressionAST(pl, l, Symbol("^"), pr, r)
+      case pl ~ l ~ _ ~ pr ~ r => BinaryExpressionAST(pl, l, "^", pr, r)
     } |
       unaryExpression
 
   lazy val unaryExpression: PackratParser[ExpressionAST] =
     "-" ~> pos ~ applyExpression /*incrementExpression*/ ^^ {
       case _ ~ LiteralExpressionAST(n: Number) => LiteralExpressionAST(n) // todo: negate
-      case p ~ v                               => UnaryExpressionAST(Symbol("-"), p, v)
+      case p ~ v                               => UnaryExpressionAST("-", p, v)
     } |
 //      "." ~> incrementExpression ^^ DereferenceExpressionAST |
 //      incrementExpression
@@ -718,7 +708,7 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
       "null" ^^^ LiteralExpressionAST(null) |
 //      "{" ~ "}" ^^^ LiteralExpressionAST( Set() ) |
 //      "{" ~ ":" ~ "}" ^^^ LiteralExpressionAST( Map() ) |
-      pos ~ ident ^^ { case p ~ n => VariableExpressionAST(p, n, n) } |
+      pos ~ ident ^^ { case p ~ n => VariableExpressionAST(p, n) } |
       "[" ~ "]" ^^^ LiteralExpressionAST(Nil) |
       "[" ~> rep1sep(expression, ",") <~ "]" ^^ { l =>
         ListExpressionAST(l)
