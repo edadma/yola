@@ -1,6 +1,6 @@
 name := "yola"
 
-version := "0.1.0"
+version := "0.1a.0"
 
 scalaVersion := "2.11.12"
 
@@ -18,7 +18,7 @@ resolvers += "Hyperreal Repository" at "https://dl.bintray.com/edadma/maven"
 
 mainClass in (Compile, run) := Some( "xyz.hyperreal." + name.value.replace('-', '_') + ".Main" )
 
-licenses := Seq("ISC" -> url("https://opensource.org/licenses/ISC"))
+licenses := Seq("ISC" -> url("https://opensource.org/licenses/isc"))
 
 homepage := Some(url("https://github.com/edadma/" + name.value))
 
