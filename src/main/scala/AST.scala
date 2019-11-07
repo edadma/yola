@@ -12,7 +12,7 @@ trait DeclarationStatementAST extends StatementAST
 //case class ImportAST( qual: String, names: List[(String, Option[String])] ) extends DeclarationStatementAST
 //case class NativeAST( pkg: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
 //case class FunctionAST( cls: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
-case class ValAST(struc: StructureAST, pos: Position, exp: ExpressionAST) extends DeclarationStatementAST
+case class ValAST(struc: PatternAST, pos: Position, exp: ExpressionAST) extends DeclarationStatementAST
 case class VarAST(pos: Position, var name: String, init: Option[(Position, ExpressionAST)])
     extends DeclarationStatementAST
 case class DataAST(pos: Position, name: String, constructors: List[(String, List[Symbol])])
@@ -24,13 +24,13 @@ case class DeclarationBlockAST(decls: List[DeclarationStatementAST]) extends Dec
 trait ExpressionAST extends StatementAST
 case class FunctionExpressionAST(pos: Position,
                                  name: String,
-                                 parms: List[StructureAST],
+                                 parms: List[PatternAST],
                                  arb: Boolean,
-                                 parts: List[FunctionPartExpressionAST],
+                                 parts: List[FunctionPartAST],
                                  where: WhereClauseAST)
     extends ExpressionAST
 case class PartialFunctionExpressionAST(cases: List[FunctionExpressionAST]) extends ExpressionAST
-case class ApplyExpressionAST(epos: Position,
+case class ApplyExpressionAST(fpos: Position,
                               f: ExpressionAST,
                               apos: Position,
                               args: List[(Position, ExpressionAST)],
@@ -62,11 +62,12 @@ case class BreakExpressionAST(pos: Position, label: Option[String], expr: Option
 case class ContinueExpressionAST(pos: Position, label: Option[String])                           extends ExpressionAST
 case class ReturnExpressionAST(expr: ExpressionAST)                                              extends ExpressionAST
 
-case class FunctionPartExpressionAST(guard: Option[ExpressionAST], body: ExpressionAST)
+case class FunctionPartAST(guard: Option[ExpressionAST], body: ExpressionAST) extends AST
 
 case class WhereClauseAST(where: List[DeclarationStatementAST]) extends AST
 
-trait StructureAST                                                              extends AST
-case class NamedStructureAST(pos: Position, var alias: String, s: StructureAST) extends StructureAST
-case class VariableStructureAST(pos: Position, var name: String, oname: String) extends StructureAST
-case class TypeStructureAST(s: StructureAST, typename: String)                  extends StructureAST
+trait PatternAST                                                            extends AST
+case class NamedPatternAST(pos: Position, var alias: String, s: PatternAST) extends PatternAST
+case class VariablePatternAST(pos: Position, var name: String)              extends PatternAST
+case class TypePatternAST(s: PatternAST, typename: String)                  extends PatternAST
+case class TuplePatternAST(pos: Position, args: List[PatternAST])           extends PatternAST
