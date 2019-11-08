@@ -8,15 +8,14 @@ object Main extends App {
       |
       |def f(x) = x + 4
       |
-      |println( f(a) )
+      |console.log( f(a) )
     """.stripMargin
   val parser            = new YolaParser
   val ast               = parser.parseFromString(program, parser.source)
-  val interp            = new Interpreter
   implicit val toplevel = new Scope
 
   toplevel.vars("println") = (args: List[Any]) => println(args)
 
-  println(interp(ast))
+  println(YolaInterpreter(ast))
 
 }

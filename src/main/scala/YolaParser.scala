@@ -650,6 +650,9 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
     pos ~ applyExpression ~ pos ~ ("(" ~> repsep(pos ~ expression, ",") <~ ")") ^^ {
       case fp ~ f ~ ap ~ args => ApplyExpressionAST(fp, f, ap, args map { case p ~ e => (p, e) }, false)
     } |
+      pos ~ applyExpression ~ ("." ~> pos) ~ (ident | stringLit) ^^ {
+        case fp ~ e ~ ap ~ f => DotExpressionAST(fp, e, ap, Symbol(f))
+      } |
 //      pos ~ applyExpression ~ ("." ~> pos) ~ (ident|stringLit) ^^ {
 //        case fp ~ e ~ ap ~ f => DotExpressionAST( fp, e, ap, Symbol(f) ) } |
 //      pos ~ applyExpression ~ ("[" ~> pos) ~ (expression <~ "]") ^^ {

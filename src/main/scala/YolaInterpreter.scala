@@ -3,7 +3,7 @@ package xyz.hyperreal.yola
 import scala.collection.mutable
 import scala.util.parsing.input.Position
 
-class Interpreter {
+object YolaInterpreter {
 
   def apply(ast: AST)(implicit scope: Scope): Unit = ast match {
     case SourceAST(stmts)           => stmts foreach apply
