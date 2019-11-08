@@ -32,6 +32,10 @@ object YolaInterpreter {
   def beval(exp: ExpressionAST)(implicit scope: Scope) = eval(exp)(scope).asInstanceOf[Boolean]
 
   def eval(exp: ExpressionAST)(implicit scope: Scope): Any = exp match {
+    case DotExpressionAST(epos, expr, apos, field) =>
+      eval(expr) match {
+        case f: (Any => Any) => f(field)
+      }
     case BinaryExpressionAST(lpos, left, op, rpos, right) =>
       val l = eval(left)
       val r = eval(right)
@@ -51,7 +55,7 @@ object YolaInterpreter {
       val args1 = args map { case (_, e) => eval(e) }
 
       eval(f) match {
-        case func: (List[Any] => Any) => func(args1.asInstanceOf[List[Any]])
+        case func: (List[Any] => Any) => func(args1)
         case FunctionExpressionAST(pos, name, parms, arb, parts, where) =>
           implicit val scope = new Scope
           val alen           = args1.length

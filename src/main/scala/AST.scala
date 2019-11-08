@@ -36,7 +36,7 @@ case class ApplyExpressionAST(fpos: Position,
                               args: List[(Position, ExpressionAST)],
                               var tailrecursive: Boolean)
     extends ExpressionAST
-case class DotExpressionAST(epos: Position, expr: ExpressionAST, apos: Position, field: Symbol) extends ExpressionAST
+case class DotExpressionAST(epos: Position, expr: ExpressionAST, apos: Position, field: String) extends ExpressionAST
 case class LiteralExpressionAST(v: Any)                                                         extends ExpressionAST
 case class VariableExpressionAST(pos: Position, var name: String)                               extends ExpressionAST
 case class BinaryExpressionAST(lpos: Position, left: ExpressionAST, op: String, rpos: Position, right: ExpressionAST)
