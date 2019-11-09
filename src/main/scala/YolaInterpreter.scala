@@ -5,7 +5,7 @@ import scala.util.parsing.input.Position
 
 object YolaInterpreter {
 
-  def apply(ast: AST)(implicit scope: Scope): Unit = ast match {
+  def apply(ast: AST)(implicit scope: Scope): Any = ast match {
     case SourceAST(stmts)           => stmts foreach apply
     case DeclarationBlockAST(decls) => decls map apply
     case VarAST(pos, name, None) =>
@@ -15,13 +15,13 @@ object YolaInterpreter {
       scope.vars(name) = Holder(0)
     case VarAST(pos, name, Some((pose, exp))) =>
       duplicate(pos, name)
-      scope.vars(name) = Holder(eval(exp))
+      scope.vars(name) = Holder(deval(exp))
     case DefAST(pos, name, func) =>
       if (scope.vars contains name)
         problem(pos, s"duplicate declaration: '$name'")
 
       scope.vars(name) = func
-    case exp: ExpressionAST => eval(exp)
+    case exp: ExpressionAST => deval(exp)
   }
 
   def duplicate(pos: Position, name: String)(implicit scope: Scope): Unit = {
@@ -29,32 +29,87 @@ object YolaInterpreter {
       problem(pos, s"duplicate declaration: '$name'")
   }
 
-  def beval(exp: ExpressionAST)(implicit scope: Scope) = eval(exp)(scope).asInstanceOf[Boolean]
+  def deval(expr: ExpressionAST)(implicit scope: Scope) = deref(eval(expr))
 
-  def eval(exp: ExpressionAST)(implicit scope: Scope): Any = exp match {
+  def beval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[Boolean]
+
+  def deref(a: Any) =
+    a match {
+      case Holder(v) => v
+      case _         => a
+    }
+
+  def eval(expr: ExpressionAST)(implicit scope: Scope): Any = expr match {
+    case ComparisonExpressionAST(pos, left, comparisons) =>
+      def comp(left: Any, cs: List[(String, Position, ExpressionAST)]): Boolean =
+        cs match {
+          case Nil => true
+          case (op, pos, exp) :: t =>
+            val right = deval(exp)
+
+            if (op match {
+                  case "==" => left == right
+                })
+              comp(right, t)
+            else
+              false
+        }
+
+      comp(deval(left), comparisons)
+    case BlockExpressionAST(stmts) =>
+      def evals(l: List[StatementAST]): Any = l match {
+        case h :: Nil => apply(h)
+        case h :: t =>
+          apply(h)
+          evals(t)
+      }
+
+      evals(stmts)
+    case AssignmentExpressionAST(lhs, op, rhs) =>
+      val ll = lhs.length
+      val rl = rhs.length
+
+      if (lhs.length > rhs.length)
+        problem(lhs.head._1, s"left hand side has too many items: l.h.s. has $ll, r.h.s has $rl")
+
+      if (lhs.length < rhs.length)
+        problem(lhs.head._1, s"right hand side has too many items: l.h.s. has $ll, r.h.s has $rl")
+
+      (lhs zip rhs) map {
+        case ((pl, el), (pr, er)) =>
+          eval(el) match {
+            case h: Holder =>
+              h.v = eval(er)
+              h.v
+            case _ => problem(pl, "not an l-value")
+          }
+      }
+    case ConditionalExpressionAST(cond, els) =>
+      eval(
+        cond find { case (c, _) => beval(c) } map { case (_, a) => a } getOrElse (els getOrElse LiteralExpressionAST(
+          ())))
     case DotExpressionAST(epos, expr, apos, field) =>
       eval(expr) match {
         case f: (Any => Any) => f(field)
       }
     case BinaryExpressionAST(lpos, left, op, rpos, right) =>
-      val l = eval(left)
-      val r = eval(right)
+      val l = deval(left)
+      val r = deval(right)
 
       op match {
         case "+" => l.asInstanceOf[Int] + r.asInstanceOf[Int]
       }
     case VariableExpressionAST(pos, name) =>
       scope.vars get name match {
-        case None            => problem(pos, s"unknown variable '$name'")
-        case Some(Holder(v)) => v
-        case Some(v)         => v
+        case None    => problem(pos, s"unknown variable '$name'")
+        case Some(v) => v
       }
     case LiteralExpressionAST(v) => v
-    case ListExpressionAST(l)    => l map eval
+    case ListExpressionAST(l)    => l map deval
     case ApplyExpressionAST(fpos, f, apos, args, tailrecursive) =>
-      val args1 = args map { case (_, e) => eval(e) }
+      val args1 = args map { case (_, e) => deval(e) }
 
-      eval(f) match {
+      deval(f) match {
         case func: (List[Any] => Any) => func(args1)
         case FunctionExpressionAST(pos, name, parms, arb, parts, where) =>
           implicit val scope = new Scope

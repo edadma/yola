@@ -548,8 +548,10 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
   )
 
   lazy val comparisonExpression: PackratParser[ExpressionAST] =
-    pos ~ comparisonExpression ~ ("==" | "!=" | "<" | ">" | "<=" | ">=") ~ pos ~ alternationExpression ^^ {
-      case pl ~ l ~ op ~ pr ~ r => BinaryExpressionAST(pl, l, op, pr, r)
+    pos ~ alternationExpression ~ rep1(("==" | "!=" | "<" | ">" | "<=" | ">=") ~ pos ~ alternationExpression ^^ {
+      case op ~ p ~ r => (op, p, r)
+    }) ^^ {
+      case pl ~ l ~ cs => ComparisonExpressionAST(pl, l, cs)
     } |
       pos ~ alternationExpression ~ ("in" | "not" ~ "in" ^^^ "notin") ~ pos ~ alternationExpression ^^ {
         case pl ~ l ~ op ~ pr ~ r => BinaryExpressionAST(pl, l, op, pr, r)

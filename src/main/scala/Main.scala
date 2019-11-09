@@ -5,10 +5,13 @@ object Main extends App {
   val program =
     """
       |var a = 3
+      |var b = 4
       |
-      |def f(x) = x + 4
+      |def f(x) = x + 5
       |
-      |console.log( f(a) )
+      |println( a )
+      |println( a = a+1 )
+      |println( a )
     """.stripMargin
   val parser            = new YolaParser
   val ast               = parser.parseFromString(program, parser.source)
@@ -16,8 +19,8 @@ object Main extends App {
   val PRINT             = (args: List[Any]) => println(args mkString ", ")
 
   toplevel.vars("println") = PRINT
-  toplevel.vars("console") = Map("log" -> PRINT)
-  println(ast)
+//  toplevel.vars("console") = Map("log" -> PRINT)
+//  println(ast)
   YolaInterpreter(ast)
 
 }
