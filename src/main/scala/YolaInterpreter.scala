@@ -75,11 +75,14 @@ object YolaInterpreter {
       if (lhs.length < rhs.length)
         problem(lhs.head._1, s"right hand side has too many items: l.h.s. has $ll, r.h.s has $rl")
 
-      (lhs zip rhs) map {
-        case ((pl, el), (pr, er)) =>
+      (lhs zip rhs.map { case (pr, er) => eval(er) }) map {
+        case ((pl, el), v) =>
           eval(el) match {
             case h: Holder =>
-              h.v = eval(er)
+              op match {
+                case "="  => h.v = v
+                case "+=" => h.v = h.v.asInstanceOf[Int] + v.asInstanceOf[Int]
+              }
               h.v
             case _ => problem(pl, "not an l-value")
           }

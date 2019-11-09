@@ -467,7 +467,7 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
     rep1sep(pos ~ lvalueExpression, ",") ~ assignment ~ (rep1sep(pos ~ assignmentExpression, ",") | pos ~ blockExpression ^^ (List(
       _))) ^^ {
       case lhs ~ op ~ rhs =>
-        AssignmentExpressionAST(lhs map { case p ~ e => (p, e) }, Symbol(op dropRight 1), rhs map {
+        AssignmentExpressionAST(lhs map { case p ~ e => (p, e) }, op, rhs map {
           case p ~ e                                 => (p, e)
         })
     } |

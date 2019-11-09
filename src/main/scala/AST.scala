@@ -47,7 +47,7 @@ case class BinaryExpressionAST(lpos: Position, left: ExpressionAST, op: String, 
     extends ExpressionAST
 case class UnaryExpressionAST(op: String, pos: Position, expr: ExpressionAST) extends ExpressionAST
 case class AssignmentExpressionAST(lhs: List[(Position, ExpressionAST)],
-                                   op: Symbol,
+                                   op: String,
                                    rhs: List[(Position, ExpressionAST)])
     extends ExpressionAST
 case class BlockExpressionAST(l: List[StatementAST])                   extends ExpressionAST

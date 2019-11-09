@@ -9,9 +9,8 @@ object Main extends App {
       |
       |def f(x) = x + 5
       |
-      |println( a )
-      |println( a = a+1 )
-      |println( a )
+      |println( b, a += 1, 2 )
+      |println( a, b )
     """.stripMargin
   val parser            = new YolaParser
   val ast               = parser.parseFromString(program, parser.source)
