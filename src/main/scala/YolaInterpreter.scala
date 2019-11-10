@@ -49,6 +49,10 @@ object YolaInterpreter {
 
             if (op match {
                   case "==" => left == right
+                  case "<"  => left.asInstanceOf[Int] < right.asInstanceOf[Int]
+                  case ">"  => left.asInstanceOf[Int] > right.asInstanceOf[Int]
+                  case "<=" => left.asInstanceOf[Int] <= right.asInstanceOf[Int]
+                  case ">=" => left.asInstanceOf[Int] >= right.asInstanceOf[Int]
                 })
               comp(right, t)
             else
@@ -87,6 +91,30 @@ object YolaInterpreter {
             case _ => problem(pl, "not an l-value")
           }
       }
+    case UnaryExpressionAST(op, pos, expr) =>
+      eval(expr) match {
+        case h: Holder =>
+          op match {
+            case "_++" =>
+              val res = h.v
+              h.v = h.v.asInstanceOf[Int] + 1
+              res
+            case "_--" =>
+              val res = h.v
+              h.v = h.v.asInstanceOf[Int] - 1
+              res
+            case "++_" =>
+              h.v = h.v.asInstanceOf[Int] + 1
+              h.v
+            case "--_" =>
+              h.v = h.v.asInstanceOf[Int] - 1
+              h.v
+          }
+        case _ => problem(pos, "not al l-value")
+      }
+    case WhileExpressionAST(label, cond, body, els) =>
+      while (beval(cond)) body foreach eval
+      els foreach eval
     case ConditionalExpressionAST(cond, els) =>
       eval(
         cond find { case (c, _) => beval(c) } map { case (_, a) => a } getOrElse (els getOrElse LiteralExpressionAST(
