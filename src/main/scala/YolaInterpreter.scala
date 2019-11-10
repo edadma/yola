@@ -9,17 +9,14 @@ object YolaInterpreter {
     case SourceAST(stmts)           => stmts foreach apply
     case DeclarationBlockAST(decls) => decls map apply
     case VarAST(pos, name, None) =>
-      if (scope.vars contains name)
-        problem(pos, s"duplicate declaration: '$name'")
-
+      duplicate(pos, name)
       scope.vars(name) = Holder(0)
     case VarAST(pos, name, Some((pose, exp))) =>
       duplicate(pos, name)
       scope.vars(name) = Holder(deval(exp))
     case DefAST(pos, name, func) =>
-      if (scope.vars contains name)
-        problem(pos, s"duplicate declaration: '$name'")
-
+      duplicate(pos, name)
+      func.scope = scope
       scope.vars(name) = func
     case exp: ExpressionAST => deval(exp)
   }
@@ -131,7 +128,7 @@ object YolaInterpreter {
         case "+" => l.asInstanceOf[Int] + r.asInstanceOf[Int]
       }
     case VariableExpressionAST(pos, name) =>
-      scope.vars get name match {
+      scope get name match {
         case None    => problem(pos, s"unknown variable '$name'")
         case Some(v) => v
       }
@@ -142,8 +139,8 @@ object YolaInterpreter {
 
       deval(f) match {
         case func: (List[Any] => Any) => func(args1)
-        case FunctionExpressionAST(pos, name, parms, arb, parts, where) =>
-          implicit val scope = new Scope
+        case f @ FunctionAST(pos, name, parms, arb, parts, where) =>
+          implicit val scope = new Scope(f.scope)
           val alen           = args1.length
           val plen           = parms.length
 
@@ -190,8 +187,16 @@ object YolaInterpreter {
   case class Holder(var v: Any)
 }
 
-class Scope {
+class Scope(val outer: Scope) {
   val vars = new mutable.HashMap[String, Any]
+
+  def get(name: String): Option[Any] =
+    vars get name orElse (if (outer eq null)
+                            None
+                          else
+                            outer.get(name))
 }
+
+case class Closure(func: FunctionAST, scope: Scope)
 
 case class NTuple(elems: List[Any])

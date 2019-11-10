@@ -7,16 +7,13 @@ object Main extends App {
       |var a = 3
       |var b = 4
       |
-      |def f(x) = x + 5
+      |def f(x) = x + b
       |
-      |while a-- > 0
-      | println( a )
-      |else
-      | println( 'done' )
+      |println( f(a) )
     """.stripMargin
   val parser            = new YolaParser
   val ast               = parser.parseFromString(program, parser.source)
-  implicit val toplevel = new Scope
+  implicit val toplevel = new Scope(null)
   val PRINT             = (args: List[Any]) => println(args mkString ", ")
 
   toplevel.vars("println") = PRINT

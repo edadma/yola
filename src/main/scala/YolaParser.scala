@@ -387,9 +387,9 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
   lazy val definition =
     pos ~ ident ~ opt("(" ~> rep1sep(structure, ",") ~ opt("...") <~ ")") ~ (optionallyGuardedPart | guardedParts) ^^ {
       case p ~ n ~ None ~ ((gs, w)) =>
-        DefAST(p, n, FunctionExpressionAST(p, n, Nil, false, gs, WhereClauseAST(w)))
+        DefAST(p, n, FunctionAST(p, n, Nil, false, gs, WhereClauseAST(w)))
       case p ~ n ~ Some(parms ~ a) ~ ((gs, w)) =>
-        DefAST(p, n, FunctionExpressionAST(p, n, parms, a isDefined, gs, WhereClauseAST(w)))
+        DefAST(p, n, FunctionAST(p, n, parms, a isDefined, gs, WhereClauseAST(w)))
     }
 
   lazy val optionallyGuardedPart
@@ -432,7 +432,7 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
   lazy val whereDefinition: PackratParser[DeclarationStatementAST] =
     pos ~ ident ~ ("(" ~> (rep1sep(structure, ",") ~ opt("...")) <~ ")") ~ (optionallyGuardedPart | guardedParts) ^^ {
       case p ~ n ~ (parms ~ a) ~ ((gs, w)) =>
-        DefAST(p, n, FunctionExpressionAST(p, n, parms, a isDefined, gs, WhereClauseAST(w)))
+        DefAST(p, n, FunctionAST(p, n, parms, a isDefined, gs, WhereClauseAST(w)))
     } |
       constant
 
@@ -539,12 +539,12 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
   lazy val lambdaExpression =
     pos ~ parameters ~ opt("|" ~> guardExpression) ~ ("->" ~> opt(expressionOrBlock)) ^^ {
       case p ~ ((parms, a)) ~ g ~ b =>
-        FunctionExpressionAST(p,
-                              "$" + p.toString,
-                              parms,
-                              a,
-                              List(FunctionPartAST(g, b.getOrElse(LiteralExpressionAST(())))),
-                              WhereClauseAST(Nil))
+        FunctionAST(p,
+                    "$" + p.toString,
+                    parms,
+                    a,
+                    List(FunctionPartAST(g, b.getOrElse(LiteralExpressionAST(())))),
+                    WhereClauseAST(Nil))
     }
   //		"otherwise" ~> "->" ~> opt(expressionOrBlock) ^^ {
   //			b => FunctionExpressionAST( List(VariableStructureAST(null, "_")), false, List(FunctionPartExpressionAST(None, b.getOrElse(LiteralExpressionAST(())))), WhereClauseAST(Nil) ) }
