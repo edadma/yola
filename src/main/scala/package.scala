@@ -13,4 +13,10 @@ package object yola {
     sys.exit(1)
   }
 
+  def display(v: Any): String =
+    v match {
+      case NTuple(elems) => elems map display mkString ("(", ", ", ")")
+      case _             => String.valueOf(v)
+    }
+
 }

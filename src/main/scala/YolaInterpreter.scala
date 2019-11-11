@@ -8,6 +8,7 @@ object YolaInterpreter {
   def apply(ast: AST)(implicit scope: Scope): Any = ast match {
     case SourceAST(stmts)           => stmts foreach apply
     case DeclarationBlockAST(decls) => decls map apply
+    case ValAST(pat, pos, expr)     =>
     case VarAST(pos, name, None) =>
       duplicate(pos, name)
       scope.vars(name) = Holder(0)
@@ -133,6 +134,7 @@ object YolaInterpreter {
         case Some(v) => v
       }
     case LiteralExpressionAST(v) => v
+    case TupleExpressionAST(l)   => NTuple(l map deval)
     case ListExpressionAST(l)    => l map deval
     case ApplyExpressionAST(fpos, f, apos, args, tailrecursive) =>
       val args1 = args map { case (_, e) => deval(e) }
@@ -171,17 +173,23 @@ object YolaInterpreter {
       }
   }
 
-  def unify(v: Any, s: PatternAST)(implicit scope: Scope): Boolean =
+  def unify(v: Any, s: PatternAST, errors: Boolean)(implicit scope: Scope): Boolean =
     s match {
       case VariablePatternAST(pos, name) =>
         duplicate(pos, name)
         scope.vars(name) = v
         true
-//      case TuplePatternAST(pos, args) =>
-//        v match {
-//          case NTuple(elems) =>
-//          case _             => false
-//        }
+      case TuplePatternAST(pos, args) =>
+        v match {
+          case NTuple(elems) =>
+            if (args.length != elems.length)unify
+              if (errors)
+                problem( pos, "tuple has wrong number")
+              false
+            else
+              elems zip args forall { case (e, a) => unify(e, a, errors) }
+          case _ => false
+        }
     }
 
   case class Holder(var v: Any)
@@ -196,7 +204,5 @@ class Scope(val outer: Scope) {
                           else
                             outer.get(name))
 }
-
-case class Closure(func: FunctionAST, scope: Scope)
 
 case class NTuple(elems: List[Any])

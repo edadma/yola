@@ -12,7 +12,7 @@ trait DeclarationStatementAST extends StatementAST
 //case class ImportAST( qual: String, names: List[(String, Option[String])] ) extends DeclarationStatementAST
 //case class NativeAST( pkg: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
 //case class FunctionAST( cls: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
-case class ValAST(struc: PatternAST, pos: Position, exp: ExpressionAST)
+case class ValAST(pat: PatternAST, pos: Position, expr: ExpressionAST)
     extends DeclarationStatementAST
 case class VarAST(pos: Position, var name: String, init: Option[(Position, ExpressionAST)])
     extends DeclarationStatementAST
@@ -58,6 +58,8 @@ case class AssignmentExpressionAST(lhs: List[(Position, ExpressionAST)],
     extends ExpressionAST
 case class BlockExpressionAST(l: List[StatementAST])                   extends ExpressionAST
 case class ListExpressionAST(l: List[ExpressionAST])                   extends ExpressionAST
+case class TupleExpressionAST(l: List[ExpressionAST])                  extends ExpressionAST
+case class MapExpressionAST(l: List[(ExpressionAST, ExpressionAST)])   extends ExpressionAST
 case class OrExpressionAST(left: ExpressionAST, right: ExpressionAST)  extends ExpressionAST
 case class AndExpressionAST(left: ExpressionAST, right: ExpressionAST) extends ExpressionAST
 case class NotExpressionAST(expr: ExpressionAST)                       extends ExpressionAST
@@ -73,6 +75,7 @@ case class BreakExpressionAST(pos: Position, label: Option[String], expr: Option
     extends ExpressionAST
 case class ContinueExpressionAST(pos: Position, label: Option[String]) extends ExpressionAST
 case class ReturnExpressionAST(expr: ExpressionAST)                    extends ExpressionAST
+case class InterpolationExpressionAST(l: List[ExpressionAST])          extends ExpressionAST
 
 case class FunctionPartAST(guard: Option[ExpressionAST], body: ExpressionAST) extends AST
 
