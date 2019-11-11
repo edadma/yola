@@ -81,8 +81,11 @@ case class FunctionPartAST(guard: Option[ExpressionAST], body: ExpressionAST) ex
 
 case class WhereClauseAST(where: List[DeclarationStatementAST]) extends AST
 
-trait PatternAST                                                            extends AST
-case class NamedPatternAST(pos: Position, var alias: String, s: PatternAST) extends PatternAST
-case class VariablePatternAST(pos: Position, var name: String)              extends PatternAST
-case class TypePatternAST(s: PatternAST, typename: String)                  extends PatternAST
-case class TuplePatternAST(pos: Position, args: List[PatternAST])           extends PatternAST
+trait PatternAST                                                             extends AST
+case class NamedPatternAST(pos: Position, var alias: String, s: PatternAST)  extends PatternAST
+case class VariablePatternAST(pos: Position, var name: String)               extends PatternAST
+case class TypePatternAST(s: PatternAST, typename: String)                   extends PatternAST
+case class TuplePatternAST(pos: Position, elems: List[PatternAST])           extends PatternAST
+case class ListPatternAST(pos: Position, elems: List[PatternAST])            extends PatternAST
+case class ConsPatternAST(pos: Position, head: PatternAST, tail: PatternAST) extends PatternAST
+case object NilPatternAST                                                    extends PatternAST

@@ -15,8 +15,9 @@ package object yola {
 
   def display(v: Any): String =
     v match {
-      case NTuple(elems) => elems map display mkString ("(", ", ", ")")
-      case _             => String.valueOf(v)
+      case NTuple(elems)  => elems map display mkString ("(", ", ", ")")
+      case elems: List[_] => elems map display mkString ("[", ", ", "]")
+      case _              => String.valueOf(v)
     }
 
 }

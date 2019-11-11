@@ -8,7 +8,7 @@ object YolaInterpreter {
   def apply(ast: AST)(implicit scope: Scope): Any = ast match {
     case SourceAST(stmts)           => stmts foreach apply
     case DeclarationBlockAST(decls) => decls map apply
-    case ValAST(pat, pos, expr)     =>
+    case ValAST(pat, pos, expr)     => unify(deval(expr), pat, true)
     case VarAST(pos, name, None) =>
       duplicate(pos, name)
       scope.vars(name) = Holder(0)
@@ -153,7 +153,7 @@ object YolaInterpreter {
 
           args1 zip parms foreach {
             case (a, p) =>
-              unify(a, p)
+              unify(a, p, false)
           }
 
           def testParts(ps: List[FunctionPartAST]): Any =
@@ -179,16 +179,42 @@ object YolaInterpreter {
         duplicate(pos, name)
         scope.vars(name) = v
         true
-      case TuplePatternAST(pos, args) =>
+      case ListPatternAST(pos, elems) =>
         v match {
-          case NTuple(elems) =>
-            if (args.length != elems.length)unify
-              if (errors)
-                problem( pos, "tuple has wrong number")
-              false
+          case l: List[_] =>
+            def unifyList(l: List[_], elems: List[PatternAST]): Boolean =
+              (l, elems) match {
+                case (Nil, Nil)         => true
+                case (h :: t, eh :: et) => unify(h, eh, errors) && unifyList(t, et)
+                case _ =>
+                  if (errors)
+                    problem(pos, "wrong number of elements in list")
+                  else
+                    false
+              }
+
+            unifyList(l, elems)
+          case _ =>
+            if (errors)
+              problem(pos, "expected list")
             else
-              elems zip args forall { case (e, a) => unify(e, a, errors) }
-          case _ => false
+              false
+        }
+      case TuplePatternAST(pos, elems) =>
+        v match {
+          case NTuple(elems2) =>
+            if (elems.length != elems2.length)
+              if (errors)
+                problem(pos, "tuple has wrong number of elems")
+              else
+                false
+            else
+              elems2 zip elems forall { case (e, a) => unify(e, a, errors) }
+          case _ =>
+            if (errors)
+              problem(pos, "expected tuple")
+            else
+              false
         }
     }
 
