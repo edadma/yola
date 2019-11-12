@@ -152,41 +152,42 @@ object YolaInterpreter {
           }) -> deval(v)
       } toMap
     case ApplyExpressionAST(fpos, f, apos, args, tailrecursive) =>
-      val args1 = args map { case (_, e) => deval(e) }
+      call(fpos, deval(f), apos, args map { case (_, e) => deval(e) })
+  }
 
-      deval(f) match {
-        case func: (List[Any] => Any) => func(args1)
-        case f @ FunctionAST(pos, name, parms, arb, parts, where) =>
-          implicit val scope = new Scope(f.scope)
-          val alen           = args1.length
-          val plen           = parms.length
+  def call(fpos: Position, f: Any, apos: Position, args: List[Any]) =
+    f match {
+      case func: (List[Any] => Any) => func(args)
+      case f @ FunctionAST(pos, name, parms, arb, parts, where) =>
+        implicit val scope = new Scope(f.scope)
+        val alen           = args.length
+        val plen           = parms.length
 
-          if (alen > plen)
-            problem(apos, s"too many arguments: expected $plen, found $alen")
-          else if (alen < plen)
-            problem(apos, s"too few arguments: expected $plen, found $alen")
+        if (alen > plen)
+          problem(apos, s"too many arguments: expected $plen, found $alen")
+        else if (alen < plen)
+          problem(apos, s"too few arguments: expected $plen, found $alen")
 
-          args1 zip parms foreach {
-            case (a, p) =>
-              unify(a, p, false)
+        args zip parms foreach {
+          case (a, p) =>
+            unify(a, p, false)
+        }
+
+        def testParts(ps: List[FunctionPartAST]): Any =
+          ps match {
+            case Nil => problem(pos, s"could not apply function: $fpos")
+            case h :: t =>
+              if (h.guard match {
+                    case None    => true
+                    case Some(g) => beval(g)
+                  })
+                eval(h.body)
+              else
+                testParts(t)
           }
 
-          def testParts(ps: List[FunctionPartAST]): Any =
-            ps match {
-              case Nil => problem(pos, s"could not apply function: $fpos")
-              case h :: t =>
-                if (h.guard match {
-                      case None    => true
-                      case Some(g) => beval(g)
-                    })
-                  eval(h.body)
-                else
-                  testParts(t)
-            }
-
-          testParts(parts)
-      }
-  }
+        testParts(parts)
+    }
 
   def declare(pos: Position, name: String, value: Any)(implicit scope: Scope) = {
     duplicate(pos, name)
