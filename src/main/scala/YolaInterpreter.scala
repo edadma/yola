@@ -12,11 +12,9 @@ object YolaInterpreter {
     case ValAST(pat, pos, expr) =>
       unify(deval(expr), pat, true)
     case VarAST(pos, name, None) =>
-      duplicate(pos, name)
-      scope.vars(name) = Var(0)
-    case VarAST(pos, name, Some((pose, exp))) =>
-      duplicate(pos, name)
-      scope.vars(name) = Var(deval(exp))
+      declare(pos, name, Var(0))
+    case VarAST(pos, name, Some((_, exp))) =>
+      declare(pos, name, Var(deval(exp)))
     case DefAST(pos, name, func) =>
       duplicate(pos, name)
       func.scope = scope
