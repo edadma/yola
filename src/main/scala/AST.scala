@@ -72,6 +72,21 @@ case class WhileExpressionAST(label: Option[String],
                               body: Option[ExpressionAST],
                               els: Option[ExpressionAST])
     extends ExpressionAST
+case class ForLoopExpressionAST(label: Option[String],
+                                gen: GeneratorExpressionAST,
+                                body: Option[ExpressionAST],
+                                els: Option[ExpressionAST])
+    extends ExpressionAST
+case class ForExpressionAST(label: Option[String],
+                            gen: List[GeneratorExpressionAST],
+                            body: ExpressionAST,
+                            els: Option[ExpressionAST])
+    extends ExpressionAST
+case class GeneratorExpressionAST(structure: PatternAST,
+                                  pos: Position,
+                                  iterable: ExpressionAST,
+                                  filter: Option[ExpressionAST])
+    extends ExpressionAST
 case class BreakExpressionAST(pos: Position, label: Option[String], expr: Option[ExpressionAST])
     extends ExpressionAST
 case class ContinueExpressionAST(pos: Position, label: Option[String]) extends ExpressionAST

@@ -9,9 +9,10 @@ object Main extends App {
       |
       |def f(x) = x + b
       |
-      |val {c, d} = {c: 123}
+      |val {c} = {c: 123}
       |
-      |println( c )
+      |;;for i <- [3, 4, 5]
+      |;;  println( i )
     """.stripMargin
   val parser            = new YolaParser
   val ast               = parser.parseFromString(program, parser.source)

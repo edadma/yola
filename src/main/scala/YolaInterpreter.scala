@@ -60,10 +60,12 @@ object YolaInterpreter {
 
       comp(deval(left), comparisons)
     case BlockExpressionAST(stmts) =>
+      val inner = new Scope(scope)
+
       def evals(l: List[StatementAST]): Any = l match {
-        case h :: Nil => apply(h)
+        case h :: Nil => apply(h)(inner)
         case h :: t =>
-          apply(h)
+          apply(h)(inner)
           evals(t)
       }
 
@@ -109,17 +111,21 @@ object YolaInterpreter {
               h.v = h.v.asInstanceOf[Int] - 1
               h.v
           }
-        case _ => problem(pos, "not al l-value")
+        case _ => problem(pos, "not an l-value")
       }
     case WhileExpressionAST(label, cond, body, els) =>
-      while (beval(cond)) body foreach eval
+      while (beval(cond)) {
+        body foreach eval
+      }
+
       els foreach eval
+    case ForExpressionAST(label, gen, body, els) =>
     case ConditionalExpressionAST(cond, els) =>
-      eval(
+      deval(
         cond find { case (c, _) => beval(c) } map { case (_, a) => a } getOrElse (els getOrElse LiteralExpressionAST(
           ())))
     case DotExpressionAST(epos, expr, apos, field) =>
-      eval(expr) match {
+      deval(expr) match {
         case f: (Any => Any) => f(field)
       }
     case BinaryExpressionAST(lpos, left, op, rpos, right) =>
