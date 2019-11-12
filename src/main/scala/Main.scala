@@ -18,6 +18,6 @@ object Main extends App {
   implicit val toplevel = new Scope(null)
 
   toplevel.vars("println") = (args: List[Any]) => println(args map display mkString ", ")
-  YolaInterpreter(ast)
+  println(YolaInterpreter(ast))
 
 }
