@@ -56,10 +56,11 @@ case class AssignmentExpressionAST(lhs: List[(Position, ExpressionAST)],
                                    op: String,
                                    rhs: List[(Position, ExpressionAST)])
     extends ExpressionAST
-case class BlockExpressionAST(l: List[StatementAST])                   extends ExpressionAST
-case class ListExpressionAST(l: List[ExpressionAST])                   extends ExpressionAST
-case class TupleExpressionAST(l: List[ExpressionAST])                  extends ExpressionAST
-case class MapExpressionAST(l: List[(ExpressionAST, ExpressionAST)])   extends ExpressionAST
+case class BlockExpressionAST(l: List[StatementAST])      extends ExpressionAST
+case class ListExpressionAST(l: List[ExpressionAST])      extends ExpressionAST
+case class TupleExpressionAST(elems: List[ExpressionAST]) extends ExpressionAST
+case class MapExpressionAST(MapExpressionAST: List[(ExpressionAST, ExpressionAST)])
+    extends ExpressionAST
 case class OrExpressionAST(left: ExpressionAST, right: ExpressionAST)  extends ExpressionAST
 case class AndExpressionAST(left: ExpressionAST, right: ExpressionAST) extends ExpressionAST
 case class NotExpressionAST(expr: ExpressionAST)                       extends ExpressionAST
@@ -88,4 +89,5 @@ case class TypePatternAST(s: PatternAST, typename: String)                   ext
 case class TuplePatternAST(pos: Position, elems: List[PatternAST])           extends PatternAST
 case class ListPatternAST(pos: Position, elems: List[PatternAST])            extends PatternAST
 case class ConsPatternAST(pos: Position, head: PatternAST, tail: PatternAST) extends PatternAST
+case class MapPatternAST(pos: Position, entries: Set[String])                extends PatternAST
 case class LiteralPatternAST(pos: Position, lit: Any)                        extends PatternAST

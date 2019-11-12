@@ -136,9 +136,17 @@ object YolaInterpreter {
         case None    => problem(pos, s"unknown variable '$name'")
         case Some(v) => v
       }
-    case LiteralExpressionAST(v) => v
-    case TupleExpressionAST(l)   => NTuple(l map deval)
-    case ListExpressionAST(l)    => l map deval
+    case LiteralExpressionAST(v)   => v
+    case TupleExpressionAST(elems) => NTuple(elems map deval)
+    case ListExpressionAST(l)      => l map deval
+    case MapExpressionAST(entries) =>
+      entries map {
+        case (k, v) =>
+          (k match {
+            case VariableExpressionAST(_, key) => key
+            case _                             => deval(k)
+          }) -> deval(v)
+      } toMap
     case ApplyExpressionAST(fpos, f, apos, args, tailrecursive) =>
       val args1 = args map { case (_, e) => deval(e) }
 
@@ -176,8 +184,33 @@ object YolaInterpreter {
       }
   }
 
+  def declare(pos: Position, name: String, value: Any)(implicit scope: Scope) = {
+    duplicate(pos, name)
+    scope.vars(name) = value
+  }
+
   def unify(v: Any, s: PatternAST, errors: Boolean)(implicit scope: Scope): Boolean =
     s match {
+      case MapPatternAST(pos, entries) =>
+        v match {
+          case m: collection.Map[_, _] =>
+            val keySet = m.keySet.asInstanceOf[Set[String]]
+
+            if (entries subsetOf keySet) {
+              for (e <- entries)
+                declare(null, e, m.asInstanceOf[Map[String, Any]](e))
+              true
+            } else if (errors)
+              problem(pos,
+                      s"missing entry: ${entries diff (entries intersect keySet) mkString ", "}")
+            else
+              false
+          case _ =>
+            if (errors)
+              problem(pos, "expected map")
+            else
+              false
+        }
       case LiteralPatternAST(pos, lit) =>
         if (v != lit)
           if (errors)
@@ -187,8 +220,7 @@ object YolaInterpreter {
         else
           true
       case VariablePatternAST(pos, name) =>
-        duplicate(pos, name)
-        scope.vars(name) = v
+        declare(pos, name, v)
         true
       case ListPatternAST(pos, elems) =>
         v match {

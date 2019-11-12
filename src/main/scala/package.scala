@@ -17,7 +17,10 @@ package object yola {
     v match {
       case NTuple(elems)  => elems map display mkString ("(", ", ", ")")
       case elems: List[_] => elems map display mkString ("[", ", ", "]")
-      case _              => String.valueOf(v)
+      case map: collection.Map[_, _] =>
+        map map { case (k, v) => s"${display(k)}: ${display(v)}" } mkString ("{", ", ", "}")
+      case s: String => s"""'${s replace ("'", "\\'")}'"""
+      case _         => String.valueOf(v)
     }
 
 }

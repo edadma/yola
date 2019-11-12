@@ -790,8 +790,8 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
       pos ~ ("(" ~> pattern <~ ",") ~ (rep1sep(pattern, ",") <~ ")") ^^ {
         case p ~ e ~ l => TuplePatternAST(p, e +: l)
       } |
-      pos ~ ("[" ~> repsep(pattern, ",") <~ "]") ^^ { case p ~ l => ListPatternAST(p, l) } |
-      pos ~ "{" ~ "}" ^^ { case p ~ _ ~ _                        => LiteralPatternAST(p, Map()) } |
+      pos ~ ("[" ~> repsep(pattern, ",") <~ "]") ^^ { case p ~ l    => ListPatternAST(p, l) } |
+      pos ~ "{" ~ repsep(ident, ",") ~ "}" ^^ { case p ~ _ ~ es ~ _ => MapPatternAST(p, es.toSet) } |
       "(" ~> pattern <~ ")"
 
 }
