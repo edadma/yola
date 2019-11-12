@@ -9,18 +9,15 @@ object Main extends App {
       |
       |def f(x) = x + b
       |
-      |val [c] = [5, 6]
+      |val [c, d] = [5, 6]
       |
-      |println( [d, c] )
+      |println( "asdf ${[d, c]} wert $a." )
     """.stripMargin
   val parser            = new YolaParser
   val ast               = parser.parseFromString(program, parser.source)
   implicit val toplevel = new Scope(null)
-  val PRINT             = (args: List[Any]) => println(args map display mkString ", ")
 
-  toplevel.vars("println") = PRINT
-//  toplevel.vars("console") = Map("log" -> PRINT)
-//  println(ast)
+  toplevel.vars("println") = (args: List[Any]) => println(args map display mkString ", ")
   YolaInterpreter(ast)
 
 }

@@ -6,15 +6,17 @@ import scala.util.parsing.input.Position
 object YolaInterpreter {
 
   def apply(ast: AST)(implicit scope: Scope): Any = ast match {
-    case SourceAST(stmts)           => stmts foreach apply
-    case DeclarationBlockAST(decls) => decls map apply
-    case ValAST(pat, pos, expr)     => unify(deval(expr), pat, true)
+    case DeclarationBlockAST(decls) =>
+      decls map apply
+      ()
+    case ValAST(pat, pos, expr) =>
+      unify(deval(expr), pat, true)
     case VarAST(pos, name, None) =>
       duplicate(pos, name)
-      scope.vars(name) = Holder(0)
+      scope.vars(name) = Var(0)
     case VarAST(pos, name, Some((pose, exp))) =>
       duplicate(pos, name)
-      scope.vars(name) = Holder(deval(exp))
+      scope.vars(name) = Var(deval(exp))
     case DefAST(pos, name, func) =>
       duplicate(pos, name)
       func.scope = scope
@@ -33,11 +35,12 @@ object YolaInterpreter {
 
   def deref(a: Any) =
     a match {
-      case Holder(v) => v
-      case _         => a
+      case Var(v) => v
+      case _      => a
     }
 
   def eval(expr: ExpressionAST)(implicit scope: Scope): Any = expr match {
+    case InterpolationExpressionAST(es) => es map deval map display mkString
     case ComparisonExpressionAST(pos, left, comparisons) =>
       def comp(left: Any, cs: List[(String, Position, ExpressionAST)]): Boolean =
         cs match {
@@ -80,7 +83,7 @@ object YolaInterpreter {
       (lhs zip rhs.map { case (pr, er) => eval(er) }) map {
         case ((pl, el), v) =>
           eval(el) match {
-            case h: Holder =>
+            case h: Var =>
               op match {
                 case "="  => h.v = v
                 case "+=" => h.v = h.v.asInstanceOf[Int] + v.asInstanceOf[Int]
@@ -91,7 +94,7 @@ object YolaInterpreter {
       }
     case UnaryExpressionAST(op, pos, expr) =>
       eval(expr) match {
-        case h: Holder =>
+        case h: Var =>
           op match {
             case "_++" =>
               val res = h.v
@@ -218,7 +221,7 @@ object YolaInterpreter {
         }
     }
 
-  case class Holder(var v: Any)
+  case class Var(var v: Any)
 }
 
 class Scope(val outer: Scope) {

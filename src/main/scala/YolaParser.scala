@@ -322,9 +322,9 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
             bi
         })
 
-  lazy val source: PackratParser[SourceAST] =
-    Newline ^^^ SourceAST(Nil) |
-      statements ^^ SourceAST
+  lazy val source: PackratParser[BlockExpressionAST] =
+    Newline ^^^ BlockExpressionAST(Nil) |
+      statements ^^ BlockExpressionAST
 
   lazy val statements = rep1(statement)
 
