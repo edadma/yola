@@ -178,6 +178,14 @@ object YolaInterpreter {
 
   def unify(v: Any, s: PatternAST, errors: Boolean)(implicit scope: Scope): Boolean =
     s match {
+      case LiteralPatternAST(pos, lit) =>
+        if (v != lit)
+          if (errors)
+            problem(pos, "literal doesn't match")
+          else
+            false
+        else
+          true
       case VariablePatternAST(pos, name) =>
         duplicate(pos, name)
         scope.vars(name) = v

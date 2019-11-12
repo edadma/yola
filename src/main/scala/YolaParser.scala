@@ -547,7 +547,7 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
                     WhereClauseAST(Nil))
     }
   //		"otherwise" ~> "->" ~> opt(expressionOrBlock) ^^ {
-  //			b => FunctionExpressionAST( List(VariableStructureAST(null, "_")), false, List(FunctionPartExpressionAST(None, b.getOrElse(LiteralExpressionAST(())))), WhereClauseAST(Nil) ) }
+  //			b => FunctionExpressionAST( List(VariablePatternAST(null, "_")), false, List(FunctionPartExpressionAST(None, b.getOrElse(LiteralExpressionAST(())))), WhereClauseAST(Nil) ) }
 
   private lazy val mathSymbols = Set(
     Symbol("+"),
@@ -639,7 +639,7 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
       multiplicativeExpression
 
   lazy val multiplicativeExpression: PackratParser[ExpressionAST] =
-    pos ~ multiplicativeExpression ~ ("*" | "/" | """\""" | "%" | "\\%" | "//" | "mod" | "div" | "rotateright" | "rotateleft" | ">>>" | "<<") ~ pos ~ exponentialExpression ^^ {
+    pos ~ multiplicativeExpression ~ ("*" | "/" | """\""" | "%" | "\\%" | "//" | "mod" | "div" | ">>>" | "<<") ~ pos ~ exponentialExpression ^^ {
       case pl ~ l ~ o ~ pr ~ r => BinaryExpressionAST(pl, l, o, pr, r)
     } |
       pos ~ multiplicativeExpression ~ pos ~ applyExpression ^^ {
@@ -688,17 +688,15 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
       } |
 //      pos ~ applyExpression ~ ("." ~> pos) ~ (ident|stringLit) ^^ {
 //        case fp ~ e ~ ap ~ f => DotExpressionAST( fp, e, ap, Symbol(f) ) } |
-//      pos ~ applyExpression ~ ("[" ~> pos) ~ (expression <~ "]") ^^ {
-//        case fp ~ f ~ ap ~ arg => BracketExpressionAST( fp, f, ap, arg ) } |
       primaryExpression
-//
-//  lazy val mapEntry = keyExpression ~ (":" ~> expression) ^^ {
-//    case VariableExpressionAST( _, k, _ ) ~ v => LiteralExpressionAST( k ) -> v
-//    case k ~ v => (k, v)
-//  }
-//
-//  lazy val keyExpression = rangeExpression
-//
+
+  lazy val mapEntry = keyExpression ~ (":" ~> expression) ^^ {
+    case VariableExpressionAST(_, k) ~ v => LiteralExpressionAST(k) -> v
+    case k ~ v                           => (k, v)
+  }
+
+  lazy val keyExpression = additiveExpression
+
 //  lazy val comprehension: PackratParser[ComprehensionAST] = (consExpression <~ "|") ~ generators ^^ { case e ~ g => ComprehensionAST( e, g ) }
 
   lazy val primaryExpression: PackratParser[ExpressionAST] =
@@ -736,17 +734,15 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
 //        case p ~ e ~ o =>
 //          val s = Symbol(o)
 //
-//          LeftSectionExpressionAST( p, e, FunctionExpressionAST("$" + p.toString, p, List(VariableStructureAST(p, "$", "$")), false, List(FunctionPartExpressionAST(None, BinaryExpressionAST(null, e, s, lookup(s), p, VariableExpressionAST(null, "$", "$")))), WhereClauseAST(Nil)), s, lookup(s) )} |
+//          LeftSectionExpressionAST( p, e, FunctionExpressionAST("$" + p.toString, p, List(VariablePatternAST(p, "$", "$")), false, List(FunctionPartExpressionAST(None, BinaryExpressionAST(null, e, s, lookup(s), p, VariableExpressionAST(null, "$", "$")))), WhereClauseAST(Nil)), s, lookup(s) )} |
 //      "(" ~> infix ~ pos ~ applyExpression <~ ")" ^^ {
 //        case o ~ p ~ e =>
 //          val s = Symbol(o)
 //
-//          RightSectionExpressionAST( s, lookup(s), p, e, FunctionExpressionAST("$" + p.toString, p, List(VariableStructureAST(p, "$", "$")), false, List(FunctionPartExpressionAST(None, BinaryExpressionAST(p, VariableExpressionAST(null, "$", "$"), s, lookup(s), null, e))), WhereClauseAST(Nil)) )} |
+//          RightSectionExpressionAST( s, lookup(s), p, e, FunctionExpressionAST("$" + p.toString, p, List(VariablePatternAST(p, "$", "$")), false, List(FunctionPartExpressionAST(None, BinaryExpressionAST(p, VariableExpressionAST(null, "$", "$"), s, lookup(s), null, e))), WhereClauseAST(Nil)) )} |
       ("true" | "false") ^^ (b => LiteralExpressionAST(b.toBoolean)) |
 //      "(" ~ ")" ^^^ LiteralExpressionAST( () ) |
       "null" ^^^ LiteralExpressionAST(null) |
-//      "{" ~ "}" ^^^ LiteralExpressionAST( Set() ) |
-//      "{" ~ ":" ~ "}" ^^^ LiteralExpressionAST( Map() ) |
       pos ~ ident ^^ { case p ~ n => VariableExpressionAST(p, n) } |
       "[" ~ "]" ^^^ LiteralExpressionAST(Nil) |
       "[" ~> rep1sep(expression, ",") <~ "]" ^^ { l =>
@@ -756,9 +752,7 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
       ("(" ~> expression <~ ",") ~ (rep1sep(expression, ",") <~ ")") ^^ {
         case e ~ l => TupleExpressionAST(e +: l)
       } |
-//      "{" ~> repsep(keyExpression, ",") <~ "}" ^^ SetExpressionAST |
-//      "{" ~> rep1sep(mapEntry, ",") <~ "}" ^^ MapExpressionAST |
-//      "{" ~> comprehension <~ "}" ^^ SetComprehensionExpressionAST |
+      "{" ~> repsep(mapEntry, ",") <~ "}" ^^ MapExpressionAST |
 //      "$" ~> pos ~ ident ^^ {
 //        case p ~ n => SysvarExpressionAST( p, n ) } |
       "(" ~> expression <~ ")"
@@ -768,38 +762,36 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
       "mod" | "div" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "in" | "not" ~ "in" ^^^ "notin" |
       ":" //todo: add support for ranges
 
-  lazy val pattern: PackratParser[PatternAST] = //altStructure
+  lazy val pattern: PackratParser[PatternAST] = //altPattern
 
-//  lazy val altStructure: PackratParser[StructureAST] =
-//    (altStructure <~ "|") ~ rep1sep(altStructure, "|") ^^ { case e ~ l => AlternationStructureAST( e +: l ) } |
-//      namedStructure
+//  lazy val altPattern: PackratParser[PatternAST] =
+//    (altPattern <~ "|") ~ rep1sep(altPattern, "|") ^^ { case e ~ l => AlternationPatternAST( e +: l ) } |
+//      namedPattern
 //
-//  lazy val namedStructure: PackratParser[StructureAST] =
-//    pos ~ (ident <~ "@") ~ typeStructure ^^ { case p ~ name ~ pat => NamedStructureAST( p, name, pat ) } |
-//      typeStructure
+//  lazy val namedPattern: PackratParser[PatternAST] =
+//    pos ~ (ident <~ "@") ~ typePattern ^^ { case p ~ name ~ pat => NamedPatternAST( p, name, pat ) } |
+//      typePattern
 //
-//  lazy val typeStructure: PackratParser[StructureAST] =
-//    consStructure ~ ("::" ~> ident) ^^ { case pat ~ typename => TypeStructureAST( pat, typename ) } |
-//      consStructure
+//  lazy val typePattern: PackratParser[PatternAST] =
+//    consPattern ~ ("::" ~> ident) ^^ { case pat ~ typename => TypePatternAST( pat, typename ) } |
+//      consPattern
 //
-//  lazy val consStructure: PackratParser[StructureAST] =
-//    pos ~ primaryStructure ~ (":" ~> consStructure) ^^ { case p ~ h ~ t => ConsStructureAST( p, h, t ) } |
-    primaryStructure
+//  lazy val consPattern: PackratParser[PatternAST] =
+//    pos ~ primaryPattern ~ (":" ~> consPattern) ^^ { case p ~ h ~ t => ConsPatternAST( p, h, t ) } |
+    primaryPattern
 
-  lazy val primaryStructure: PackratParser[PatternAST] =
-//    number ^^ LiteralStructureAST |
-//      stringLit ^^ LiteralStructureAST |
-//      "undefined" ^^^ LiteralStructureAST( undefined ) |
-//      "(" ~ ")" ^^^ LiteralStructureAST( () ) |
-//      "null" ^^^ LiteralStructureAST( null ) |
-//      pos ~ ident ~ ("(" ~> rep1sep(structure, ",") <~ ")") ^^ { case p ~ n ~ l => RecordStructureAST( p, n, l.toVector ) } |
-    pos ~ ident ^^ { case p ~ n => VariablePatternAST(p, n) } |
+  lazy val primaryPattern: PackratParser[PatternAST] =
+    pos ~ number ^^ { case p ~ l          => LiteralPatternAST(p, l) } |
+      pos ~ stringLit ^^ { case p ~ l     => LiteralPatternAST(p, l) } |
+      pos ~ "(" ~ ")" ^^ { case p ~ _ ~ _ => LiteralPatternAST(p, ()) } |
+      pos ~ "null" ^^ { case p ~ _        => LiteralPatternAST(p, null) } |
+//      pos ~ ident ~ ("(" ~> rep1sep(structure, ",") <~ ")") ^^ { case p ~ n ~ l => RecordPatternAST( p, n, l.toVector ) } |
+      pos ~ ident ^^ { case p ~ n => VariablePatternAST(p, n) } |
       pos ~ ("(" ~> pattern <~ ",") ~ (rep1sep(pattern, ",") <~ ")") ^^ {
         case p ~ e ~ l => TuplePatternAST(p, e +: l)
       } |
-//      "[" ~ "]" ^^^ NilStructureAST |
       pos ~ ("[" ~> repsep(pattern, ",") <~ "]") ^^ { case p ~ l => ListPatternAST(p, l) } |
-//      "{" ~ "}" ^^^ LiteralStructureAST( Set() ) |
+      pos ~ "{" ~ "}" ^^ { case p ~ _ ~ _                        => LiteralPatternAST(p, Map()) } |
       "(" ~> pattern <~ ")"
 
 }

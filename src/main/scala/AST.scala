@@ -88,4 +88,4 @@ case class TypePatternAST(s: PatternAST, typename: String)                   ext
 case class TuplePatternAST(pos: Position, elems: List[PatternAST])           extends PatternAST
 case class ListPatternAST(pos: Position, elems: List[PatternAST])            extends PatternAST
 case class ConsPatternAST(pos: Position, head: PatternAST, tail: PatternAST) extends PatternAST
-case object NilPatternAST                                                    extends PatternAST
+case class LiteralPatternAST(pos: Position, lit: Any)                        extends PatternAST
