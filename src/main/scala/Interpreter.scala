@@ -3,7 +3,7 @@ package xyz.hyperreal.yola
 import scala.collection.mutable
 import scala.util.parsing.input.Position
 
-object YolaInterpreter {
+object Interpreter {
 
   def apply(ast: AST)(implicit scope: Scope): Any = ast match {
     case DeclarationBlockAST(decls) =>
@@ -113,6 +113,8 @@ object YolaInterpreter {
           }
         case _ => problem(pos, "not an l-value")
       }
+    case RepeatExpressionAST(label, body) =>
+      while (true) eval(body)
     case WhileExpressionAST(label, cond, body, els) =>
       while (beval(cond)) {
         body foreach eval

@@ -14,11 +14,11 @@ object Main extends App {
       |;;for i <- [3, 4, 5]
       |;;  println( i )
     """.stripMargin
-  val parser            = new YolaParser
+  val parser            = new YParser
   val ast               = parser.parseFromString(program, parser.source)
   implicit val toplevel = new Scope(null)
 
   toplevel.vars("println") = (args: List[Any]) => println(args map display mkString ", ")
-  println(YolaInterpreter(ast))
+  println(Interpreter(ast))
 
 }

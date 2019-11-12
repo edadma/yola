@@ -23,7 +23,7 @@ class YolaLexical
                                true,
                                List("{", "[", "("),
                                List("}", "]", ")"),
-                               ";;",
+                               "//",
                                "/*",
                                "*/") {
 
@@ -36,7 +36,7 @@ class YolaLexical
   override def whitespace: Parser[Any] = rep[Any](
     whitespaceChar
       | '/' ~ '*' ~ comment
-      | ';' ~ ';' ~ rep(chrExcept(EofCh, '\n'))
+      | '/' ~ '/' ~ rep(chrExcept(EofCh, '\n'))
       | '/' ~ '*' ~ failure("unclosed comment")
   )
 
@@ -219,7 +219,6 @@ class YolaLexical
     "-",
     "/",
     "\\",
-    "//",
     "%",
     "^",
     "(",
@@ -236,7 +235,6 @@ class YolaLexical
     ">",
     "<=",
     ">=",
-    "\\?",
     ":",
     "->",
     ".",
@@ -259,20 +257,14 @@ class YolaLexical
     "--=",
     "*=",
     "/=",
-    "//=",
-    "\\=",
     "^=",
-    "?=",
     "++",
     "--",
-    "<:=",
-    ">:=",
-    "...",
-    "\\\\" //todo: implement limiting generation (pg. 115) (as \\ since \ is integer division and we don't want "limit" to be a keyword for energize
+    "..."
   )
 }
 
-class YolaParser extends StandardTokenParsers with PackratParsers {
+class YParser extends StandardTokenParsers with PackratParsers {
 
   import Interpolation._
 
@@ -505,8 +497,9 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
       opt(ident <~ ":") ~ ("while" ~> expression) ~ opt("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
         case l ~ c ~ b ~ e => WhileExpressionAST(l, c, b, e)
       } |
-//      opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
-//        case l ~ b => RepeatExpressionAST( l, b ) } |
+      opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
+        case l ~ b => RepeatExpressionAST(l, b)
+      } |
       functionExpression
 
   lazy val elsePart: PackratParser[Option[ExpressionAST]] = opt(onl ~> "else" ~> expressionOrBlock)
@@ -716,7 +709,8 @@ class YolaParser extends StandardTokenParsers with PackratParsers {
                 case INTERPOLATION_VARIABLE =>
                   buf.append(VariableExpressionAST(p, m.group(1)))
                 case INTERPOLATION_EXPRESSION =>
-                  val parser = new YolaParser
+                  val parser = new YParser
+
                   buf += parser
                     .parseFromString(m.group(1), parser.expressionStatement)
                     .asInstanceOf[ExpressionAST]
