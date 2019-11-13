@@ -5,7 +5,9 @@ object Main extends App {
   import Testing._
 
   println(runCapture("""
-                       |println( 3::[] )
+                       |val a :: b = [3, 4]
+                       |
+                       |println( a, b )
                        |""".stripMargin))
 
 }

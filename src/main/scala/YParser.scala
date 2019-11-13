@@ -703,10 +703,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
 //  lazy val generateDefinedExpression: PackratParser[ExpressionAST] =
 //    "!" ~> pos ~ applyExpression ^^ {
 //      case p ~ c => GenerateExpressionAST( p, c ) } |
-//      "\\" ~> applyExpression ^^ DefinedExpressionAST |
-//      "\\?" ~> applyExpression ^^ DefinedOptionExpressionAST |
-//      "/" ~> applyExpression ^^ UndefinedExpressionAST |
-  applyExpression
+//  applyExpression
 
   lazy val applyExpression: PackratParser[ExpressionAST] =
     pos ~ applyExpression ~ pos ~ ("(" ~> repsep(pos ~ expression, ",") <~ ")") ^^ {

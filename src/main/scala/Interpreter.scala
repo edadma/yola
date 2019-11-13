@@ -271,6 +271,16 @@ object Interpreter {
             else
               false
         }
+      case ConsPatternAST(pos, head, tail) =>
+        v match {
+          case h :: t =>
+            unify(h, head, errors) && unify(t, tail, errors)
+          case _ =>
+            if (errors)
+              problem(pos, "expected list")
+            else
+              false
+        }
       case TuplePatternAST(pos, elems) =>
         v match {
           case NTuple(elems2) =>
