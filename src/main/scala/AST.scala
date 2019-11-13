@@ -71,6 +71,7 @@ case class WhileExpressionAST(label: Option[String],
                               cond: ExpressionAST,
                               body: Option[ExpressionAST],
                               els: Option[ExpressionAST])
+    extends ExpressionAST
 case class RepeatExpressionAST(label: Option[String], body: ExpressionAST) extends ExpressionAST
 case class ForLoopExpressionAST(label: Option[String],
                                 gen: GeneratorExpressionAST,
@@ -106,3 +107,4 @@ case class ListPatternAST(pos: Position, elems: List[PatternAST])            ext
 case class ConsPatternAST(pos: Position, head: PatternAST, tail: PatternAST) extends PatternAST
 case class MapPatternAST(pos: Position, entries: Set[String])                extends PatternAST
 case class LiteralPatternAST(pos: Position, lit: Any)                        extends PatternAST
+case class AlternationPatternAST(pos: Position, alts: List[PatternAST])      extends PatternAST

@@ -15,12 +15,17 @@ package object yola {
 
   def display(v: Any): String =
     v match {
-      case NTuple(elems)  => elems map display mkString ("(", ", ", ")")
-      case elems: List[_] => elems map display mkString ("[", ", ", "]")
+      case NTuple(elems)  => elems map quotedDisplay mkString ("(", ", ", ")")
+      case elems: List[_] => elems map quotedDisplay mkString ("[", ", ", "]")
       case map: collection.Map[_, _] =>
-        map map { case (k, v) => s"${display(k)}: ${display(v)}" } mkString ("{", ", ", "}")
+        map map { case (k, v) => s"${quotedDisplay(k)}: ${quotedDisplay(v)}" } mkString ("{", ", ", "}")
+      case _ => String.valueOf(v)
+    }
+
+  def quotedDisplay(v: Any): String =
+    v match {
       case s: String => s"""'${s replace ("'", "\\'")}'"""
-      case _         => String.valueOf(v)
+      case _         => display(v)
     }
 
 }

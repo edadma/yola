@@ -198,6 +198,22 @@ object Interpreter {
 
   def unify(v: Any, s: PatternAST, errors: Boolean)(implicit scope: Scope): Boolean =
     s match {
+      case AlternationPatternAST(pos, alts) =>
+        def alternate(as: List[PatternAST]): Boolean =
+          as match {
+            case Nil =>
+              if (errors)
+                problem(pos, "none of the alternatives match")
+              else
+                false
+            case h :: t =>
+              if (unify(v, h, false))
+                true
+              else
+                alternate(t)
+          }
+
+        alternate(alts)
       case MapPatternAST(pos, entries) =>
         v match {
           case m: collection.Map[_, _] =>

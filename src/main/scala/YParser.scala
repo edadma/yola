@@ -487,20 +487,21 @@ class YParser extends StandardTokenParsers with PackratParsers {
     } |
       constructExpression
 
-  lazy val constructExpression: PackratParser[ExpressionAST] =
-    "if" ~> expression ~ ("then" ~> expressionOrBlock | blockExpression) ~ rep(elif) ~ elsePart ^^ {
-      case c ~ t ~ ei ~ e => ConditionalExpressionAST((c, t) +: ei, e)
+  lazy val constructExpression
+    : PackratParser[ExpressionAST] = "if" ~> expression ~ ("then" ~> expressionOrBlock | blockExpression) ~ rep(
+    elif) ~ elsePart ^^ {
+    case c ~ t ~ ei ~ e => ConditionalExpressionAST((c, t) +: ei, e)
+  } |
+    opt(ident <~ ":") ~ ("for" ~> generators) ~ ("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
+      case l ~ g ~ b ~ e => ForExpressionAST(l, g, b, e)
     } |
-      opt(ident <~ ":") ~ ("for" ~> generators) ~ ("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
-        case l ~ g ~ b ~ e => ForExpressionAST(l, g, b, e)
-      } |
-      opt(ident <~ ":") ~ ("while" ~> expression) ~ opt("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
-        case l ~ c ~ b ~ e => WhileExpressionAST(l, c, b, e)
-      } |
-      opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
-        case l ~ b => RepeatExpressionAST(l, b)
-      } |
-      functionExpression
+    opt(ident <~ ":") ~ ("while" ~> expression) ~ opt("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
+      case l ~ c ~ b ~ e => WhileExpressionAST(l, c, b, e)
+    } |
+    opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
+      case l ~ b => RepeatExpressionAST(l, b)
+    } |
+    functionExpression
 
   lazy val elsePart: PackratParser[Option[ExpressionAST]] = opt(onl ~> "else" ~> expressionOrBlock)
 
@@ -758,12 +759,14 @@ class YParser extends StandardTokenParsers with PackratParsers {
       "mod" | "div" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "in" | "not" ~ "in" ^^^ "notin" |
       ":" //todo: add support for ranges
 
-  lazy val pattern: PackratParser[PatternAST] = //altPattern
+  lazy val pattern: PackratParser[PatternAST] = altPattern
 
-//  lazy val altPattern: PackratParser[PatternAST] =
-//    (altPattern <~ "|") ~ rep1sep(altPattern, "|") ^^ { case e ~ l => AlternationPatternAST( e +: l ) } |
-//      namedPattern
-//
+  lazy val altPattern: PackratParser[PatternAST] =
+    pos ~ (altPattern <~ "|") ~ rep1sep(altPattern, "|") ^^ {
+      case p ~ e ~ l => AlternationPatternAST(p, e +: l)
+    } |
+      primaryPattern //namedPattern
+
 //  lazy val namedPattern: PackratParser[PatternAST] =
 //    pos ~ (ident <~ "@") ~ typePattern ^^ { case p ~ name ~ pat => NamedPatternAST( p, name, pat ) } |
 //      typePattern
@@ -774,7 +777,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
 //
 //  lazy val consPattern: PackratParser[PatternAST] =
 //    pos ~ primaryPattern ~ (":" ~> consPattern) ^^ { case p ~ h ~ t => ConsPatternAST( p, h, t ) } |
-    primaryPattern
+//  primaryPattern
 
   lazy val primaryPattern: PackratParser[PatternAST] =
     pos ~ number ^^ { case p ~ l          => LiteralPatternAST(p, l) } |

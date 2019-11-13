@@ -4,15 +4,9 @@ object Main extends App {
 
   val program =
     """
-      |var a = 3
-      |var b = 4
+      |val (3|4, a) = (5, 4)
       |
-      |def f(x) = x + b
-      |
-      |println( f(a) )
-      |
-      |;;for i <- [3, 4, 5]
-      |;;  println( i )
+      |println( a )
     """.stripMargin
   val parser            = new YParser
   val ast               = parser.parseFromString(program, parser.source)
