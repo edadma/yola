@@ -258,7 +258,8 @@ class YolaLexical
     "^=",
     "++",
     "--",
-    "..."
+    "...",
+    "::"
   )
 }
 
@@ -777,8 +778,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
       "(" ~ ")" ^^^ LiteralExpressionAST(()) |
       "null" ^^^ LiteralExpressionAST(null) |
       pos ~ ident ^^ { case p ~ n => VariableExpressionAST(p, n) } |
-      "[" ~ "]" ^^^ LiteralExpressionAST(Nil) |
-      "[" ~> rep1sep(expression, ",") <~ "]" ^^ { l =>
+      "[" ~> repsep(expression, ",") <~ "]" ^^ { l =>
         ListExpressionAST(l)
       } |
 //      "[" ~> comprehension <~ "]" ^^ ListComprehensionExpressionAST |

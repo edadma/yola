@@ -7,6 +7,13 @@ object LanguageTests extends TestSuite {
   import Testing._
 
   val tests = Tests {
+    test("values") {
+      assert(runResult("[]") == Nil)
+      assert(runResult("3::[]") == List(3))
+      assert(runResult("3::4::[]") == List(3, 4))
+      assert(runResult("3::4::[5]") == List(3, 4, 5))
+    }
+
     test("arithmetic") {
       assert(runResult("1 + 2") == 3)
     }

@@ -5,7 +5,7 @@ object Main extends App {
   import Testing._
 
   println(runCapture("""
-                       |println( () )
+                       |println( 3::[] )
                        |""".stripMargin))
 
 }

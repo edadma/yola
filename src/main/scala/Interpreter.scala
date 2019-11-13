@@ -155,6 +155,8 @@ object Interpreter {
       } toMap
     case ApplyExpressionAST(fpos, f, apos, args, tailrecursive) =>
       call(fpos, deval(f), apos, args map { case (_, e) => deval(e) })
+    case ConsExpressionAST(lpos, left, rpos, right) =>
+      deval(left) :: deval(right).asInstanceOf[List[Any]]
   }
 
   def call(fpos: Position, f: Any, apos: Position, args: List[Any]) =
