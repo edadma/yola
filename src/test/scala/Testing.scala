@@ -11,11 +11,14 @@ object Testing {
     implicit val toplevel = new Scope(null)
     val out               = new StringBuilder
 
-    def output(a: Any) = out ++= a.toString
+    def output(a: Any) = {
+      out ++= a.toString
+      out += '\n'
+    }
 
     toplevel.vars("println") = (args: List[Any]) => output(args map display mkString ", ")
     Interpreter(ast)
-    out.toString
+    out.toString.trim
   }
 
   def runResult(snippet: String) = {

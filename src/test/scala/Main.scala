@@ -4,6 +4,8 @@ object Main extends App {
 
   import Testing._
 
-  println(runCapture("println(1+2)"))
+  println(runCapture("""
+                       |println( () )
+                       |""".stripMargin))
 
 }

@@ -738,7 +738,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
 //
 //          RightSectionExpressionAST( s, lookup(s), p, e, FunctionExpressionAST("$" + p.toString, p, List(VariablePatternAST(p, "$", "$")), false, List(FunctionPartExpressionAST(None, BinaryExpressionAST(p, VariableExpressionAST(null, "$", "$"), s, lookup(s), null, e))), WhereClauseAST(Nil)) )} |
       ("true" | "false") ^^ (b => LiteralExpressionAST(b.toBoolean)) |
-//      "(" ~ ")" ^^^ LiteralExpressionAST( () ) |
+      "(" ~ ")" ^^^ LiteralExpressionAST(()) |
       "null" ^^^ LiteralExpressionAST(null) |
       pos ~ ident ^^ { case p ~ n => VariableExpressionAST(p, n) } |
       "[" ~ "]" ^^^ LiteralExpressionAST(Nil) |
