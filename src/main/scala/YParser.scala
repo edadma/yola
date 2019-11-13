@@ -188,7 +188,6 @@ class YolaLexical
     "continue",
     "return",
     "do",
-    "fail",
     "yield",
     "repeat",
     "by",
@@ -209,8 +208,7 @@ class YolaLexical
     "module", //todo: implement module system similar to Modula
     "null",
     "true",
-    "false",
-    "undefined"
+    "false"
   )
 
   delimiters ++= List(
@@ -718,9 +716,6 @@ class YParser extends StandardTokenParsers with PackratParsers {
       pos ~ applyExpression ~ ("." ~> pos) ~ (ident | stringLit) ^^ {
         case fp ~ e ~ ap ~ f => DotExpressionAST(fp, e, ap, f)
       } |
-      pos ~ applyExpression ~ ("." ~> pos) ~ (ident | stringLit) ^^ {
-        case fp ~ e ~ ap ~ f => DotExpressionAST(fp, e, ap, f)
-      } |
       primaryExpression
 
   lazy val mapEntry = keyExpression ~ (":" ~> expression) ^^ {
@@ -758,7 +753,6 @@ class YParser extends StandardTokenParsers with PackratParsers {
           } else
             LiteralExpressionAST(s)
       } |
-//      "undefined" ^^^ LiteralExpressionAST( undefined ) |
 //      "(" ~> infix <~ ")" ^^ {
 //        o =>
 //          val s = Symbol(o)
@@ -789,9 +783,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
       "(" ~> expression <~ ")"
 
   lazy val infix =
-    "+" | "-" | "*" | "/" | """\""" | "\\%" | "//" | "^" | "%" |
+    "+" | "-" | "*" | "/" | """\""" | "\\%" | "^" | "%" |
       "mod" | "div" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "in" | "not" ~ "in" ^^^ "notin" |
-      ":" //todo: add support for ranges
+      "::" //todo: add support for ranges
 
   lazy val pattern: PackratParser[PatternAST] = altPattern
 

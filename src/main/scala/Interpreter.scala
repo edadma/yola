@@ -157,6 +157,9 @@ object Interpreter {
       call(fpos, deval(f), apos, args map { case (_, e) => deval(e) })
     case ConsExpressionAST(lpos, left, rpos, right) =>
       deval(left) :: deval(right).asInstanceOf[List[Any]]
+    case AndExpressionAST(left, right) => beval(left) && beval(right)
+    case OrExpressionAST(left, right)  => beval(left) || beval(right)
+    case NotExpressionAST(cond)        => !beval(cond)
   }
 
   def call(fpos: Position, f: Any, apos: Position, args: List[Any]) =
