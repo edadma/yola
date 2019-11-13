@@ -51,6 +51,19 @@ case class BinaryExpressionAST(lpos: Position,
                                rpos: Position,
                                right: ExpressionAST)
     extends ExpressionAST
+case class RangeExpressionAST(fpos: Position,
+                              f: ExpressionAST,
+                              tpos: Position,
+                              t: ExpressionAST,
+                              bpos: Position,
+                              b: ExpressionAST,
+                              inclusive: Boolean)
+    extends ExpressionAST
+case class ConsExpressionAST(lpos: Position,
+                             left: ExpressionAST,
+                             rpos: Position,
+                             right: ExpressionAST)
+    extends ExpressionAST
 case class UnaryExpressionAST(op: String, pos: Position, expr: ExpressionAST) extends ExpressionAST
 case class AssignmentExpressionAST(lhs: List[(Position, ExpressionAST)],
                                    op: String,
