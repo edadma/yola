@@ -5,9 +5,9 @@ object Main extends App {
   import Testing._
 
   println(runCapture("""
-                       |val a :: b = [3, 4]
+                       |val a :: (x@b :: c :: []) = [3, 4, 5]
                        |
-                       |println( a, b )
+                       |println( a, b, c, x )
                        |""".stripMargin))
 
 }

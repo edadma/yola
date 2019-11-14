@@ -14,6 +14,18 @@ object LanguageTests extends TestSuite {
       assert(runResult("3::4::[5]") == List(3, 4, 5))
     }
 
+    test("destructuring") {
+      assert(
+        runCapture("""
+                     |val a :: (x@b :: c :: []) = [3, 4, 5]
+                     |
+                     |println( a, b, c, x )
+                     |""".stripMargin) ==
+          """
+            |3, 4, 5, [4, 5]
+            |""".stripMargin.trim)
+    }
+
     test("arithmetic") {
       assert(runResult("1 + 2") == 3)
     }

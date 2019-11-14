@@ -271,6 +271,12 @@ object Interpreter {
             else
               false
         }
+      case NamedPatternAST(pos, alias, pat) =>
+        if (unify(v, pat, errors)) {
+          declare(pos, alias, v)
+          true
+        } else
+          false
       case ConsPatternAST(pos, head, tail) =>
         v match {
           case h :: t =>
