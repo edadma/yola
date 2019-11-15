@@ -31,6 +31,8 @@ object Interpreter {
 
   def beval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[Boolean]
 
+  def ieval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[Iterable[Any]]
+
   def deref(a: Any) =
     a match {
       case Var(v) => v
@@ -122,6 +124,22 @@ object Interpreter {
 
       els foreach eval
     case ForExpressionAST(label, gen, body, els) =>
+      def foreach(gs: List[GeneratorExpressionAST], outer: Scope): Unit =
+        gs match {
+          case Nil => deval(body)(outer)
+          case GeneratorExpressionAST(pattern, pos, iterable, filter) :: tail =>
+            ieval(iterable).foreach(v => {
+              val inner = new Scope(outer)
+
+              unify(v, pattern, true)(inner)
+
+              if (!filter.isDefined || beval(filter.get)(inner))
+                foreach(tail, inner)
+            })
+        }
+
+      foreach(gen, scope)
+      els foreach eval
     case ConditionalExpressionAST(cond, els) =>
       deval(
         cond find { case (c, _) => beval(c) } map { case (_, a) => a } getOrElse (els getOrElse LiteralExpressionAST(
@@ -136,10 +154,11 @@ object Interpreter {
 
       op match {
         case "+" => l.asInstanceOf[Int] + r.asInstanceOf[Int]
+        case "%" => l.asInstanceOf[Int] % r.asInstanceOf[Int]
       }
     case VariableExpressionAST(pos, name) =>
       scope get name match {
-        case None    => problem(pos, s"unknown variable '$name'")
+        case None    => problem(pos, s"undeclared variable '$name'")
         case Some(v) => v
       }
     case LiteralExpressionAST(v)   => v
@@ -157,6 +176,15 @@ object Interpreter {
       call(fpos, deval(f), apos, args map { case (_, e) => deval(e) })
     case ConsExpressionAST(lpos, left, rpos, right) =>
       deval(left) :: deval(right).asInstanceOf[List[Any]]
+    case RangeExpressionAST(fpos, from, tpos, to, bpos, by, incl) =>
+      val start = deval(from).asInstanceOf[Int]
+      val end   = deval(to).asInstanceOf[Int]
+      val step  = deval(by).asInstanceOf[Int]
+
+      if (incl)
+        start to end by step
+      else
+        start until end by step
     case AndExpressionAST(left, right) => beval(left) && beval(right)
     case OrExpressionAST(left, right)  => beval(left) || beval(right)
     case NotExpressionAST(cond)        => !beval(cond)

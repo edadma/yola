@@ -492,6 +492,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
     opt(ident <~ ":") ~ ("for" ~> generators) ~ ("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
       case l ~ g ~ b ~ e => ForExpressionAST(l, g, b, e)
     } |
+    opt(ident <~ ":") ~ (("for" ~ Indent) ~> generators) ~ ((statements ^^ BlockExpressionAST) <~ Dedent) ~ elsePart ^^ {
+      case l ~ g ~ b ~ e => ForExpressionAST(l, g, b, e)
+    } |
     opt(ident <~ ":") ~ ("while" ~> expression) ~ opt("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
       case l ~ c ~ b ~ e => WhileExpressionAST(l, c, b, e)
     } |
@@ -506,11 +509,11 @@ class YParser extends StandardTokenParsers with PackratParsers {
     case c ~ t => (c, t)
   }
 
-  lazy val generator = (pattern <~ "<-") ~ pos ~ expression ~ opt("if" ~> logicalExpression) ^^ {
+  lazy val generator = (pattern <~ "<-") ~ pos ~ expression ~ opt((onl ~ "if") ~> logicalExpression) ^^ {
     case s ~ p ~ t ~ f => GeneratorExpressionAST(s, p, t, f)
   }
 
-  lazy val generators = rep1sep(generator, ",")
+  lazy val generators = rep1sep(generator, ";" | nl)
 
   lazy val lvalueExpression = applyExpression //generateDefinedExpression
 

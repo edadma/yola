@@ -52,12 +52,12 @@ case class BinaryExpressionAST(lpos: Position,
                                right: ExpressionAST)
     extends ExpressionAST
 case class RangeExpressionAST(fpos: Position,
-                              f: ExpressionAST,
+                              from: ExpressionAST,
                               tpos: Position,
-                              t: ExpressionAST,
+                              to: ExpressionAST,
                               bpos: Position,
-                              b: ExpressionAST,
-                              inclusive: Boolean)
+                              by: ExpressionAST,
+                              incl: Boolean)
     extends ExpressionAST
 case class ConsExpressionAST(lpos: Position,
                              left: ExpressionAST,
@@ -96,7 +96,7 @@ case class ForExpressionAST(label: Option[String],
                             body: ExpressionAST,
                             els: Option[ExpressionAST])
     extends ExpressionAST
-case class GeneratorExpressionAST(structure: PatternAST,
+case class GeneratorExpressionAST(pattern: PatternAST,
                                   pos: Position,
                                   iterable: ExpressionAST,
                                   filter: Option[ExpressionAST])

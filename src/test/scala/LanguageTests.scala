@@ -38,6 +38,20 @@ object LanguageTests extends TestSuite {
                           |""".stripMargin) == "4")
     }
 
+    test("for") {
+      assert(
+        runCapture("""
+                     |for i <- 1..4 if i%2 == 0; j <- 5..8 if j%2 == 1
+                     |  println( i, j )
+                     |""".stripMargin) ==
+          """
+            |2, 5
+            |2, 7
+            |4, 5
+            |4, 7
+            |""".stripMargin.trim)
+    }
+
     test("lexical scope") {
       assert(
         runCapture("""
