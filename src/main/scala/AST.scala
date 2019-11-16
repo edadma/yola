@@ -96,6 +96,7 @@ case class WhileExpressionAST(label: Option[String],
 case class RepeatExpressionAST(label: Option[String], body: ExpressionAST) extends ExpressionAST
 case class ForYieldExpressionAST(gen: List[GeneratorExpressionAST], body: ExpressionAST)
     extends ExpressionAST
+case class TypeExpressionAST(expr: ExpressionAST, typ: String) extends ExpressionAST
 case class ForExpressionAST(label: Option[String],
                             gen: List[GeneratorExpressionAST],
                             body: ExpressionAST,

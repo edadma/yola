@@ -564,8 +564,10 @@ class YParser extends StandardTokenParsers with PackratParsers {
       pos ~ alternationExpression ~ ("in" | "not" ~ "in" ^^^ "notin") ~ pos ~ alternationExpression ^^ {
         case pl ~ l ~ op ~ pr ~ r => BinaryExpressionAST(pl, l, op, pr, r)
       } |
-//      alternationExpression ~ "is" ~ ident ^^ { case e ~ _ ~ t => TypeExpressionAST( e, t ) } |
-//      alternationExpression ~ ("is" ~> "not" ~> ident) ^^ { case e ~ t => NotExpressionAST( TypeExpressionAST(e, t) ) } |
+      alternationExpression ~ "is" ~ ident ^^ { case e ~ _ ~ t => TypeExpressionAST(e, t) } |
+      alternationExpression ~ ("is" ~> "not" ~> ident) ^^ {
+        case e ~ t => NotExpressionAST(TypeExpressionAST(e, t))
+      } |
       alternationExpression
 
   lazy val alternationExpression: PackratParser[ExpressionAST] =
