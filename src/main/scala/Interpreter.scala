@@ -40,6 +40,7 @@ object Interpreter {
     }
 
   def eval(expr: ExpressionAST)(implicit scope: Scope): Any = expr match {
+    case SectionExpressionAST(op)       =>
     case InterpolationExpressionAST(es) => es map deval map display mkString
     case ComparisonExpressionAST(pos, left, comparisons) =>
       def comp(left: Any, cs: List[(String, Position, ExpressionAST)]): Boolean =
@@ -188,12 +189,13 @@ object Interpreter {
     case AndExpressionAST(left, right) => beval(left) && beval(right)
     case OrExpressionAST(left, right)  => beval(left) || beval(right)
     case NotExpressionAST(cond)        => !beval(cond)
+    case f: FunctionExpressionAST      => f
   }
 
   def call(fpos: Position, f: Any, apos: Position, args: List[Any]) =
     f match {
       case func: (List[Any] => Any) => func(args)
-      case f @ FunctionAST(pos, name, parms, arb, parts, where) =>
+      case f @ FunctionExpressionAST(pos, name, parms, arb, parts, where) =>
         implicit val scope = new Scope(f.scope)
         val alen           = args.length
         val plen           = parms.length
@@ -208,7 +210,7 @@ object Interpreter {
             unify(a, p, false)
         }
 
-        def testParts(ps: List[FunctionPartAST]): Any =
+        def testParts(ps: List[FunctionPart]): Any =
           ps match {
             case Nil => problem(pos, s"could not apply function: $fpos")
             case h :: t =>
@@ -340,10 +342,7 @@ class Scope(val outer: Scope) {
   val vars = new mutable.HashMap[String, Any]
 
   def get(name: String): Option[Any] =
-    vars get name orElse (if (outer eq null)
-                            None
-                          else
-                            outer.get(name))
+    vars get name orElse (if (outer eq null) None else outer.get(name))
 }
 
 case class NTuple(elems: List[Any])
