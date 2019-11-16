@@ -17,6 +17,8 @@ package object yola {
     v match {
       case NTuple(elems)  => elems map quotedDisplay mkString ("(", ", ", ")")
       case elems: List[_] => elems map quotedDisplay mkString ("[", ", ", "]")
+      case elems: collection.Seq[_] =>
+        elems map quotedDisplay mkString (s"${elems.stringPrefix}(", ", ", ")")
       case map: collection.Map[_, _] =>
         map map { case (k, v) => s"${quotedDisplay(k)}: ${quotedDisplay(v)}" } mkString ("{", ", ", "}")
       case _ => String.valueOf(v)
