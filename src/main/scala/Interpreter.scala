@@ -144,7 +144,9 @@ object Interpreter {
     case ConditionalExpressionAST(cond, els) =>
       deval(
         cond find { case (c, _) => beval(c) } map { case (_, a) => a } getOrElse (els getOrElse LiteralExpressionAST(
-          ())))
+          ()
+        ))
+      )
     case DotExpressionAST(epos, expr, apos, field) =>
       deval(expr) match {
         case f: (Any => Any) => f(field)
@@ -259,8 +261,10 @@ object Interpreter {
                 declare(null, e, m.asInstanceOf[Map[String, Any]](e))
               true
             } else if (errors)
-              problem(pos,
-                      s"missing entry: ${entries diff (entries intersect keySet) mkString ", "}")
+              problem(
+                pos,
+                s"missing entry: ${entries diff (entries intersect keySet) mkString ", "}"
+              )
             else
               false
           case _ =>
