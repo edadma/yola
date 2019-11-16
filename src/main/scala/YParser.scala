@@ -489,10 +489,19 @@ class YParser extends StandardTokenParsers with PackratParsers {
     elif) ~ elsePart ^^ {
     case c ~ t ~ ei ~ e => ConditionalExpressionAST((c, t) +: ei, e)
   } |
+    (("for" ~ Indent) ~> generators <~ nl) ~ ("yield" ~> expressionOrBlock <~ (Newline ~ Dedent)) ^^ {
+      case g ~ b => ForYieldExpressionAST(g, b)
+    } |
+    ("for" ~> generators) ~ ((Indent ~ "yield") ~> expressionOrBlock) <~ (Newline ~ Dedent) ^^ {
+      case g ~ b => ForYieldExpressionAST(g, b)
+    } |
+    ("for" ~> generators) ~ ("yield" ~> expressionOrBlock) ^^ {
+      case g ~ b => ForYieldExpressionAST(g, b)
+    } |
     opt(ident <~ ":") ~ ("for" ~> generators) ~ ("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
       case l ~ g ~ b ~ e => ForExpressionAST(l, g, b, e)
     } |
-    opt(ident <~ ":") ~ (("for" ~ Indent) ~> generators) ~ ((statements ^^ BlockExpressionAST) <~ Dedent) ~ elsePart ^^ {
+    opt(ident <~ ":") ~ (("for" ~ Indent) ~> generators <~ (opt("do") ~ nl)) ~ ((statements ^^ BlockExpressionAST) <~ Dedent) ~ elsePart ^^ {
       case l ~ g ~ b ~ e => ForExpressionAST(l, g, b, e)
     } |
     opt(ident <~ ":") ~ ("while" ~> expression) ~ opt("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
