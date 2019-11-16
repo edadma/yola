@@ -124,6 +124,24 @@ object Interpreter {
       }
 
       els foreach eval
+    case ForYieldExpressionAST(gen, body) =>
+      def flatMap(gs: List[GeneratorExpressionAST], outer: Scope): collection.Iterable[Any] =
+        gs match {
+          case Nil => List(deval(body)(outer))
+          case GeneratorExpressionAST(pattern, pos, iterable, filter) :: tail =>
+            ieval(iterable).flatMap(v => {
+              val inner = new Scope(outer)
+
+              unify(v, pattern, true)(inner)
+
+              if (!filter.isDefined || beval(filter.get)(inner))
+                flatMap(tail, inner)
+              else
+                Nil
+            })
+        }
+
+      flatMap(gen, scope)
     case ForExpressionAST(label, gen, body, els) =>
       def foreach(gs: List[GeneratorExpressionAST], outer: Scope): Unit =
         gs match {
