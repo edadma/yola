@@ -363,9 +363,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
     } |
       pos ~ constructor ^^ { case p ~ (c @ (n, _)) => DataAST(p, n, List(c)) }
 
-  lazy val constructor: PackratParser[(String, List[Symbol])] =
+  lazy val constructor: PackratParser[(String, List[String])] =
     (ident <~ "(") ~ (rep1sep(ident, ",") <~ ")") ^^ {
-      case name ~ fields => (name, fields map (Symbol(_)))
+      case name ~ fields => (name, fields)
     } |
       ident ^^ ((_, Nil))
 
@@ -637,23 +637,6 @@ class YParser extends StandardTokenParsers with PackratParsers {
                              LiteralExpressionAST(-1),
                              false)
       } |
-//      pos ~ (additiveExpression <~ "..") ~ opt("by" ~> pos ~ additiveExpression) ^^ {
-//        case pf ~ f ~ None         => UnboundedLazyListExpressionAST(pf, f, null, LiteralExpressionAST(1))
-//        case pf ~ f ~ Some(pb ~ b) => UnboundedLazyListExpressionAST(pf, f, pb, b)
-//      } |
-//      pos ~ additiveExpression ~ ("to" | "until") ~ pos ~ additiveExpression ~ opt(
-//        "by" ~> pos ~ additiveExpression) ^^ {
-//        case pf ~ f ~ op ~ pt ~ t ~ Some(pb ~ b) =>
-//          SequenceExpressionAST(pf, f, pt, t, pb, b, if (op == "to") true else false)
-//        case pf ~ f ~ op ~ pt ~ t ~ None =>
-//          SequenceExpressionAST(pf,
-//                                f,
-//                                pt,
-//                                t,
-//                                null,
-//                                LiteralExpressionAST(1),
-//                                if (op == "to") true else false)
-//      } |
       additiveExpression
 
   lazy val additiveExpression: PackratParser[ExpressionAST] =
@@ -693,11 +676,6 @@ class YParser extends StandardTokenParsers with PackratParsers {
         case p ~ e ~ o => UnaryExpressionAST("_" + o, p, e)
       } |
       applyExpression /*generateDefinedExpression*/
-//
-//  lazy val generateDefinedExpression: PackratParser[ExpressionAST] =
-//    "!" ~> pos ~ applyExpression ^^ {
-//      case p ~ c => GenerateExpressionAST( p, c ) } |
-//  applyExpression
 
   lazy val applyExpression: PackratParser[ExpressionAST] =
     pos ~ applyExpression ~ pos ~ ("(" ~> repsep(pos ~ expression, ",") <~ ")") ^^ {

@@ -16,7 +16,7 @@ case class ValAST(pat: PatternAST, pos: Position, expr: ExpressionAST)
     extends DeclarationStatementAST
 case class VarAST(pos: Position, var name: String, init: Option[(Position, ExpressionAST)])
     extends DeclarationStatementAST
-case class DataAST(pos: Position, name: String, constructors: List[(String, List[Symbol])])
+case class DataAST(pos: Position, name: String, constructors: List[(String, List[String])])
     extends DeclarationStatementAST
 case class DefAST(pos: Position, name: String, func: FunctionExpressionAST)
     extends DeclarationStatementAST

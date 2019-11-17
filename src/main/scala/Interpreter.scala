@@ -19,7 +19,8 @@ object Interpreter {
       duplicate(pos, name)
       func.scope = scope
       scope.vars(name) = func
-    case exp: ExpressionAST => deval(exp)
+    case DataAST(pos, name, constructors) =>
+    case exp: ExpressionAST               => deval(exp)
   }
 
   def duplicate(pos: Position, name: String)(implicit scope: Scope): Unit = {
@@ -368,3 +369,7 @@ class Scope(val outer: Scope) {
 }
 
 case class NTuple(elems: List[Any])
+
+case class Constructor(typ: String, name: String, fields: List[String])
+
+case class Record(typ: String, name: String, fields: List[String], args: List[Any])

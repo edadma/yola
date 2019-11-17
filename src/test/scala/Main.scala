@@ -5,14 +5,9 @@ object Main extends App {
   import Testing._
 
   println(runCapture("""
-                       |val l =
-                       |  for
-                       |    i <- 1..2
-                       |    j <- 3..4
-                       |    yield
-                       |      (i, j)
+                       |data a(b, c)
                        |
-                       |println( l )
+                       |println( a(3, 4) )
                        |""".stripMargin))
 
 }
