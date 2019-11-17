@@ -3,12 +3,14 @@ package xyz.hyperreal.yola
 import scala.collection.mutable
 import scala.util.parsing.input.Position
 
-object Interpreter {
+class Interpreter(importScope: (List[String], String, Option[String], Scope) => Unit) {
 
   def apply(ast: AST)(implicit scope: Scope): Any = ast match {
     case DeclarationBlockAST(decls) =>
       decls map apply
       ()
+    case ImportAST(module, names) =>
+      names foreach { case (n, r) => importScope(module, n, r, scope) }
     case ValAST(pat, pos, expr) =>
       unify(deval(expr), pat, true)
     case VarAST(pos, name, None) =>

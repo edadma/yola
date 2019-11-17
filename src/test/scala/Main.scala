@@ -5,11 +5,9 @@ object Main extends App {
   import Testing._
 
   println(runCapture("""
-                       |data a(b, c)
+                       |import yode.os._
                        |
-                       |val a(d, e) = a(3, 4)
-                       |
-                       |println( d, e )
+                       |println( osUname() )
                        |""".stripMargin))
 
 }

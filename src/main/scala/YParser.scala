@@ -177,6 +177,7 @@ class YolaLexical
   }
 
   reserved ++= List(
+    "import",
     "if",
     "then",
     "else",
@@ -326,14 +327,26 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val declarationStatement: PackratParser[DeclarationStatementAST] = declaration <~ Newline
 
   def declarationdef: PackratParser[DeclarationStatementAST] =
-    //		imports |
-    //		natives |
-    constants |
+    imports |
+      //		natives |
+      constants |
       variables |
       datatypes |
       definitions
 
   lazy val declaration: PackratParser[DeclarationStatementAST] = declarationdef
+
+  lazy val imports =
+    "import" ~> rep1sep(imprt, ",") ^^ DeclarationBlockAST |
+      "import" ~> Indent ~> rep1(imprt <~ Newline) <~ Dedent ^^ DeclarationBlockAST
+
+  lazy val imprt = ident ~ "." ~ rep1sep(ident, ".") ^^ {
+    case f ~ _ ~ n =>
+      val module = f +: n.init
+      val name   = n.last
+
+      ImportAST(module, List((name, None)))
+  }
 
   lazy val constants =
     "val" ~> rep1sep(constant, ",") ^^ DeclarationBlockAST |

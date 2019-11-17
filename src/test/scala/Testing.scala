@@ -17,7 +17,7 @@ object Testing {
     }
 
     toplevel.vars("println") = (args: List[Any]) => output(args map display mkString ", ")
-    Interpreter(ast)
+    new Interpreter(null)(ast)
     out.toString.trim
   }
 
@@ -26,7 +26,7 @@ object Testing {
     val ast               = parser.parseFromString(snippet, parser.source)
     implicit val toplevel = new Scope(null)
 
-    Interpreter(ast)
+    new Interpreter(null)(ast)
   }
 
 }

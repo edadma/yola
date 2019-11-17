@@ -9,7 +9,8 @@ case class SourceAST(statements: List[StatementAST]) extends AST
 trait StatementAST extends AST
 
 trait DeclarationStatementAST extends StatementAST
-//case class ImportAST( qual: String, names: List[(String, Option[String])] ) extends DeclarationStatementAST
+case class ImportAST(module: List[String], names: List[(String, Option[String])])
+    extends DeclarationStatementAST
 //case class NativeAST( pkg: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
 //case class FunctionAST( cls: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
 case class ValAST(pat: PatternAST, pos: Position, expr: ExpressionAST)
