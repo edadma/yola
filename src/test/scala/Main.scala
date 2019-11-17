@@ -7,7 +7,9 @@ object Main extends App {
   println(runCapture("""
                        |data a(b, c)
                        |
-                       |println( a(3, 4) )
+                       |val a(d, e) = a(3, 4)
+                       |
+                       |println( d, e )
                        |""".stripMargin))
 
 }

@@ -16,11 +16,12 @@ object Interpreter {
     case VarAST(pos, name, Some((_, exp))) =>
       declare(pos, name, Var(deval(exp)))
     case DefAST(pos, name, func) =>
-      duplicate(pos, name)
       func.scope = scope
-      scope.vars(name) = func
-    case DataAST(pos, name, constructors) =>
-    case exp: ExpressionAST               => deval(exp)
+      declare(pos, name, func)
+    case DataAST(pos, typ, constructors) =>
+      for ((name, fields) <- constructors)
+        declare(pos, name, Constructor(typ, name, fields))
+    case exp: ExpressionAST => deval(exp)
   }
 
   def duplicate(pos: Position, name: String)(implicit scope: Scope): Unit = {
@@ -216,6 +217,13 @@ object Interpreter {
   def call(fpos: Position, f: Any, apos: Position, args: List[Any]) =
     f match {
       case func: (List[Any] => Any) => func(args)
+      case con @ Constructor(typ, name, fields) =>
+        if (fields.length != args.length)
+          problem(
+            apos,
+            s"wrong number of arguments for constructor '$name': got ${args.length}, expected ${fields.length}")
+
+        Record(con, args)
       case f @ FunctionExpressionAST(pos, name, parms, arb, parts, where) =>
         implicit val scope = new Scope(f.scope)
         val alen           = args.length
@@ -340,6 +348,17 @@ object Interpreter {
             else
               false
         }
+      case RecordPatternAST(pos, name, args) =>
+        v match {
+          case Record(Constructor(_, rname, _), rargs)
+              if name == rname && args.length == rargs.length =>
+            rargs zip args forall { case (e, a) => unify(e, a, errors) }
+          case _ =>
+            if (errors)
+              problem(pos, s"expected record '$name'")
+            else
+              false
+        }
       case TuplePatternAST(pos, elems) =>
         v match {
           case NTuple(elems2) =>
@@ -372,4 +391,4 @@ case class NTuple(elems: List[Any])
 
 case class Constructor(typ: String, name: String, fields: List[String])
 
-case class Record(typ: String, name: String, fields: List[String], args: List[Any])
+case class Record(con: Constructor, args: List[Any])

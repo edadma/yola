@@ -127,13 +127,14 @@ case class ComprehensionAST(expr: ExpressionAST, gen: List[GeneratorExpressionAS
 
 case class WhereClauseAST(where: List[DeclarationStatementAST]) extends AST
 
-trait PatternAST                                                              extends AST
-case class NamedPatternAST(pos: Position, var alias: String, pat: PatternAST) extends PatternAST
-case class VariablePatternAST(pos: Position, var name: String)                extends PatternAST
-case class TypePatternAST(s: PatternAST, typename: String)                    extends PatternAST
-case class TuplePatternAST(pos: Position, elems: List[PatternAST])            extends PatternAST
-case class ListPatternAST(pos: Position, elems: List[PatternAST])             extends PatternAST
-case class ConsPatternAST(pos: Position, head: PatternAST, tail: PatternAST)  extends PatternAST
-case class MapPatternAST(pos: Position, entries: Set[String])                 extends PatternAST
-case class LiteralPatternAST(pos: Position, lit: Any)                         extends PatternAST
-case class AlternationPatternAST(pos: Position, alts: List[PatternAST])       extends PatternAST
+trait PatternAST                                                                 extends AST
+case class NamedPatternAST(pos: Position, var alias: String, pat: PatternAST)    extends PatternAST
+case class VariablePatternAST(pos: Position, var name: String)                   extends PatternAST
+case class TypePatternAST(s: PatternAST, typename: String)                       extends PatternAST
+case class TuplePatternAST(pos: Position, elems: List[PatternAST])               extends PatternAST
+case class ListPatternAST(pos: Position, elems: List[PatternAST])                extends PatternAST
+case class ConsPatternAST(pos: Position, head: PatternAST, tail: PatternAST)     extends PatternAST
+case class MapPatternAST(pos: Position, entries: Set[String])                    extends PatternAST
+case class LiteralPatternAST(pos: Position, lit: Any)                            extends PatternAST
+case class AlternationPatternAST(pos: Position, alts: List[PatternAST])          extends PatternAST
+case class RecordPatternAST(pos: Position, name: String, args: List[PatternAST]) extends PatternAST

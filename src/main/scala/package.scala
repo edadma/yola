@@ -15,8 +15,9 @@ package object yola {
 
   def display(v: Any): String =
     v match {
-      case NTuple(elems)  => elems map quotedDisplay mkString ("(", ", ", ")")
-      case elems: List[_] => elems map quotedDisplay mkString ("[", ", ", "]")
+      case NTuple(elems)     => elems map quotedDisplay mkString ("(", ", ", ")")
+      case Record(con, args) => args map quotedDisplay mkString (s"${con.name}(", ", ", ")")
+      case elems: List[_]    => elems map quotedDisplay mkString ("[", ", ", "]")
       case elems: collection.Seq[_] =>
         elems map quotedDisplay mkString (s"${elems.stringPrefix}(", ", ", ")")
       case map: collection.Map[_, _] =>

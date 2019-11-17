@@ -50,6 +50,13 @@ object LanguageTests extends TestSuite {
             |4, 5
             |4, 7
             |""".stripMargin.trim)
+      assert(runCapture("""
+                          |val l =
+                          |  for i <- 1..4 if i%2 == 0; j <- 5..8 if j%2 == 1
+                          |    yield (i, j)
+                          |
+                          |println( l )
+                          |""".stripMargin) == "Vector((2, 5), (2, 7), (4, 5), (4, 7))")
     }
 
     test("lexical scope") {

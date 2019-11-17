@@ -807,7 +807,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
       pos ~ stringLit ^^ { case p ~ l     => LiteralPatternAST(p, l) } |
       pos ~ "(" ~ ")" ^^ { case p ~ _ ~ _ => LiteralPatternAST(p, ()) } |
       pos ~ "null" ^^ { case p ~ _        => LiteralPatternAST(p, null) } |
-//      pos ~ ident ~ ("(" ~> rep1sep(structure, ",") <~ ")") ^^ { case p ~ n ~ l => RecordPatternAST( p, n, l.toVector ) } |
+      pos ~ ident ~ ("(" ~> rep1sep(pattern, ",") <~ ")") ^^ {
+        case p ~ n ~ l => RecordPatternAST(p, n, l)
+      } |
       pos ~ ident ^^ { case p ~ n => VariablePatternAST(p, n) } |
       pos ~ ("(" ~> pattern <~ ",") ~ (rep1sep(pattern, ",") <~ ")") ^^ {
         case p ~ e ~ l => TuplePatternAST(p, e +: l)
