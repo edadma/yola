@@ -14,21 +14,16 @@ class Interpreter(importScope: (List[String], String, Option[String], Scope) => 
     case ValAST(pat, pos, expr) =>
       unify(deval(expr), pat, true)
     case VarAST(pos, name, None) =>
-      declare(pos, name, Var(0))
+      implicitly[Scope].declare(pos, name, Var(0))
     case VarAST(pos, name, Some((_, exp))) =>
-      declare(pos, name, Var(deval(exp)))
+      implicitly[Scope].declare(pos, name, Var(deval(exp)))
     case DefAST(pos, name, func) =>
       func.scope = scope
-      declare(pos, name, func)
+      implicitly[Scope].declare(pos, name, func)
     case DataAST(pos, typ, constructors) =>
       for ((name, fields) <- constructors)
-        declare(pos, name, Constructor(typ, name, fields))
+        implicitly[Scope].declare(pos, name, Constructor(typ, name, fields))
     case exp: ExpressionAST => deval(exp)
-  }
-
-  def duplicate(pos: Position, name: String)(implicit scope: Scope): Unit = {
-    if (scope.vars contains name)
-      problem(pos, s"duplicate declaration: '$name'")
   }
 
   def deval(expr: ExpressionAST)(implicit scope: Scope) = deref(eval(expr))
@@ -257,11 +252,6 @@ class Interpreter(importScope: (List[String], String, Option[String], Scope) => 
         testParts(parts)
     }
 
-  def declare(pos: Position, name: String, value: Any)(implicit scope: Scope) = {
-    duplicate(pos, name)
-    scope.vars(name) = value
-  }
-
   def unify(v: Any, s: PatternAST, errors: Boolean)(implicit scope: Scope): Boolean =
     s match {
       case AlternationPatternAST(pos, alts) =>
@@ -287,7 +277,7 @@ class Interpreter(importScope: (List[String], String, Option[String], Scope) => 
 
             if (entries subsetOf keySet) {
               for (e <- entries)
-                declare(null, e, m.asInstanceOf[Map[String, Any]](e))
+                implicitly[Scope].declare(null, e, m.asInstanceOf[Map[String, Any]](e))
               true
             } else if (errors)
               problem(
@@ -311,7 +301,7 @@ class Interpreter(importScope: (List[String], String, Option[String], Scope) => 
         else
           true
       case VariablePatternAST(pos, name) =>
-        declare(pos, name, v)
+        implicitly[Scope].declare(pos, name, v)
         true
       case ListPatternAST(pos, elems) =>
         v match {
@@ -336,7 +326,7 @@ class Interpreter(importScope: (List[String], String, Option[String], Scope) => 
         }
       case NamedPatternAST(pos, alias, pat) =>
         if (unify(v, pat, errors)) {
-          declare(pos, alias, v)
+          implicitly[Scope].declare(pos, alias, v)
           true
         } else
           false
@@ -384,6 +374,16 @@ class Interpreter(importScope: (List[String], String, Option[String], Scope) => 
 
 class Scope(val outer: Scope) {
   val vars = new mutable.HashMap[String, Any]
+
+  def duplicate(pos: Position, name: String): Unit = {
+    if (vars contains name)
+      problem(pos, s"duplicate declaration: '$name'")
+  }
+
+  def declare(pos: Position, name: String, value: Any) = {
+    duplicate(pos, name)
+    vars(name) = value
+  }
 
   def get(name: String): Option[Any] =
     vars get name orElse (if (outer eq null) None else outer.get(name))

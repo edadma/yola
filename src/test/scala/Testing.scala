@@ -5,6 +5,11 @@ import java.nio.charset.StandardCharsets
 
 object Testing {
 
+  def importScope(module: List[String],
+                  name: String,
+                  rename: Option[String],
+                  scope: Scope): Unit = {}
+
   def runCapture(snippet: String) = {
     val parser            = new YParser
     val ast               = parser.parseFromString(snippet, parser.source)
@@ -17,7 +22,7 @@ object Testing {
     }
 
     toplevel.vars("println") = (args: List[Any]) => output(args map display mkString ", ")
-    new Interpreter(null)(ast)
+    new Interpreter(importScope)(ast)
     out.toString.trim
   }
 
@@ -26,7 +31,7 @@ object Testing {
     val ast               = parser.parseFromString(snippet, parser.source)
     implicit val toplevel = new Scope(null)
 
-    new Interpreter(null)(ast)
+    new Interpreter(importScope)(ast)
   }
 
 }

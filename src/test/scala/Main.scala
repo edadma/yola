@@ -7,7 +7,7 @@ object Main extends App {
   println(runCapture("""
                        |import yode.os._
                        |
-                       |println( osUname() )
+                       |println( osUname )
                        |""".stripMargin))
 
 }
