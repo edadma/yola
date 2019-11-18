@@ -1,37 +1,31 @@
 package xyz.hyperreal.yola
 
-import java.io.ByteArrayOutputStream
-import java.nio.charset.StandardCharsets
-
 object Testing {
 
-  def importScope(module: List[String],
-                  name: String,
-                  rename: Option[String],
-                  scope: Scope): Unit = {}
+  def loader(module: List[String], name: String, rename: Option[String], scope: Scope): Unit = {}
 
   def runCapture(snippet: String) = {
-    val parser            = new YParser
-    val ast               = parser.parseFromString(snippet, parser.source)
-    implicit val toplevel = new Scope(null)
-    val out               = new StringBuilder
+    val parser          = new YParser
+    val ast             = parser.parseFromString(snippet, parser.source)
+    implicit val global = new Scope(null)
+    val out             = new StringBuilder
 
-    def output(a: Any) = {
+    def output(a: Any): Unit = {
       out ++= a.toString
       out += '\n'
     }
 
-    toplevel.vars("println") = (args: List[Any]) => output(args map display mkString ", ")
-    new Interpreter(importScope)(ast)
+    global.vars("println") = (args: List[Any]) => output(args map display mkString ", ")
+    new Interpreter(loader)(ast)
     out.toString.trim
   }
 
   def runResult(snippet: String) = {
-    val parser            = new YParser
-    val ast               = parser.parseFromString(snippet, parser.source)
-    implicit val toplevel = new Scope(null)
+    val parser          = new YParser
+    val ast             = parser.parseFromString(snippet, parser.source)
+    implicit val global = new Scope(null)
 
-    new Interpreter(importScope)(ast)
+    new Interpreter(loader)(ast)
   }
 
 }

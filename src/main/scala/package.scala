@@ -4,6 +4,8 @@ import scala.util.parsing.input.Position
 
 package object yola {
 
+  def perror(error: String) = problem(null, error)
+
   def problem(pos: Position, error: String) = {
     if (pos eq null)
       println(error)
