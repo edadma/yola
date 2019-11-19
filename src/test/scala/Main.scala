@@ -1,11 +1,5 @@
 package xyz.hyperreal.yola
 
 object Main extends App {
-
-  import Testing._
-
-  println(runCapture("""
-                       |println( 'asdf' )
-                       |""".stripMargin))
-
+  Testing.runResult(io.Source.fromFile(args(0)) mkString)
 }
