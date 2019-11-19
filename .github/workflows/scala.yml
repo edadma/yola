@@ -13,7 +13,7 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Install libunwind-dev
+    - name: Install libunwind-dev, libgc-dev, libre2-dev
       run: sudo apt install libunwind-dev libgc-dev libre2-dev
     - name: Run tests
       run: sbt test
