@@ -8,6 +8,17 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
     case DeclarationBlockAST(decls) =>
       decls map apply
       ()
+    case EnumAST(name, pos, enumeration) =>
+      var idx = 0
+
+      enumeration foreach {
+        case (name, None) =>
+          scope.declare(pos, name, Enum(name, idx))
+          idx += 1
+        case (name, Some(ord)) =>
+          scope.declare(pos, name, Enum(name, ord))
+          idx = ord + 1
+      }
     case ImportAST(module, names) =>
       names foreach {
         case (n, r) =>
@@ -244,11 +255,14 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
   def call(fpos: Position, f: Any, apos: Position, args: List[Any]) =
     f match {
       case func: (List[Any] => Any) => func(args)
+      case Constructor(_, name, Nil) =>
+        problem(fpos, "nullary constructors can't be applied")
       case con @ Constructor(typ, name, fields) =>
         if (fields.length != args.length)
           problem(
             apos,
-            s"wrong number of arguments for constructor '$name': got ${args.length}, expected ${fields.length}")
+            s"wrong number of arguments for constructor '$name': got ${args.length}, expected ${fields.length}"
+          )
 
         Record(con, args)
       case f @ FunctionExpressionAST(pos, name, parms, arb, parts, where) =>
@@ -407,3 +421,12 @@ case class NTuple(elems: List[Any])
 case class Constructor(typ: String, name: String, fields: List[String])
 
 case class Record(con: Constructor, args: List[Any])
+
+case class Enum(name: String, ordinal: Int) extends (Any => Any) {
+
+  def apply(v: Any) =
+    v match {
+      case "name"    => name
+      case "ordinal" => ordinal
+    }
+}

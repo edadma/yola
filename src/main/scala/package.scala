@@ -3,7 +3,6 @@ package xyz.hyperreal
 import scala.util.parsing.input.Position
 
 package object yola {
-
   def perror(error: String) = problem(null, error)
 
   def problem(pos: Position, error: String) = {
@@ -24,7 +23,10 @@ package object yola {
         elems map quotedDisplay mkString (s"${elems.stringPrefix}(", ", ", ")")
       case map: collection.Map[_, _] =>
         map map { case (k, v) => s"${quotedDisplay(k)}: ${quotedDisplay(v)}" } mkString ("{", ", ", "}")
-      case _ => String.valueOf(v)
+      case Constructor(typ, name, Nil)    => name
+      case Constructor(typ, name, fields) => fields mkString (s"$typ:$name(", ", ", ")")
+      case Enum(name, ordinal)            => s"$name<$ordinal>"
+      case _                              => String.valueOf(v)
     }
 
   def quotedDisplay(v: Any): String =
@@ -32,5 +34,4 @@ package object yola {
       case s: String => s"""'${s replace ("'", "\\'")}'"""
       case _         => display(v)
     }
-
 }
