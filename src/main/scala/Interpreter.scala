@@ -164,24 +164,8 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
       }
 
       els foreach eval
-    case ForYieldExpressionAST(gen, body) =>
-      def flatMap(gs: List[GeneratorExpressionAST], outer: Scope): collection.Iterable[Any] =
-        gs match {
-          case Nil => List(deval(body)(outer))
-          case GeneratorExpressionAST(pattern, pos, iterable, filter) :: tail =>
-            ieval(iterable).flatMap(v => {
-              val inner = new Scope(outer)
-
-              unify(v, pattern, true)(inner)
-
-              if (!filter.isDefined || beval(filter.get)(inner))
-                flatMap(tail, inner)
-              else
-                Nil
-            })
-        }
-
-      flatMap(gen, scope)
+    case ForYieldExpressionAST(gen, body)          => flatMap(gen, scope, body)
+    case ListComprehensionExpressionAST(expr, gen) => flatMap(gen, scope, expr).toList
     case ForExpressionAST(label, gen, body, els) =>
       def foreach(gs: List[GeneratorExpressionAST], outer: Scope): Unit =
         gs match {
@@ -214,8 +198,9 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
       val r = deval(right)
 
       op match {
-        case "+" => l.asInstanceOf[Int] + r.asInstanceOf[Int]
-        case "%" => l.asInstanceOf[Int] % r.asInstanceOf[Int]
+        case "+"   => l.asInstanceOf[Int] + r.asInstanceOf[Int]
+        case "%"   => l.asInstanceOf[Int] % r.asInstanceOf[Int]
+        case "adj" => l.asInstanceOf[Int] * r.asInstanceOf[Int]
       }
     case VariableExpressionAST(pos, name) =>
       scope get name match {
@@ -251,6 +236,26 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
     case NotExpressionAST(cond)        => !beval(cond)
     case f: FunctionExpressionAST      => f
   }
+
+  def flatMap(
+      gs: List[GeneratorExpressionAST],
+      outer: Scope,
+      expr: ExpressionAST
+  ): collection.Iterable[Any] =
+    gs match {
+      case Nil => List(deval(expr)(outer))
+      case GeneratorExpressionAST(pattern, pos, iterable, filter) :: tail =>
+        ieval(iterable)(outer).flatMap(v => {
+          val inner = new Scope(outer)
+
+          unify(v, pattern, true)(inner)
+
+          if (!filter.isDefined || beval(filter.get)(inner))
+            flatMap(tail, inner, expr)
+          else
+            Nil
+        })
+    }
 
   def call(fpos: Position, f: Any, apos: Position, args: List[Any]) =
     f match {

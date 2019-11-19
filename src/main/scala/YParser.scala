@@ -554,6 +554,15 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val generators = rep1sep(generator, ";" | nl)
 
+  lazy val listgenerator
+      : PackratParser[GeneratorExpressionAST] = (pattern <~ "<-") ~ pos ~ expression ~ opt(
+    "if" ~> logicalExpression
+  ) ^^ {
+    case s ~ p ~ t ~ f => GeneratorExpressionAST(s, p, t, f)
+  }
+
+  lazy val listgenerators: PackratParser[List[GeneratorExpressionAST]] = rep1sep(listgenerator, ",")
+
   lazy val lvalueExpression = applyExpression //generateDefinedExpression
 
   lazy val assignment = "=" | "+=" | "++=" | "-=" | "--=" | "*=" | "/=" | "//=" | "\\=" | "^=" | "<:=" | ">:="
@@ -736,8 +745,6 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val keyExpression = additiveExpression
 
-//  lazy val comprehension: PackratParser[ComprehensionAST] = (consExpression <~ "|") ~ generators ^^ { case e ~ g => ComprehensionAST( e, g ) }
-
   lazy val primaryExpression: PackratParser[ExpressionAST] =
 //    pos ~ regexLit ^^ {
 //      case p ~ r => RegexLiteralAST( p, r ) } |
@@ -825,7 +832,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
       "[" ~> repsep(expression, ",") <~ "]" ^^ { l =>
         ListExpressionAST(l)
       } |
-//      "[" ~> comprehension <~ "]" ^^ ListComprehensionExpressionAST |
+      "[" ~> (consExpression <~ "|") ~ listgenerators <~ "]" ^^ {
+        case e ~ g => ListComprehensionExpressionAST(e, g)
+      } |
       ("(" ~> expression <~ ",") ~ (rep1sep(expression, ",") <~ ")") ^^ {
         case e ~ l => TupleExpressionAST(e +: l)
       } |

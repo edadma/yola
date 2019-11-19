@@ -50,7 +50,7 @@ case class RightSectionExpressionAST(
     lambda: FunctionExpressionAST,
     var closure: Option[Boolean] = None
 ) extends ExpressionAST
-case class ListComprehensionExpressionAST(comprehension: ComprehensionAST)  extends ExpressionAST
+
 case class PartialFunctionExpressionAST(cases: List[FunctionExpressionAST]) extends ExpressionAST
 
 case class ApplyExpressionAST(
@@ -128,6 +128,9 @@ case class RepeatExpressionAST(label: Option[String], body: ExpressionAST) exten
 
 case class ForYieldExpressionAST(gen: List[GeneratorExpressionAST], body: ExpressionAST)
     extends ExpressionAST
+
+case class ListComprehensionExpressionAST(expr: ExpressionAST, gen: List[GeneratorExpressionAST])
+    extends ExpressionAST
 case class TypeExpressionAST(expr: ExpressionAST, typ: String) extends ExpressionAST
 
 case class ForExpressionAST(
@@ -160,8 +163,6 @@ case class FunctionExpressionAST(
 ) extends ExpressionAST { var scope: Scope = null }
 
 case class FunctionPart(guard: Option[ExpressionAST], body: ExpressionAST) extends AST
-
-case class ComprehensionAST(expr: ExpressionAST, gen: List[GeneratorExpressionAST]) extends AST
 
 case class WhereClauseAST(where: List[DeclarationStatementAST]) extends AST
 
