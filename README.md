@@ -1,4 +1,4 @@
--scala-native
-=============
+yola
+====
 
-This is a template project for Scala native.
+https://github.com/edadma/yola/workflows/scala/badge.svg
