@@ -19,14 +19,15 @@ object Interpolation {
 }
 
 class YolaLexical
-    extends IndentationLexical(false,
-                               true,
-                               List("{", "[", "("),
-                               List("}", "]", ")"),
-                               "//",
-                               "/*",
-                               "*/") {
-
+    extends IndentationLexical(
+      false,
+      true,
+      List("{", "[", "("),
+      List("}", "]", ")"),
+      "//",
+      "/*",
+      "*/"
+    ) {
   import Interpolation._
 
   override def token: Parser[Token] = regexToken | stringToken | decimalToken | super.token
@@ -105,7 +106,8 @@ class YolaLexical
               ).get(r.rest.first) match {
                 case Some(c) => c
                 case _       => sys.error("illegal escape character " + r.rest.first)
-              })
+              }
+            )
 
             chr(r.rest.rest)
           }
@@ -177,6 +179,7 @@ class YolaLexical
   }
 
   reserved ++= List(
+    "enum",
     "import",
     "if",
     "then",
@@ -259,7 +262,6 @@ class YolaLexical
 }
 
 class YParser extends StandardTokenParsers with PackratParsers {
-
   import Interpolation._
 
   override val lexical = new YolaLexical
@@ -289,24 +291,26 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val number: PackratParser[Number] =
     numericLit ^^
-      (n =>
-        if (n startsWith "0x") {
-          val num = BigInt(n substring 2, 16)
+      (
+          n =>
+            if (n startsWith "0x") {
+              val num = BigInt(n substring 2, 16)
 
-          if (num.isValidInt)
-            num.intValue.asInstanceOf[Number]
-          else
-            num
-        } else if (n matches ".*[.eE].*")
-          n.toDouble.asInstanceOf[Number]
-        else {
-          val bi = BigInt(n)
+              if (num.isValidInt)
+                num.intValue.asInstanceOf[Number]
+              else
+                num
+            } else if (n matches ".*[.eE].*")
+              n.toDouble.asInstanceOf[Number]
+            else {
+              val bi = BigInt(n)
 
-          if (bi.isValidInt)
-            bi.intValue.asInstanceOf[Number]
-          else
-            bi
-        })
+              if (bi.isValidInt)
+                bi.intValue.asInstanceOf[Number]
+              else
+                bi
+            }
+      )
 
   lazy val source: PackratParser[BlockExpressionAST] =
     Newline ^^^ BlockExpressionAST(Nil) |
@@ -328,6 +332,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
       constants |
       variables |
       datatypes |
+      enums |
       definitions
 
   lazy val declaration: PackratParser[DeclarationStatementAST] = declarationdef
@@ -343,6 +348,15 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
       ImportAST(module, List((name, None)))
   }
+
+  lazy val enums =
+    "enum" ~> rep1sep(enum, ",") ^^ DeclarationBlockAST |
+      "enum" ~> Indent ~> rep1(enum <~ Newline) <~ Dedent ^^ DeclarationBlockAST
+
+  lazy val enum =
+    (ident <~ "=") ~ pos ~ rep1sep(ident ~ opt("=" ~> numericLit), "|") ^^ {
+      case t ~ p ~ e => EnumAST(t, p, e map { case n ~ v => (n, v map (_.toInt)) })
+    }
 
   lazy val constants =
     "val" ~> rep1sep(constant, ",") ^^ DeclarationBlockAST |
@@ -393,7 +407,8 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val optionallyGuardedPart
     : PackratParser[(List[FunctionPart], List[DeclarationStatementAST])] =
     opt("|" ~> guardExpression) ~ ("=" ~> expressionOrBlock | blockExpression) ~ opt(
-      whereClause | Indent ~> whereClause <~ Newline <~ Dedent) ^^ {
+      whereClause | Indent ~> whereClause <~ Newline <~ Dedent
+    ) ^^ {
       case g ~ b ~ w => (List(FunctionPart(g, b)), w getOrElse Nil)
     }
 
@@ -485,7 +500,8 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val assignmentExpression: PackratParser[ExpressionAST] =
     rep1sep(pos ~ lvalueExpression, ",") ~ assignment ~ (rep1sep(pos ~ assignmentExpression, ",") | pos ~ blockExpression ^^ (List(
-      _))) ^^ {
+      _
+    ))) ^^ {
       case lhs ~ op ~ rhs =>
         AssignmentExpressionAST(lhs map { case p ~ e => (p, e) }, op, rhs map {
           case p ~ e                                 => (p, e)
@@ -495,7 +511,8 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val constructExpression
     : PackratParser[ExpressionAST] = "if" ~> expression ~ ("then" ~> expressionOrBlock | blockExpression) ~ rep(
-    elif) ~ elsePart ^^ {
+    elif
+  ) ~ elsePart ^^ {
     case c ~ t ~ ei ~ e => ConditionalExpressionAST((c, t) +: ei, e)
   } |
     (("for" ~ Indent) ~> generators <~ nl) ~ ("yield" ~> expressionOrBlock <~ (Newline ~ Dedent)) ^^ {
@@ -533,6 +550,15 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val generators = rep1sep(generator, ";" | nl)
 
+  lazy val listgenerator
+    : PackratParser[GeneratorExpressionAST] = (pattern <~ "<-") ~ pos ~ expression ~ opt(
+    "if" ~> logicalExpression
+  ) ^^ {
+    case s ~ p ~ t ~ f => GeneratorExpressionAST(s, p, t, f)
+  }
+
+  lazy val listgenerators: PackratParser[List[GeneratorExpressionAST]] = rep1sep(listgenerator, ",")
+
   lazy val lvalueExpression = applyExpression //generateDefinedExpression
 
   lazy val assignment = "=" | "+=" | "++=" | "-=" | "--=" | "*=" | "/=" | "//=" | "\\=" | "^=" | "<:=" | ">:="
@@ -566,7 +592,8 @@ class YParser extends StandardTokenParsers with PackratParsers {
     pos ~ alternationExpression ~ rep1(
       ("==" | "!=" | "<" | ">" | "<=" | ">=") ~ pos ~ alternationExpression ^^ {
         case op ~ p ~ r => (op, p, r)
-      }) ^^ {
+      }
+    ) ^^ {
       case pl ~ l ~ cs => ComparisonExpressionAST(pl, l, cs)
     } |
       pos ~ alternationExpression ~ ("in" | "not" ~ "in" ^^^ "notin") ~ pos ~ alternationExpression ^^ {
@@ -595,8 +622,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
       case p ~ l ~ e => BreakExpressionAST(p, l, e)
     } |
       "continue" ~> pos ~ opt(ident) ^^ { case p ~ l => ContinueExpressionAST(p, l) } |
-      "return" ~> opt(expression) ^^ (e =>
-        ReturnExpressionAST(e.getOrElse(LiteralExpressionAST(())))) |
+      "return" ~> opt(expression) ^^ (
+          e => ReturnExpressionAST(e.getOrElse(LiteralExpressionAST(())))
+      ) |
 //      ("yield" ~> consExpression) ~ opt("do" ~> consExpression) ^^ { case e ~ r => YieldExpressionAST( e, r ) } |
       consExpression
 
@@ -608,42 +636,50 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val rangeExpression: PackratParser[ExpressionAST] =
     pos ~ (additiveExpression <~ "..") ~ pos ~ additiveExpression ~ opt(
-      "by" ~> pos ~ additiveExpression) ^^ {
+      "by" ~> pos ~ additiveExpression
+    ) ^^ {
       case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST(pf, f, pt, t, pb, b, true)
       case pf ~ f ~ pt ~ t ~ None =>
         RangeExpressionAST(pf, f, pt, t, null, LiteralExpressionAST(1), true)
     } |
       pos ~ (additiveExpression <~ "..<") ~ pos ~ additiveExpression ~ opt(
-        "by" ~> pos ~ additiveExpression) ^^ {
+        "by" ~> pos ~ additiveExpression
+      ) ^^ {
         case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST(pf, f, pt, t, pb, b, false)
         case pf ~ f ~ pt ~ t ~ None =>
           RangeExpressionAST(pf, f, pt, t, null, LiteralExpressionAST(1), false)
       } |
       pos ~ (additiveExpression <~ "..+") ~ pos ~ additiveExpression ~ opt(
-        "by" ~> pos ~ additiveExpression) ^^ {
+        "by" ~> pos ~ additiveExpression
+      ) ^^ {
         case pf ~ f ~ pt ~ t ~ Some(pb ~ b) =>
           RangeExpressionAST(pf, f, pt, BinaryExpressionAST(null, f, "+", null, t), pb, b, false)
         case pf ~ f ~ pt ~ t ~ None =>
-          RangeExpressionAST(pf,
-                             f,
-                             pt,
-                             BinaryExpressionAST(null, f, "+", null, t),
-                             null,
-                             LiteralExpressionAST(1),
-                             false)
+          RangeExpressionAST(
+            pf,
+            f,
+            pt,
+            BinaryExpressionAST(null, f, "+", null, t),
+            null,
+            LiteralExpressionAST(1),
+            false
+          )
       } |
       pos ~ (additiveExpression <~ "..-") ~ pos ~ additiveExpression ~ opt(
-        "by" ~> pos ~ additiveExpression) ^^ {
+        "by" ~> pos ~ additiveExpression
+      ) ^^ {
         case pf ~ f ~ pt ~ t ~ Some(pb ~ b) =>
           RangeExpressionAST(pf, f, pt, BinaryExpressionAST(null, f, "-", null, t), pb, b, false)
         case pf ~ f ~ pt ~ t ~ None =>
-          RangeExpressionAST(pf,
-                             f,
-                             pt,
-                             BinaryExpressionAST(null, f, "-", null, t),
-                             null,
-                             LiteralExpressionAST(-1),
-                             false)
+          RangeExpressionAST(
+            pf,
+            f,
+            pt,
+            BinaryExpressionAST(null, f, "-", null, t),
+            null,
+            LiteralExpressionAST(-1),
+            false
+          )
       } |
       additiveExpression
 
@@ -702,8 +738,6 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val keyExpression = additiveExpression
 
-//  lazy val comprehension: PackratParser[ComprehensionAST] = (consExpression <~ "|") ~ generators ^^ { case e ~ g => ComprehensionAST( e, g ) }
-
   lazy val primaryExpression: PackratParser[ExpressionAST] =
 //    pos ~ regexLit ^^ {
 //      case p ~ r => RegexLiteralAST( p, r ) } |
@@ -751,8 +785,11 @@ class YParser extends StandardTokenParsers with PackratParsers {
             List(VariablePatternAST(p, "a")),
             false,
             List(
-              FunctionPart(None,
-                           BinaryExpressionAST(null, e, o, p, VariableExpressionAST(null, "a")))),
+              FunctionPart(
+                None,
+                BinaryExpressionAST(null, e, o, p, VariableExpressionAST(null, "a"))
+              )
+            ),
             WhereClauseAST(Nil)
           )
       } |
@@ -763,8 +800,11 @@ class YParser extends StandardTokenParsers with PackratParsers {
             List(VariablePatternAST(p, "a")),
             false,
             List(
-              FunctionPart(None,
-                           BinaryExpressionAST(null, VariableExpressionAST(null, "a"), o, p, e))),
+              FunctionPart(
+                None,
+                BinaryExpressionAST(null, VariableExpressionAST(null, "a"), o, p, e)
+              )
+            ),
             WhereClauseAST(Nil)
           )
       } |
@@ -775,7 +815,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
       "[" ~> repsep(expression, ",") <~ "]" ^^ { l =>
         ListExpressionAST(l)
       } |
-//      "[" ~> comprehension <~ "]" ^^ ListComprehensionExpressionAST |
+      "[" ~> (consExpression <~ "|") ~ listgenerators <~ "]" ^^ {
+        case e ~ g => ListComprehensionExpressionAST(e, g)
+      } |
       ("(" ~> expression <~ ",") ~ (rep1sep(expression, ",") <~ ")") ^^ {
         case e ~ l => TupleExpressionAST(e +: l)
       } |
@@ -822,7 +864,6 @@ class YParser extends StandardTokenParsers with PackratParsers {
       pos ~ ("[" ~> repsep(pattern, ",") <~ "]") ^^ { case p ~ l    => ListPatternAST(p, l) } |
       pos ~ "{" ~ repsep(ident, ",") ~ "}" ^^ { case p ~ _ ~ es ~ _ => MapPatternAST(p, es.toSet) } |
       "(" ~> pattern <~ ")"
-
 }
 
 //todo: cset operations + (including adding string to cset), -, *, - (complement)
