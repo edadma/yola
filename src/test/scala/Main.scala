@@ -5,7 +5,9 @@ object Main extends App {
   import Testing._
 
   println(runCapture("""
-                       |println( 'asdf' )
+                       |
+                       |
+                       |println( (x -> x + 3)(4) )
                        |""".stripMargin))
 
 }

@@ -238,7 +238,7 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
     case AndExpressionAST(left, right) => beval(left) && beval(right)
     case OrExpressionAST(left, right)  => beval(left) || beval(right)
     case NotExpressionAST(cond)        => !beval(cond)
-    case f: FunctionExpressionAST      => f
+    case f: FunctionPieceAST           => f
   }
 
   def call(fpos: Position, f: Any, apos: Position, args: List[Any]) =
@@ -251,7 +251,7 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
             s"wrong number of arguments for constructor '$name': got ${args.length}, expected ${fields.length}")
 
         Record(con, args)
-      case f @ FunctionExpressionAST(pos, name, parms, arb, parts, where) =>
+      case f @ FunctionPieceAST(pos, parms, arb, parts, where) =>
         implicit val scope = new Scope(f.scope)
         val alen           = args.length
         val plen           = parms.length

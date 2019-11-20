@@ -5,6 +5,7 @@ import scala.util.parsing.input.Position
 
 class Scope(val outer: Scope) {
   val vars = new mutable.HashMap[String, Any]
+  //val funcs = new mutable.HashMap[Int, List[FunctionExpressionAST]]()
 
   def duplicate(pos: Position, name: String): Unit = {
     if (vars contains name)
