@@ -60,7 +60,7 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
     case VarAST(pos, name, Some((_, exp))) => implicitly[Scope].declare(pos, name, Var(deval(exp)))
     case DefAST(pos, name, func) =>
       func.scope = scope
-      implicitly[Scope].declare(pos, name, func)
+      implicitly[Scope].add(pos, name, func)
     case DataAST(pos, typ, constructors) =>
       for ((name, fields) <- constructors)
         implicitly[Scope].declare(pos, name, Constructor(typ, name, fields))
