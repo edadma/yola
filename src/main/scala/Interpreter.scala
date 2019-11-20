@@ -270,6 +270,11 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
           )
 
         Record(con, args)
+      case Functions(map) =>
+        map get args.length match {
+          case None    => problem(fpos, s"function of arity ${args.length} not found")
+          case Some(f) =>
+        }
       case f @ FunctionPieceAST(pos, parms, arb, parts, where) =>
         implicit val scope = new Scope(f.scope)
         val alen           = args.length

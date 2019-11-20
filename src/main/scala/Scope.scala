@@ -19,12 +19,6 @@ class Scope(val outer: Scope) {
   def get(name: String): Option[Any] =
     vars get name orElse (if (outer eq null) None else outer.get(name))
 
-  def get(name: String, arity: Int): Option[Any] =
-    get(name) map {
-      case Functions(map) => map(arity)
-      case v              => v
-    }
-
   def add(pos: Position, name: String, piece: FunctionPieceAST) = {
     vars get name match {
       case None =>
@@ -39,6 +33,6 @@ class Scope(val outer: Scope) {
       case _ => duplicate(pos, name)
     }
   }
-
-  case class Functions(map: mutable.HashMap[Int, FunctionExpressionAST])
 }
+
+case class Functions(map: mutable.HashMap[Int, FunctionExpressionAST])
