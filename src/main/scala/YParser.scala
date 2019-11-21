@@ -235,6 +235,7 @@ class YolaLexical
     ">=",
     ":",
     "->",
+    "~>",
     ".",
     ";",
     "!",
@@ -713,13 +714,13 @@ class YParser extends StandardTokenParsers with PackratParsers {
       incrementExpression
 
   lazy val incrementExpression: PackratParser[ExpressionAST] =
-    ("++" | "--") ~ pos ~ applyExpression /*generateDefinedExpression*/ ^^ {
+    ("++" | "--") ~ pos ~ applyExpression ^^ {
       case o ~ p ~ e => UnaryExpressionAST(o + "_", p, e)
     } |
-      pos ~ applyExpression /*generateDefinedExpression*/ ~ ("++" | "--") ^^ {
+      pos ~ applyExpression ~ ("++" | "--") ^^ {
         case p ~ e ~ o => UnaryExpressionAST("_" + o, p, e)
       } |
-      applyExpression /*generateDefinedExpression*/
+      applyExpression
 
   lazy val applyExpression: PackratParser[ExpressionAST] =
     pos ~ applyExpression ~ pos ~ ("(" ~> repsep(pos ~ expression, ",") <~ ")") ^^ {
@@ -728,6 +729,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
     } |
       pos ~ applyExpression ~ ("." ~> pos) ~ (ident | stringLit) ^^ {
         case fp ~ e ~ ap ~ f => DotExpressionAST(fp, e, ap, f)
+      } |
+      pos ~ applyExpression ~ "~>" ~ pos ~ applyExpression ^^ {
+        case ap ~ a ~ _ ~ fp ~ f => ApplyExpressionAST(fp, f, ap, List((ap, a)), false)
       } |
       primaryExpression
 

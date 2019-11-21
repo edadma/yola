@@ -1,5 +1,6 @@
 package xyz.hyperreal.yola
 
+import scala.collection.mutable
 import scala.util.parsing.input.Position
 
 class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit) {
@@ -105,7 +106,8 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
       val inner = new Scope(scope)
 
       def evals(l: List[StatementAST]): Any = l match {
-        case h :: Nil => apply(h)(inner)
+        case h :: Nil =>
+          apply(h)(inner)
         case h :: t =>
           apply(h)(inner)
           evals(t)
@@ -268,7 +270,7 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
             s"wrong number of arguments for constructor '$name': got ${args.length}, expected ${fields.length}"
           )
 
-        Record(con, args)
+        Record(con, mutable.LinkedHashMap(fields zip args: _*))
       case Functions(map) =>
         map get args.length match {
           case None    => problem(fpos, s"function of arity ${args.length} not found")
@@ -405,8 +407,8 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
       case RecordPatternAST(pos, name, args) =>
         v match {
           case Record(Constructor(_, rname, _), rargs)
-              if name == rname && args.length == rargs.length =>
-            rargs zip args forall { case (e, a) => unify(e, a, errors) }
+              if name == rname && args.length == rargs.size =>
+            rargs.values zip args forall { case (e, a) => unify(e, a, errors) }
           case p: Product if name == p.productPrefix && args.length == p.productArity =>
             p.productIterator.toList zip args forall { case (e, a) => unify(e, a, errors) }
           case _ =>
@@ -443,7 +445,9 @@ case class NTuple(elems: List[Any])
 
 case class Constructor(typ: String, name: String, fields: List[String])
 
-case class Record(con: Constructor, args: List[Any])
+case class Record(con: Constructor, args: mutable.LinkedHashMap[String, Any]) extends (Any => Any) {
+  def apply(field: Any) = args(field.asInstanceOf[String])
+}
 
 case class Enum(name: String, ordinal: Int) extends (Any => Any) {
 

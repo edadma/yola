@@ -1,1 +1,16 @@
-println( None )
+val f =
+    [] -> 0
+    [a] -> a
+    [a, b] -> a + b
+
+data c(x, y)
+
+val v = c(5, [3, 4])
+
+println( v )
+
+def g(x) = x
+
+val a = g(v.y) ~> f
+
+println( a )
