@@ -1,5 +1,7 @@
 def
-    map( f, [] ) = []
-    map( f, x::xs ) = f(x) :: map( f, xs )
+    filter( p, [] ) = []
+    filter( p, x::xs )
+        | p( x ) = x :: filter( p, xs )
+        | else = filter( p, xs )
 
-println( map((*2), [3, 4, 5]) )
+println( filter((>4), [3, 4, 5, 6]) )

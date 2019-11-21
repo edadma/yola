@@ -46,6 +46,15 @@ object LanguageTests extends TestSuite {
                          |
                          |map( (*2), [3, 4, 5] )
                          |""".stripMargin) == List(6, 8, 10))
+      assert(runResult("""
+                         |def
+                         |    filter( p, [] ) = []
+                         |    filter( p, x::xs )
+                         |        | p( x ) = x :: filter( p, xs )
+                         |        | else = filter( p, xs )
+                         |
+                         |filter( (>4), [3, 4, 5, 6] )
+                         |""".stripMargin) == 7)
     }
 
     test("variables") {
