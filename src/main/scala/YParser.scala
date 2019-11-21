@@ -796,18 +796,20 @@ class YParser extends StandardTokenParsers with PackratParsers {
       } |
       "(" ~> infix ~ pos ~ applyExpression <~ ")" ^^ {
         case o ~ p ~ e =>
-          FunctionExpressionAST(List(FunctionPieceAST(
-            p,
-            List(VariablePatternAST(p, "a")),
-            false,
+          FunctionExpressionAST(
             List(
-              FunctionPart(
-                None,
-                ComparisonExpressionAST(null, VariableExpressionAST(null, "a"), List((o, p, e)))
-              )
-            ),
-            WhereClauseAST(Nil)
-          )))
+              FunctionPieceAST(
+                p,
+                List(VariablePatternAST(p, "a")),
+                false,
+                List(
+                  FunctionPart(
+                    None,
+                    BinaryExpressionAST(null, VariableExpressionAST(null, "a"), o, p, e)
+                  )
+                ),
+                WhereClauseAST(Nil)
+              )))
       } |
       "(" ~> infixComparison <~ ")" ^^ (op =>
         FunctionExpressionAST(List(FunctionPieceAST(
