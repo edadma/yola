@@ -765,48 +765,51 @@ class YParser extends StandardTokenParsers with PackratParsers {
             LiteralExpressionAST(s)
       } |
       "(" ~> infix <~ ")" ^^ (op =>
-        FunctionPieceAST(
+        FunctionExpressionAST(List(FunctionPieceAST(
           null,
           List(VariablePatternAST(null, "a"), VariablePatternAST(null, "b")),
           false,
-          List(
-            FunctionPart(None,
-                         BinaryExpressionAST(null,
-                                             VariableExpressionAST(null, "a"),
-                                             op,
-                                             null,
-                                             VariableExpressionAST(null, "b")))),
+          List(FunctionPart(None,
+                            BinaryExpressionAST(null,
+                                                VariableExpressionAST(null, "a"),
+                                                op,
+                                                null,
+                                                VariableExpressionAST(null, "b")))),
           WhereClauseAST(Nil)
-        )) |
+        )))) |
       ("(" ~> pos) ~ applyExpression ~ (infix <~ ")") ^^ {
         case p ~ e ~ o =>
-          FunctionPieceAST(
-            p,
-            List(VariablePatternAST(p, "a")),
-            false,
+          FunctionExpressionAST(
             List(
-              FunctionPart(
-                None,
-                BinaryExpressionAST(null, e, o, p, VariableExpressionAST(null, "a"))
-              )
-            ),
-            WhereClauseAST(Nil)
-          )
+              FunctionPieceAST(
+                p,
+                List(VariablePatternAST(p, "a")),
+                false,
+                List(
+                  FunctionPart(
+                    None,
+                    BinaryExpressionAST(null, e, o, p, VariableExpressionAST(null, "a"))
+                  )
+                ),
+                WhereClauseAST(Nil)
+              )))
       } |
       "(" ~> infix ~ pos ~ applyExpression <~ ")" ^^ {
         case o ~ p ~ e =>
-          FunctionPieceAST(
-            p,
-            List(VariablePatternAST(p, "a")),
-            false,
+          FunctionExpressionAST(
             List(
-              FunctionPart(
-                None,
-                BinaryExpressionAST(null, VariableExpressionAST(null, "a"), o, p, e)
-              )
-            ),
-            WhereClauseAST(Nil)
-          )
+              FunctionPieceAST(
+                p,
+                List(VariablePatternAST(p, "a")),
+                false,
+                List(
+                  FunctionPart(
+                    None,
+                    BinaryExpressionAST(null, VariableExpressionAST(null, "a"), o, p, e)
+                  )
+                ),
+                WhereClauseAST(Nil)
+              )))
       } |
       ("true" | "false") ^^ (b => LiteralExpressionAST(b.toBoolean)) |
       "(" ~ ")" ^^^ LiteralExpressionAST(()) |

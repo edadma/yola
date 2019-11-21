@@ -36,6 +36,16 @@ object LanguageTests extends TestSuite {
                          |
                          |f(4)
                          |""".stripMargin) == 7)
+      assert(runResult("""
+                         |(x -> x + 3)(4)
+                         |""".stripMargin) == 7)
+      assert(runResult("""
+                         |def
+                         |  map( f, [] ) = []
+                         |  map( f, x::xs ) = f(x) :: map( f, xs )
+                         |
+                         |map( (*2), [3, 4, 5] )
+                         |""".stripMargin) == List(6, 8, 10))
     }
 
     test("variables") {

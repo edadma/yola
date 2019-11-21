@@ -198,9 +198,9 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
       val r = deval(right)
 
       op match {
-        case "+"   => l.asInstanceOf[Int] + r.asInstanceOf[Int]
-        case "%"   => l.asInstanceOf[Int] % r.asInstanceOf[Int]
-        case "adj" => l.asInstanceOf[Int] * r.asInstanceOf[Int]
+        case "+"         => l.asInstanceOf[Int] + r.asInstanceOf[Int]
+        case "%"         => l.asInstanceOf[Int] % r.asInstanceOf[Int]
+        case "*" | "adj" => l.asInstanceOf[Int] * r.asInstanceOf[Int]
       }
     case VariableExpressionAST(pos, name) =>
       scope get name match {
