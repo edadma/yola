@@ -14,8 +14,14 @@ package object yola {
     sys.exit(1)
   }
 
+  private val tupleRegex = "Tuple[0-9]+" r
+
   def display(v: Any): String =
     v match {
+      case p: Product =>
+        val prefix = if (p.productPrefix.matches("Tuple[0-9]+")) "(" else p.productPrefix
+
+        p.productIterator map quotedDisplay mkString (prefix, ", ", ")")
       case NTuple(elems)     => elems map quotedDisplay mkString ("(", ", ", ")")
       case Record(con, args) => args.values map quotedDisplay mkString (s"${con.name}(", ", ", ")")
       case elems: List[_]    => elems map quotedDisplay mkString ("[", ", ", "]")
