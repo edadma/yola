@@ -3,7 +3,6 @@ package xyz.hyperreal.yola
 import utest._
 
 object LanguageTests extends TestSuite {
-
   import Testing._
 
   val tests = Tests {
@@ -23,7 +22,8 @@ object LanguageTests extends TestSuite {
                      |""".stripMargin) ==
           """
             |3, 4, 5, [4, 5]
-            |""".stripMargin.trim)
+            |""".stripMargin.trim
+      )
     }
 
     test("arithmetic") {
@@ -76,7 +76,11 @@ object LanguageTests extends TestSuite {
             |2, 7
             |4, 5
             |4, 7
-            |""".stripMargin.trim)
+            |""".stripMargin.trim
+      )
+    }
+
+    test("for yield") {
       assert(runCapture("""
                           |val l =
                           |  for i <- 1..4 if i%2 == 0; j <- 5..8 if j%2 == 1
@@ -84,6 +88,12 @@ object LanguageTests extends TestSuite {
                           |
                           |println( l )
                           |""".stripMargin) == "Vector((2, 5), (2, 7), (4, 5), (4, 7))")
+    }
+
+    test("list comprehensions") {
+      assert(
+        runCapture("""println( [(i, j) | i <- 1..4 if i%2 == 0, j <- 5..8 if j%2 == 1] )""") == "[(2, 5), (2, 7), (4, 5), (4, 7)]"
+      )
     }
 
     test("lexical scope") {
@@ -101,7 +111,8 @@ object LanguageTests extends TestSuite {
           """
             |5
             |3
-            |""".stripMargin.trim)
+            |""".stripMargin.trim
+      )
       assert(
         runCapture("""
                      |val a = 3
@@ -118,8 +129,8 @@ object LanguageTests extends TestSuite {
           """
             |5
             |3
-            |""".stripMargin.trim)
+            |""".stripMargin.trim
+      )
     }
   }
-
 }

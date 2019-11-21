@@ -1,5 +1,1 @@
-def
-  map( f, [] ) = []
-  map( f, x::xs ) = f(x) :: map( f, xs )
-
-map( (*2), [3, 4, 5] )
+println( [(i, j) | i <- 1..4 if i%2 == 0, j <- 5..8 if j%2 == 1] )
