@@ -30,6 +30,14 @@ object LanguageTests extends TestSuite {
       assert(runResult("1 + 2") == 3)
     }
 
+    test("functions") {
+      assert(runResult("""
+                         |def f(x) = x + 3
+                         |
+                         |f(4)
+                         |""".stripMargin) == 7)
+    }
+
     test("variables") {
       assert(runCapture("""
                           |val a = 3

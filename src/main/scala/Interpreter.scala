@@ -277,36 +277,42 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
         }
       case FunctionExpressionAST(pieces) =>
         pieces.head match {
-          case f @ FunctionPieceAST(pos, parms, arb, parts, where) =>
-            implicit val scope = new Scope(f.scope)
-            val alen           = args.length
-            val plen           = parms.length
+          case FunctionPieceAST(pos, parms, arb, parts, where) =>
+            val alen = args.length
+            val plen = parms.length
 
             if (alen > plen)
               problem(apos, s"too many arguments: expected $plen, found $alen")
             else if (alen < plen)
               problem(apos, s"too few arguments: expected $plen, found $alen")
-
-            args zip parms foreach {
-              case (a, p) =>
-                unify(a, p, false)
-            }
-
-            def testParts(ps: List[FunctionPart]): Any =
-              ps match {
-                case Nil => problem(pos, s"could not apply function: $fpos")
-                case h :: t =>
-                  if (h.guard match {
-                        case None    => true
-                        case Some(g) => beval(g)
-                      })
-                    eval(h.body)
-                  else
-                    testParts(t)
-              }
-
-            testParts(parts)
         }
+
+        def testPieces(ps: List[FunctionPieceAST]): Any =
+          ps match {
+            case Nil => problem(fpos, s"could not find matching function piece")
+            case (piece @ FunctionPieceAST(pos, parms, arb, parts, where)) :: t =>
+              implicit val scope = new Scope(piece.scope)
+
+              if (args zip parms forall { case (a, p) => unify(a, p, false) }) {
+                def testParts(ps: List[FunctionPart]): Any =
+                  ps match {
+                    case Nil => problem(pos, s"could not apply function")
+                    case h :: t =>
+                      if (h.guard match {
+                            case None    => true
+                            case Some(g) => beval(g)
+                          })
+                        eval(h.body)
+                      else
+                        testParts(t)
+                  }
+
+                testParts(parts)
+              } else
+                testPieces(t)
+          }
+
+        testPieces(pieces)
     }
 //      case f @ FunctionPieceAST(pos, parms, arb, parts, where) =>
 //        implicit val scope = new Scope(f.scope)
