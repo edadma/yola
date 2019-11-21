@@ -234,7 +234,7 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
     case AndExpressionAST(left, right) => beval(left) && beval(right)
     case OrExpressionAST(left, right)  => beval(left) || beval(right)
     case NotExpressionAST(cond)        => !beval(cond)
-    case f: FunctionPieceAST           => f
+    case f: FunctionExpressionAST      => f
   }
 
   def flatMap(
@@ -257,7 +257,7 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
         })
     }
 
-  def call(fpos: Position, f: Any, apos: Position, args: List[Any]) =
+  def call(fpos: Position, f: Any, apos: Position, args: List[Any]): Any =
     f match {
       case func: (List[Any] => Any) => func(args)
       case Constructor(_, name, Nil) =>
@@ -273,38 +273,70 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
       case Functions(map) =>
         map get args.length match {
           case None    => problem(fpos, s"function of arity ${args.length} not found")
-          case Some(f) =>
+          case Some(f) => call(fpos, f, apos, args)
         }
-      case f @ FunctionPieceAST(pos, parms, arb, parts, where) =>
-        implicit val scope = new Scope(f.scope)
-        val alen           = args.length
-        val plen           = parms.length
+      case FunctionExpressionAST(pieces) =>
+        pieces.head match {
+          case f @ FunctionPieceAST(pos, parms, arb, parts, where) =>
+            implicit val scope = new Scope(f.scope)
+            val alen           = args.length
+            val plen           = parms.length
 
-        if (alen > plen)
-          problem(apos, s"too many arguments: expected $plen, found $alen")
-        else if (alen < plen)
-          problem(apos, s"too few arguments: expected $plen, found $alen")
+            if (alen > plen)
+              problem(apos, s"too many arguments: expected $plen, found $alen")
+            else if (alen < plen)
+              problem(apos, s"too few arguments: expected $plen, found $alen")
 
-        args zip parms foreach {
-          case (a, p) =>
-            unify(a, p, false)
+            args zip parms foreach {
+              case (a, p) =>
+                unify(a, p, false)
+            }
+
+            def testParts(ps: List[FunctionPart]): Any =
+              ps match {
+                case Nil => problem(pos, s"could not apply function: $fpos")
+                case h :: t =>
+                  if (h.guard match {
+                        case None    => true
+                        case Some(g) => beval(g)
+                      })
+                    eval(h.body)
+                  else
+                    testParts(t)
+              }
+
+            testParts(parts)
         }
-
-        def testParts(ps: List[FunctionPart]): Any =
-          ps match {
-            case Nil => problem(pos, s"could not apply function: $fpos")
-            case h :: t =>
-              if (h.guard match {
-                    case None    => true
-                    case Some(g) => beval(g)
-                  })
-                eval(h.body)
-              else
-                testParts(t)
-          }
-
-        testParts(parts)
     }
+//      case f @ FunctionPieceAST(pos, parms, arb, parts, where) =>
+//        implicit val scope = new Scope(f.scope)
+//        val alen           = args.length
+//        val plen           = parms.length
+//
+//        if (alen > plen)
+//          problem(apos, s"too many arguments: expected $plen, found $alen")
+//        else if (alen < plen)
+//          problem(apos, s"too few arguments: expected $plen, found $alen")
+//
+//        args zip parms foreach {
+//          case (a, p) =>
+//            unify(a, p, false)
+//        }
+//
+//        def testParts(ps: List[FunctionPart]): Any =
+//          ps match {
+//            case Nil => problem(pos, s"could not apply function: $fpos")
+//            case h :: t =>
+//              if (h.guard match {
+//                    case None    => true
+//                    case Some(g) => beval(g)
+//                  })
+//                eval(h.body)
+//              else
+//                testParts(t)
+//          }
+//
+//        testParts(parts)
 
   def unify(v: Any, s: PatternAST, errors: Boolean)(implicit scope: Scope): Boolean =
     s match {
