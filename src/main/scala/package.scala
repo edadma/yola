@@ -34,4 +34,11 @@ package object yola {
       case s: String => s"""'${s replace ("'", "\\'")}'"""
       case _         => display(v)
     }
+
+  val globalScope =
+    new Scope(null) {
+      vars ++= Map(
+        "None" -> None
+      )
+    }
 }

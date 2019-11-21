@@ -26,31 +26,22 @@ case class VarAST(pos: Position, var name: String, init: Option[(Position, Expre
 
 case class DataAST(pos: Position, name: String, constructors: List[(String, List[String])])
     extends DeclarationStatementAST
+
 case class DefAST(pos: Position, name: String, func: FunctionPieceAST)
     extends DeclarationStatementAST
 
 case class DeclarationBlockAST(decls: List[DeclarationStatementAST]) extends DeclarationStatementAST
 
-trait ExpressionAST                         extends StatementAST
-case class SectionExpressionAST(op: String) extends ExpressionAST
-case class LeftSectionExpressionAST(pos: Position,
-                                    expr: ExpressionAST,
-                                    lambda: FunctionPieceAST,
-                                    op: String,
-                                    var closure: Option[Boolean] = None)
-    extends ExpressionAST
-case class RightSectionExpressionAST(op: String,
-                                     pos: Position,
-                                     expr: ExpressionAST,
-                                     lambda: FunctionPieceAST,
-                                     var closure: Option[Boolean] = None)
-    extends ExpressionAST
-case class ApplyExpressionAST(fpos: Position,
-                              f: ExpressionAST,
-                              apos: Position,
-                              args: List[(Position, ExpressionAST)],
-                              var tailrecursive: Boolean)
-    extends ExpressionAST
+trait ExpressionAST extends StatementAST
+
+case class ApplyExpressionAST(
+    fpos: Position,
+    f: ExpressionAST,
+    apos: Position,
+    args: List[(Position, ExpressionAST)],
+    var tailrecursive: Boolean
+) extends ExpressionAST
+
 case class DotExpressionAST(epos: Position, expr: ExpressionAST, apos: Position, field: String)
     extends ExpressionAST
 case class LiteralExpressionAST(v: Any)                           extends ExpressionAST
@@ -147,12 +138,13 @@ case class FunctionExpressionAST(pieces: List[FunctionPieceAST]) extends Express
   var scope: Scope = null
 }
 
-case class FunctionPieceAST(pos: Position,
-                            parms: List[PatternAST],
-                            arb: Boolean,
-                            parts: List[FunctionPart],
-                            where: WhereClauseAST)
-    extends ExpressionAST { var scope: Scope = null }
+case class FunctionPieceAST(
+    pos: Position,
+    parms: List[PatternAST],
+    arb: Boolean,
+    parts: List[FunctionPart],
+    where: WhereClauseAST
+) extends ExpressionAST { var scope: Scope = null }
 
 case class FunctionPart(guard: Option[ExpressionAST], body: ExpressionAST) extends AST
 

@@ -6,9 +6,10 @@ object Testing {
   def run(snippet: String, output: Any => Unit) = {
     val parser          = new YParser
     val ast             = parser.parseFromString(snippet, parser.source)
-    implicit val global = new Scope(null)
+    implicit val global = globalScope
 
     global.vars("println") = (args: List[Any]) => output(args map display mkString ", ")
+
     new Interpreter(loader)(ast)
   }
 

@@ -80,7 +80,6 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
     }
 
   def eval(expr: ExpressionAST)(implicit scope: Scope): Any = expr match {
-    case SectionExpressionAST(op)       =>
     case InterpolationExpressionAST(es) => es map deval map display mkString
     case ComparisonExpressionAST(pos, left, comparisons) =>
       def comp(left: Any, cs: List[(String, Position, ExpressionAST)]): Boolean =
@@ -314,35 +313,6 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
 
         testPieces(pieces)
     }
-//      case f @ FunctionPieceAST(pos, parms, arb, parts, where) =>
-//        implicit val scope = new Scope(f.scope)
-//        val alen           = args.length
-//        val plen           = parms.length
-//
-//        if (alen > plen)
-//          problem(apos, s"too many arguments: expected $plen, found $alen")
-//        else if (alen < plen)
-//          problem(apos, s"too few arguments: expected $plen, found $alen")
-//
-//        args zip parms foreach {
-//          case (a, p) =>
-//            unify(a, p, false)
-//        }
-//
-//        def testParts(ps: List[FunctionPart]): Any =
-//          ps match {
-//            case Nil => problem(pos, s"could not apply function: $fpos")
-//            case h :: t =>
-//              if (h.guard match {
-//                    case None    => true
-//                    case Some(g) => beval(g)
-//                  })
-//                eval(h.body)
-//              else
-//                testParts(t)
-//          }
-//
-//        testParts(parts)
 
   def unify(v: Any, s: PatternAST, errors: Boolean)(implicit scope: Scope): Boolean =
     s match {
@@ -437,6 +407,8 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
           case Record(Constructor(_, rname, _), rargs)
               if name == rname && args.length == rargs.length =>
             rargs zip args forall { case (e, a) => unify(e, a, errors) }
+          case p: Product if name == p.productPrefix && args.length == p.productArity =>
+            p.productIterator.toList zip args forall { case (e, a) => unify(e, a, errors) }
           case _ =>
             if (errors)
               problem(pos, s"expected record '$name'")
@@ -453,6 +425,9 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
                 false
             else
               elems2 zip elems forall { case (e, a) => unify(e, a, errors) }
+          case p: Product
+              if p.productPrefix == s"Tuple${elems.length}" && elems.length == p.productArity =>
+            p.productIterator.toList zip elems forall { case (e, a) => unify(e, a, errors) }
           case _ =>
             if (errors)
               problem(pos, "expected tuple")

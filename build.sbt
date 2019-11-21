@@ -1,6 +1,6 @@
 name := "yola"
 
-version := "0.1m.0"
+version := "0.1o.0"
 
 scalaVersion := "2.11.12"
 
@@ -8,15 +8,22 @@ nativeLinkStubs := true
 
 nativeMode := "debug"
 
-nativeLinkingOptions := Seq( s"-L/${baseDirectory.value}/native-lib" )
+nativeLinkingOptions := Seq(s"-L/${baseDirectory.value}/native-lib")
 
-scalacOptions ++= Seq( "-deprecation", "-feature", "-unchecked", "-language:postfixOps", "-language:implicitConversions", "-language:existentials" )
+scalacOptions ++= Seq(
+  "-deprecation",
+  "-feature",
+  "-unchecked",
+  "-language:postfixOps",
+  "-language:implicitConversions",
+  "-language:existentials"
+)
 
 organization := "xyz.hyperreal"
 
 resolvers += "Hyperreal Repository" at "https://dl.bintray.com/edadma/maven"
 
-mainClass in (Compile, run) := Some( "xyz.hyperreal." + name.value.replace('-', '_') + ".Main" )
+mainClass in (Compile, run) := Some("xyz.hyperreal." + name.value.replace('-', '_') + ".Main")
 
 licenses := Seq("ISC" -> url("https://opensource.org/licenses/isc"))
 
@@ -26,7 +33,7 @@ enablePlugins(ScalaNativePlugin)
 
 libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.1" % "test"
 
-testFrameworks += new TestFramework( "utest.runner.Framework" )
+testFrameworks += new TestFramework("utest.runner.Framework")
 
 libraryDependencies ++= Seq(
   "xyz.hyperreal" %%% "indentation-lexical-native" % "0.9.1"
@@ -44,7 +51,9 @@ publishMavenStyle := true
 
 publishArtifact in Test := false
 
-pomIncludeRepository := { _ => false }
+pomIncludeRepository := { _ =>
+  false
+}
 
 pomExtra :=
   <scm>
