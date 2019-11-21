@@ -54,7 +54,7 @@ object LanguageTests extends TestSuite {
                          |        | else = filter( p, xs )
                          |
                          |filter( (>4), [3, 4, 5, 6] )
-                         |""".stripMargin) == 7)
+                         |""".stripMargin) == List(5, 6))
     }
 
     test("variables") {
