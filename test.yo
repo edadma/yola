@@ -1,5 +1,10 @@
-def f(x) = 3x
+def
+  foldl( f, z, [] )    =  z
+  foldl( f, z, x::xs ) =  foldl( f, f(z, x), xs )
 
-def g(x) = x + 4
+  sum( l )             =  foldl( (+), 0, l )
+  product( l )         =  foldl( (*), 1, l )
 
-println( 5 ~> g ~> f )
+val l = [3, 4, 5]
+
+println( [sum(l), product(l)] )

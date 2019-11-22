@@ -62,6 +62,18 @@ object LanguageTests extends TestSuite {
                          |
                          |5 ~> g ~> f
                          |""".stripMargin) == 27)
+      assert(runResult("""
+                         |def
+                         |  foldl( f, z, [] )    =  z
+                         |  foldl( f, z, x::xs ) =  foldl( f, f(z, x), xs )
+                         |
+                         |  sum( l )             =  foldl( (+), 0, l )
+                         |  product( l )         =  foldl( (*), 1, l )
+                         |
+                         |val l = [3, 4, 5]
+                         |
+                         |[sum(l), product(l)]
+                         |""".stripMargin) == List(12, 60))
     }
 
     test("variables") {
