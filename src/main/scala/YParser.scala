@@ -291,27 +291,27 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val onl = rep(Newline)
 
   lazy val number: PackratParser[Number] =
-    numericLit ^^
-      (
-          n =>
-            if (n startsWith "0x") {
-              val num = BigInt(n substring 2, 16)
-
-              if (num.isValidInt)
-                num.intValue.asInstanceOf[Number]
-              else
-                num
-            } else if (n matches ".*[.eE].*")
-              n.toDouble.asInstanceOf[Number]
-            else {
-              val bi = BigInt(n)
-
-              if (bi.isValidInt)
-                bi.intValue.asInstanceOf[Number]
-              else
-                bi
-            }
-      )
+    numericLit ^^ BigDecimal.apply
+//      (
+//          n =>
+//            if (n startsWith "0x") {
+//              val num = BigInt(n substring 2, 16)
+//
+//              if (num.isValidInt)
+//                num.intValue.asInstanceOf[Number]
+//              else
+//                num
+//            } else if (n matches ".*[.eE].*")
+//              n.toDouble.asInstanceOf[Number]
+//            else {
+//              val bi = BigInt(n)
+//
+//              if (bi.isValidInt)
+//                bi.intValue.asInstanceOf[Number]
+//              else
+//                bi
+//            }
+//      )
 
   lazy val source: PackratParser[BlockExpressionAST] =
     Newline ^^^ BlockExpressionAST(Nil) |
@@ -646,14 +646,14 @@ class YParser extends StandardTokenParsers with PackratParsers {
     ) ^^ {
       case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST(pf, f, pt, t, pb, b, true)
       case pf ~ f ~ pt ~ t ~ None =>
-        RangeExpressionAST(pf, f, pt, t, null, LiteralExpressionAST(1), true)
+        RangeExpressionAST(pf, f, pt, t, null, LiteralExpressionAST(BigDecimal(1)), true)
     } |
       pos ~ (additiveExpression <~ "..<") ~ pos ~ additiveExpression ~ opt(
         "by" ~> pos ~ additiveExpression
       ) ^^ {
         case pf ~ f ~ pt ~ t ~ Some(pb ~ b) => RangeExpressionAST(pf, f, pt, t, pb, b, false)
         case pf ~ f ~ pt ~ t ~ None =>
-          RangeExpressionAST(pf, f, pt, t, null, LiteralExpressionAST(1), false)
+          RangeExpressionAST(pf, f, pt, t, null, LiteralExpressionAST(BigDecimal(1)), false)
       } |
       pos ~ (additiveExpression <~ "..+") ~ pos ~ additiveExpression ~ opt(
         "by" ~> pos ~ additiveExpression
@@ -683,7 +683,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
             pt,
             BinaryExpressionAST(null, f, "-", null, t),
             null,
-            LiteralExpressionAST(-1),
+            LiteralExpressionAST(BigDecimal(-1)),
             false
           )
       } |

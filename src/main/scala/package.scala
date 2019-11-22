@@ -1,5 +1,6 @@
 package xyz.hyperreal
 
+import scala.collection.immutable.Range
 import scala.util.parsing.input.Position
 
 package object yola {
@@ -18,6 +19,8 @@ package object yola {
 
   def display(v: Any): String =
     v match {
+      case r: Range =>
+        s"Range(start: ${r.start}, end: ${r.end}, step: ${r.step}, incl: ${r.isInclusive})"
       case NTuple(elems)     => elems map quotedDisplay mkString ("(", ", ", ")")
       case Record(con, args) => args.values map quotedDisplay mkString (s"${con.name}(", ", ", ")")
       case elems: List[_]    => elems map quotedDisplay mkString ("[", ", ", "]")

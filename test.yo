@@ -14,10 +14,4 @@
         println(55)
 */
 
-val a = 4
-val b = 5
-val c = 6
-
-def f(x) = x*a
-
-println( 7 ~> f ~> x -> x + b ~> (+ c) )
+println( for i <- 1..3 yield i )

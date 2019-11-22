@@ -70,6 +70,8 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
 
   def beval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[Boolean]
 
+  def neval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[BigDecimal]
+
   def ieval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[Iterable[Any]]
 
   def deref(a: Any) =
@@ -89,10 +91,10 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
 
             if (op match {
                   case "==" => left == right
-                  case "<"  => left.asInstanceOf[Int] < right.asInstanceOf[Int]
-                  case ">"  => left.asInstanceOf[Int] > right.asInstanceOf[Int]
-                  case "<=" => left.asInstanceOf[Int] <= right.asInstanceOf[Int]
-                  case ">=" => left.asInstanceOf[Int] >= right.asInstanceOf[Int]
+                  case "<"  => left.asInstanceOf[BigDecimal] < right.asInstanceOf[BigDecimal]
+                  case ">"  => left.asInstanceOf[BigDecimal] > right.asInstanceOf[BigDecimal]
+                  case "<=" => left.asInstanceOf[BigDecimal] <= right.asInstanceOf[BigDecimal]
+                  case ">=" => left.asInstanceOf[BigDecimal] >= right.asInstanceOf[BigDecimal]
                 })
               comp(right, t)
             else
@@ -128,7 +130,7 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
             case h: Var =>
               op match {
                 case "="  => h.v = v
-                case "+=" => h.v = h.v.asInstanceOf[Int] + v.asInstanceOf[Int]
+                case "+=" => h.v = h.v.asInstanceOf[BigDecimal] + v.asInstanceOf[BigDecimal]
               }
               h.v
             case _ => problem(pl, "not an l-value")
@@ -140,17 +142,17 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
           op match {
             case "_++" =>
               val res = h.v
-              h.v = h.v.asInstanceOf[Int] + 1
+              h.v = h.v.asInstanceOf[BigDecimal] + 1
               res
             case "_--" =>
               val res = h.v
-              h.v = h.v.asInstanceOf[Int] - 1
+              h.v = h.v.asInstanceOf[BigDecimal] - 1
               res
             case "++_" =>
-              h.v = h.v.asInstanceOf[Int] + 1
+              h.v = h.v.asInstanceOf[BigDecimal] + 1
               h.v
             case "--_" =>
-              h.v = h.v.asInstanceOf[Int] - 1
+              h.v = h.v.asInstanceOf[BigDecimal] - 1
               h.v
           }
         case _ => problem(pos, "not an l-value")
@@ -172,8 +174,9 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
           case GeneratorExpressionAST(pattern, pos, iterable, filter) :: tail =>
             ieval(iterable).foreach(v => {
               val inner = new Scope(outer)
+              val v1    = if (v.isInstanceOf[Int]) BigDecimal(v.asInstanceOf[Int]) else v
 
-              unify(v, pattern, true)(inner)
+              unify(v1, pattern, true)(inner)
 
               if (!filter.isDefined || beval(filter.get)(inner))
                 foreach(tail, inner)
@@ -197,9 +200,9 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
       val r = deval(right)
 
       op match {
-        case "+"         => l.asInstanceOf[Int] + r.asInstanceOf[Int]
-        case "%"         => l.asInstanceOf[Int] % r.asInstanceOf[Int]
-        case "*" | "adj" => l.asInstanceOf[Int] * r.asInstanceOf[Int]
+        case "+"         => l.asInstanceOf[BigDecimal] + r.asInstanceOf[BigDecimal]
+        case "%"         => l.asInstanceOf[BigDecimal] % r.asInstanceOf[BigDecimal]
+        case "*" | "adj" => l.asInstanceOf[BigDecimal] * r.asInstanceOf[BigDecimal]
       }
     case VariableExpressionAST(pos, name) =>
       scope get name match {
@@ -222,9 +225,9 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
     case ConsExpressionAST(lpos, left, rpos, right) =>
       deval(left) :: deval(right).asInstanceOf[List[Any]]
     case RangeExpressionAST(fpos, from, tpos, to, bpos, by, incl) =>
-      val start = deval(from).asInstanceOf[Int]
-      val end   = deval(to).asInstanceOf[Int]
-      val step  = deval(by).asInstanceOf[Int]
+      val start = neval(from).toIntExact
+      val end   = neval(to).toIntExact
+      val step  = neval(by).toIntExact
 
       if (incl)
         start to end by step
@@ -250,8 +253,9 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
       case GeneratorExpressionAST(pattern, pos, iterable, filter) :: tail =>
         ieval(iterable)(outer).flatMap(v => {
           val inner = new Scope(outer)
+          val v1    = if (v.isInstanceOf[Int]) BigDecimal(v.asInstanceOf[Int]) else v
 
-          unify(v, pattern, true)(inner)
+          unify(v1, pattern, true)(inner)
 
           if (!filter.isDefined || beval(filter.get)(inner))
             flatMap(tail, inner, expr)
