@@ -14,4 +14,4 @@
         println(55)
 */
 
-println( for i <- 1..3 yield i )
+println( None )

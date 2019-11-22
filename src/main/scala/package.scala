@@ -28,9 +28,10 @@ package object yola {
         elems map quotedDisplay mkString (s"${elems.stringPrefix}(", ", ", ")")
       case map: collection.Map[_, _] =>
         map map { case (k, v) => s"${quotedDisplay(k)}: ${quotedDisplay(v)}" } mkString ("{", ", ", "}")
-      case Constructor(typ, name, Nil)    => name
-      case Constructor(typ, name, fields) => fields mkString (s"$typ:$name(", ", ", ")")
-      case Enum(name, ordinal)            => s"$name<$ordinal>"
+      case Constructor(typ, name, Nil)       => name
+      case Constructor(typ, name, fields)    => fields mkString (s"$typ:$name(", ", ", ")")
+      case Enum(name, ordinal)               => s"$name<$ordinal>"
+      case p: Product if p.productArity == 0 => p.productPrefix
       case p: Product =>
         val prefix = if (p.productPrefix.matches("Tuple[0-9]+")) "(" else p.productPrefix
 
