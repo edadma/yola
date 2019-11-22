@@ -55,6 +55,13 @@ object LanguageTests extends TestSuite {
                          |
                          |filter( (>4), [3, 4, 5, 6] )
                          |""".stripMargin) == List(5, 6))
+      assert(runResult("""
+                         |def
+                         |  f(x) = 3x
+                         |  g(x) = x + 4
+                         |
+                         |5 ~> g ~> f
+                         |""".stripMargin) == 27)
     }
 
     test("variables") {
