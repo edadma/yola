@@ -8,6 +8,7 @@ object Testing {
     val ast             = parser.parseFromString(snippet, parser.source)
     implicit val global = globalScope
 
+    println(ast)
     global.vars("println") = (args: List[Any]) => output(args map display mkString ", ")
 
     new Interpreter(loader)(ast)

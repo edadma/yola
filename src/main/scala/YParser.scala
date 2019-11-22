@@ -730,7 +730,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
       pos ~ applyExpression ~ ("." ~> pos) ~ (ident | stringLit) ^^ {
         case fp ~ e ~ ap ~ f => DotExpressionAST(fp, e, ap, f)
       } |
-      pos ~ applyExpression ~ "~>" ~ pos ~ applyExpression ^^ {
+      pos ~ applyExpression ~ "~>" ~ pos ~ primaryExpression ^^ {
         case ap ~ a ~ _ ~ fp ~ f => ApplyExpressionAST(fp, f, ap, List((ap, a)), false)
       } |
       primaryExpression

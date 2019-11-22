@@ -1,14 +1,7 @@
-val f =
-    [] -> 0
-    [a] -> a
-    [a, b] -> a + b
+def f(x) = 3x
 
-data c(x, y)
+def g(x) = x + 4
 
-val v = c(5, [3, 4])
-
-println( v )
-
-def g(x) = x
-
-println( g(v.y) ~> f )
+println( 5 ~> (
+ 5 -> 6
+))
