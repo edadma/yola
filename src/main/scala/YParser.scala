@@ -537,7 +537,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
     opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
       case l ~ b => RepeatExpressionAST(l, b)
     } |
-    functionExpression
+    sendExpression //functionExpression
 
   lazy val elsePart: PackratParser[Option[ExpressionAST]] = opt(onl ~> "else" ~> expressionOrBlock)
 
@@ -560,9 +560,14 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val listgenerators: PackratParser[List[GeneratorExpressionAST]] = rep1sep(listgenerator, ",")
 
-  lazy val lvalueExpression = applyExpression //generateDefinedExpression
+  lazy val lvalueExpression = applyExpression
 
   lazy val assignment = "=" | "+=" | "++=" | "-=" | "--=" | "*=" | "/=" | "//=" | "\\=" | "^=" | "<:=" | ">:="
+
+  lazy val sendExpression: PackratParser[ExpressionAST] =
+    pos ~ sendExpression ~ "~>" ~ pos ~ functionExpression ^^ {
+      case ap ~ a ~ _ ~ fp ~ f => ApplyExpressionAST(fp, f, ap, List((ap, a)), false)
+    } | functionExpression
 
   lazy val functionExpression: PackratParser[ExpressionAST] =
     lambda ^^ (l => FunctionExpressionAST(List(l))) |
@@ -730,9 +735,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
       pos ~ applyExpression ~ ("." ~> pos) ~ (ident | stringLit) ^^ {
         case fp ~ e ~ ap ~ f => DotExpressionAST(fp, e, ap, f)
       } |
-      pos ~ applyExpression ~ "~>" ~ pos ~ primaryExpression ^^ {
-        case ap ~ a ~ _ ~ fp ~ f => ApplyExpressionAST(fp, f, ap, List((ap, a)), false)
-      } |
+//      pos ~ applyExpression ~ "~>" ~ pos ~ primaryExpression ^^ {
+//        case ap ~ a ~ _ ~ fp ~ f => ApplyExpressionAST(fp, f, ap, List((ap, a)), false)
+//      } |
       primaryExpression
 
   lazy val mapEntry = keyExpression ~ (":" ~> expression) ^^ {
