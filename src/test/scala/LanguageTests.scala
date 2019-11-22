@@ -116,6 +116,13 @@ object LanguageTests extends TestSuite {
     }
 
     test("lexical scope") {
+      assert(runResult("""
+                         |val a = 4
+                         |
+                         |def f(x) = 3*a
+                         |
+                         |5 ~> f ~> x -> x + a//todo: (+ a)
+                         |""".stripMargin) == 16)
       assert(
         runCapture("""
                      |val a = 3
