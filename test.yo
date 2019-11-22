@@ -11,6 +11,4 @@ println( v )
 
 def g(x) = x
 
-val a = g(v.y) ~> f
-
-println( a )
+println( g(v.y) ~> f )

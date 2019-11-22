@@ -18,10 +18,6 @@ package object yola {
 
   def display(v: Any): String =
     v match {
-      case p: Product =>
-        val prefix = if (p.productPrefix.matches("Tuple[0-9]+")) "(" else p.productPrefix
-
-        p.productIterator map quotedDisplay mkString (prefix, ", ", ")")
       case NTuple(elems)     => elems map quotedDisplay mkString ("(", ", ", ")")
       case Record(con, args) => args.values map quotedDisplay mkString (s"${con.name}(", ", ", ")")
       case elems: List[_]    => elems map quotedDisplay mkString ("[", ", ", "]")
@@ -32,7 +28,11 @@ package object yola {
       case Constructor(typ, name, Nil)    => name
       case Constructor(typ, name, fields) => fields mkString (s"$typ:$name(", ", ", ")")
       case Enum(name, ordinal)            => s"$name<$ordinal>"
-      case _                              => String.valueOf(v)
+      case p: Product =>
+        val prefix = if (p.productPrefix.matches("Tuple[0-9]+")) "(" else p.productPrefix
+
+        p.productIterator map quotedDisplay mkString (prefix, ", ", ")")
+      case _ => String.valueOf(v)
     }
 
   def quotedDisplay(v: Any): String =
