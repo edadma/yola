@@ -144,7 +144,7 @@ case class FunctionPieceAST(
     arb: Boolean,
     parts: List[FunctionPart],
     where: WhereClauseAST
-) extends ExpressionAST { var scope: Scope = null }
+) extends ExpressionAST
 
 case class FunctionPart(guard: Option[ExpressionAST], body: ExpressionAST) extends AST
 

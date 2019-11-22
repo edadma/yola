@@ -1,10 +1,13 @@
-def
-  foldl( f, z, [] )    =  z
-  foldl( f, z, x::xs ) =  foldl( f, f(z, x), xs )
+3 ~>
+    2 ->
+        println(2)
+        println(22)
+    3 ->
+        val a = 123
 
-  sum( l )             =  foldl( (+), 0, l )
-  product( l )         =  foldl( (*), 1, l )
-
-val l = [3, 4, 5]
-
-println( [sum(l), product(l)] )
+        println(a)
+        println(3)
+        println(33)
+    5 ->
+        println(5)
+        println(55)

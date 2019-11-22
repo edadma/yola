@@ -19,20 +19,27 @@ class Scope(val outer: Scope) {
   def get(name: String): Option[Any] =
     vars get name orElse (if (outer eq null) None else outer.get(name))
 
-  def add(pos: Position, name: String, piece: FunctionPieceAST) = {
+  def add(pos: Position, name: String, piece: FunctionPieceAST)(implicit scope: Scope) = {
     vars get name match {
       case None =>
+        val fexp = FunctionExpressionAST(List(piece))
+
+        fexp.scope = scope
         vars(name) = Functions(
-          mutable.HashMap[Int, FunctionExpressionAST](
-            piece.parms.length -> FunctionExpressionAST(List(piece))))
+          mutable.HashMap[Int, FunctionExpressionAST](piece.parms.length -> fexp))
       case Some(Functions(map)) =>
-        map(piece.parms.length) = FunctionExpressionAST(map get piece.parms.length match {
+        val fexp = FunctionExpressionAST(map get piece.parms.length match {
           case None    => List(piece)
           case Some(f) => f.pieces :+ piece
         })
+
+        fexp.scope = scope
+        map(piece.parms.length) = fexp
       case _ => duplicate(pos, name)
     }
   }
+
+  override def toString: String = s"Scope:$vars"
 }
 
 case class Functions(map: mutable.HashMap[Int, FunctionExpressionAST])

@@ -59,9 +59,7 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
     case ValAST(pat, pos, expr)            => unify(deval(expr), pat, true)
     case VarAST(pos, name, None)           => implicitly[Scope].declare(pos, name, Var(0))
     case VarAST(pos, name, Some((_, exp))) => implicitly[Scope].declare(pos, name, Var(deval(exp)))
-    case DefAST(pos, name, func) =>
-      func.scope = scope
-      implicitly[Scope].add(pos, name, func)
+    case DefAST(pos, name, func)           => implicitly[Scope].add(pos, name, func)
     case DataAST(pos, typ, constructors) =>
       for ((name, fields) <- constructors)
         implicitly[Scope].declare(pos, name, Constructor(typ, name, fields))
@@ -235,7 +233,11 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
     case AndExpressionAST(left, right) => beval(left) && beval(right)
     case OrExpressionAST(left, right)  => beval(left) || beval(right)
     case NotExpressionAST(cond)        => !beval(cond)
-    case f: FunctionExpressionAST      => f
+    case f: FunctionExpressionAST =>
+      if (f.scope eq null)
+        f.scope = scope
+
+      f
   }
 
   def flatMap(
@@ -276,7 +278,7 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
           case None    => problem(fpos, s"function of arity ${args.length} not found")
           case Some(f) => call(fpos, f, apos, args)
         }
-      case FunctionExpressionAST(pieces) =>
+      case fexp @ FunctionExpressionAST(pieces) =>
         pieces.head match {
           case FunctionPieceAST(pos, parms, arb, parts, where) =>
             val alen = args.length
@@ -291,8 +293,8 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
         def testPieces(ps: List[FunctionPieceAST]): Any =
           ps match {
             case Nil => problem(fpos, s"could not find matching function piece")
-            case (piece @ FunctionPieceAST(pos, parms, arb, parts, where)) :: t =>
-              implicit val scope = new Scope(piece.scope)
+            case FunctionPieceAST(pos, parms, arb, parts, where) :: t =>
+              implicit val scope = new Scope(fexp.scope)
 
               if (args zip parms forall { case (a, p) => unify(a, p, false) }) {
                 def testParts(ps: List[FunctionPart]): Any =
