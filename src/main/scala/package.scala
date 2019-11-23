@@ -35,7 +35,7 @@ package object yola {
       case p: Product =>
         val prefix = if (p.productPrefix.matches("Tuple[0-9]+")) "(" else p.productPrefix
 
-        p.productIterator map quotedDisplay mkString (prefix, ", ", ")")
+        p.productIterator map quotedDisplay mkString (s"$prefix(", ", ", ")")
       case _ => String.valueOf(v)
     }
 
