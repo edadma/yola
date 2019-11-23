@@ -143,12 +143,10 @@ case class FunctionPieceAST(
     parms: List[PatternAST],
     arb: Boolean,
     parts: List[FunctionPart],
-    where: WhereClauseAST
+    where: List[DeclarationStatementAST]
 ) extends ExpressionAST
 
 case class FunctionPart(guard: Option[ExpressionAST], body: ExpressionAST) extends AST
-
-case class WhereClauseAST(where: List[DeclarationStatementAST]) extends AST
 
 trait PatternAST                                                                 extends AST
 case class NamedPatternAST(pos: Position, var alias: String, pat: PatternAST)    extends PatternAST

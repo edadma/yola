@@ -14,4 +14,12 @@
         println(55)
 */
 
-println( None )
+val a = 123.456
+
+def f(x) = a + x
+    where
+        a = 2.3x
+
+println( f(5) )
+
+println(a)

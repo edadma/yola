@@ -400,9 +400,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val definition =
     pos ~ ident ~ opt("(" ~> rep1sep(pattern, ",") ~ opt("...") <~ ")") ~ (optionallyGuardedPart | guardedParts) ^^ {
       case p ~ n ~ None ~ ((gs, w)) =>
-        DefAST(p, n, FunctionPieceAST(p, Nil, false, gs, WhereClauseAST(w)))
+        DefAST(p, n, FunctionPieceAST(p, Nil, false, gs, w))
       case p ~ n ~ Some(parms ~ a) ~ ((gs, w)) =>
-        DefAST(p, n, FunctionPieceAST(p, parms, a isDefined, gs, WhereClauseAST(w)))
+        DefAST(p, n, FunctionPieceAST(p, parms, a isDefined, gs, w))
     }
 
   lazy val optionallyGuardedPart
@@ -446,7 +446,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val whereDefinition: PackratParser[DeclarationStatementAST] =
     pos ~ ident ~ ("(" ~> (rep1sep(pattern, ",") ~ opt("...")) <~ ")") ~ (optionallyGuardedPart | guardedParts) ^^ {
       case p ~ n ~ (parms ~ a) ~ ((gs, w)) =>
-        DefAST(p, n, FunctionPieceAST(p, parms, a isDefined, gs, WhereClauseAST(w)))
+        DefAST(p, n, FunctionPieceAST(p, parms, a isDefined, gs, w))
     } |
       constant
 
@@ -589,7 +589,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
                          parms,
                          a,
                          List(FunctionPart(g, b.getOrElse(LiteralExpressionAST(())))),
-                         WhereClauseAST(Nil))
+                         Nil)
     }
   //		"else" ~> "->" ~> opt(expressionOrBlock) ^^ {
   //			b => FunctionExpressionAST( List(VariablePatternAST(null, "_")), false, List(FunctionPartExpressionAST(None, b.getOrElse(LiteralExpressionAST(())))), WhereClauseAST(Nil) ) }
@@ -784,37 +784,41 @@ class YParser extends StandardTokenParsers with PackratParsers {
                                                 op,
                                                 null,
                                                 VariableExpressionAST(null, "#b")))),
-          WhereClauseAST(Nil)
+          Nil
         )))) |
       ("(" ~> pos) ~ applyExpression ~ (infix <~ ")") ^^ {
         case p ~ e ~ o =>
-          FunctionExpressionAST(List(FunctionPieceAST(
-            p,
-            List(VariablePatternAST(p, "#a")),
-            false,
+          FunctionExpressionAST(
             List(
-              FunctionPart(
-                None,
-                BinaryExpressionAST(null, e, o, p, VariableExpressionAST(null, "#a"))
-              )
-            ),
-            WhereClauseAST(Nil)
-          )))
+              FunctionPieceAST(
+                p,
+                List(VariablePatternAST(p, "#a")),
+                false,
+                List(
+                  FunctionPart(
+                    None,
+                    BinaryExpressionAST(null, e, o, p, VariableExpressionAST(null, "#a"))
+                  )
+                ),
+                Nil
+              )))
       } |
       "(" ~> infix ~ pos ~ applyExpression <~ ")" ^^ {
         case o ~ p ~ e =>
-          FunctionExpressionAST(List(FunctionPieceAST(
-            p,
-            List(VariablePatternAST(p, "#a")),
-            false,
+          FunctionExpressionAST(
             List(
-              FunctionPart(
-                None,
-                BinaryExpressionAST(null, VariableExpressionAST(null, "#a"), o, p, e)
-              )
-            ),
-            WhereClauseAST(Nil)
-          )))
+              FunctionPieceAST(
+                p,
+                List(VariablePatternAST(p, "#a")),
+                false,
+                List(
+                  FunctionPart(
+                    None,
+                    BinaryExpressionAST(null, VariableExpressionAST(null, "#a"), o, p, e)
+                  )
+                ),
+                Nil
+              )))
       } |
       "(" ~> infixComparison <~ ")" ^^ (op =>
         FunctionExpressionAST(List(FunctionPieceAST(
@@ -826,37 +830,45 @@ class YParser extends StandardTokenParsers with PackratParsers {
             ComparisonExpressionAST(null,
                                     VariableExpressionAST(null, "#a"),
                                     List((op, null, VariableExpressionAST(null, "#b")))))),
-          WhereClauseAST(Nil)
+          Nil
         )))) |
       ("(" ~> pos) ~ applyExpression ~ (infixComparison <~ ")") ^^ {
         case p ~ e ~ o =>
-          FunctionExpressionAST(List(FunctionPieceAST(
-            p,
-            List(VariablePatternAST(p, "#a")),
-            false,
+          FunctionExpressionAST(
             List(
-              FunctionPart(
-                None,
-                ComparisonExpressionAST(null, e, List((o, p, VariableExpressionAST(null, "#a"))))
-              )
-            ),
-            WhereClauseAST(Nil)
-          )))
+              FunctionPieceAST(
+                p,
+                List(VariablePatternAST(p, "#a")),
+                false,
+                List(
+                  FunctionPart(
+                    None,
+                    ComparisonExpressionAST(null,
+                                            e,
+                                            List((o, p, VariableExpressionAST(null, "#a"))))
+                  )
+                ),
+                Nil
+              )))
       } |
       "(" ~> infixComparison ~ pos ~ applyExpression <~ ")" ^^ {
         case o ~ p ~ e =>
-          FunctionExpressionAST(List(FunctionPieceAST(
-            p,
-            List(VariablePatternAST(p, "#a")),
-            false,
+          FunctionExpressionAST(
             List(
-              FunctionPart(
-                None,
-                ComparisonExpressionAST(null, VariableExpressionAST(null, "#a"), List((o, p, e)))
-              )
-            ),
-            WhereClauseAST(Nil)
-          )))
+              FunctionPieceAST(
+                p,
+                List(VariablePatternAST(p, "#a")),
+                false,
+                List(
+                  FunctionPart(
+                    None,
+                    ComparisonExpressionAST(null,
+                                            VariableExpressionAST(null, "#a"),
+                                            List((o, p, e)))
+                  )
+                ),
+                Nil
+              )))
       } |
       ("true" | "false") ^^ (b => LiteralExpressionAST(b.toBoolean)) |
       "(" ~ ")" ^^^ LiteralExpressionAST(()) |

@@ -7,7 +7,7 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
 
   def apply(ast: AST)(implicit scope: Scope): Any = ast match {
     case DeclarationBlockAST(decls) =>
-      decls map apply
+      decls foreach apply
       ()
     case EnumAST(name, pos, enumeration) =>
       var idx = 0
@@ -314,6 +314,7 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
                         testParts(t)
                   }
 
+                where foreach apply
                 testParts(parts)
               } else
                 testPieces(t)
