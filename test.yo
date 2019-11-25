@@ -14,12 +14,6 @@
         println(55)
 */
 
-val a = 123.456
+import yola.math.{pi, cos}
 
-def f(x) = a + x
-    where
-        a = 2.3x
-
-println( f(5) )
-
-println(a)
+println(cos(pi))

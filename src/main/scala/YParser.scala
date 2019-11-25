@@ -205,7 +205,7 @@ class YolaLexical
     "var",
     "val",
     "data",
-    "module", //todo: implement module system similar to Modula
+    "module",
     "null",
     "true",
     "false"
@@ -258,7 +258,8 @@ class YolaLexical
     "++",
     "--",
     "...",
-    "::"
+    "::",
+    "=>"
   )
 }
 
@@ -342,13 +343,17 @@ class YParser extends StandardTokenParsers with PackratParsers {
     "import" ~> rep1sep(imprt, ",") ^^ DeclarationBlockAST |
       "import" ~> Indent ~> rep1(imprt <~ Newline) <~ Dedent ^^ DeclarationBlockAST
 
-  lazy val imprt = ident ~ "." ~ rep1sep(ident, ".") ^^ {
-    case f ~ _ ~ n =>
-      val module = f +: n.init
-      val name   = n.last
+  lazy val imprt = rep1sep(ident, ".") ~ "." ~ "{" ~ rep1sep(ident ~ opt("=>" ~> ident), ",") ~ "}" ^^ {
+    case m ~ _ ~ _ ~ e ~ _ =>
+      ImportAST(m, e map { case n ~ r => n -> r })
+  } |
+    ident ~ "." ~ rep1sep(ident, ".") ^^ {
+      case f ~ _ ~ n =>
+        val module = f +: n.init
+        val name   = n.last
 
-      ImportAST(module, List((name, None)))
-  }
+        ImportAST(module, List((name, None)))
+    }
 
   lazy val enums =
     "enum" ~> rep1sep(enum, ",") ^^ DeclarationBlockAST |

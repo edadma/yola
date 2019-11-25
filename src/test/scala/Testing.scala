@@ -10,7 +10,7 @@ object Testing {
 
     global.vars("println") = (args: List[Any]) => output(args map display mkString ", ")
 
-    new Interpreter(loader)(ast)
+    new Interpreter(globalScope)(ast)
   }
 
   def runCapture(snippet: String) = {

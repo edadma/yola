@@ -3,7 +3,7 @@ package xyz.hyperreal.yola
 import scala.collection.mutable
 import scala.util.parsing.input.Position
 
-class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit) {
+class Interpreter(globalScope: Scope) {
 
   def apply(ast: AST)(implicit scope: Scope): Any = ast match {
     case DeclarationBlockAST(decls) =>
@@ -23,38 +23,34 @@ class Interpreter(loader: (List[String], String, Option[String], Scope) => Unit)
     case ImportAST(module, names) =>
       names foreach {
         case (n, r) =>
-          scope get module.head match {
-            case None => loader(module, n, r, scope)
-            case Some(m: Map[String, Any]) =>
-              def find(ms: List[String], map: Map[String, Any]): Unit =
-                ms match {
-                  case Nil =>
-                    val mod = map.asInstanceOf[Map[String, List[Any] => Any]]
+          def find(ms: List[String], map: collection.Map[String, Any]): Unit =
+            ms match {
+              case Nil =>
+                val mod = map.asInstanceOf[Map[String, List[Any] => Any]]
 
-                    if (n == "_")
-                      for ((k, v) <- mod)
-                        scope.declare(null, k, v)
-                    else
-                      mod get n match {
-                        case None => perror(s"member '$n' not found")
-                        case Some(o) =>
-                          val mem =
-                            r match {
-                              case None          => n
-                              case Some(newname) => newname
-                            }
+                if (n == "_")
+                  for ((k, v) <- mod)
+                    scope.declare(null, k, v)
+                else
+                  mod get n match {
+                    case None => perror(s"member '$n' not found")
+                    case Some(o) =>
+                      val mem =
+                        r match {
+                          case None          => n
+                          case Some(newname) => newname
+                        }
 
-                          scope.declare(null, mem, o)
-                      }
-                  case h :: t =>
-                    map get h match {
-                      case None    => perror(s"module '$h' not found")
-                      case Some(m) => find(t, m.asInstanceOf[Map[String, Any]])
-                    }
+                      scope.declare(null, mem, o)
+                  }
+              case h :: t =>
+                map get h match {
+                  case None    => perror(s"module '$h' not found")
+                  case Some(m) => find(t, m.asInstanceOf[Map[String, Any]])
                 }
+            }
 
-              find(module.tail, m)
-          }
+          find(module, globalScope.vars)
       }
     case ValAST(pat, pos, expr)            => unify(deval(expr), pat, true)
     case VarAST(pos, name, None)           => implicitly[Scope].declare(pos, name, Var(0))

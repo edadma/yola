@@ -4,7 +4,7 @@ import scala.collection.immutable.Range
 import scala.util.parsing.input.Position
 
 package object yola {
-  def perror(error: String) = problem(null, error)
+  def perror(msg: String) = problem(null, msg)
 
   def problem(pos: Position, error: String) = {
     if (pos eq null)
@@ -48,7 +48,10 @@ package object yola {
   val globalScope =
     new Scope(null) {
       vars ++= Map(
-        "None" -> None
+        "None" -> None,
+        "yola" -> Map(
+          "math" -> xyz.hyperreal.yola.module.Math.exports
+        )
       )
     }
 }
