@@ -412,7 +412,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
     }
 
   lazy val optionallyGuardedPart
-      : PackratParser[(List[FunctionPart], List[DeclarationStatementAST])] =
+    : PackratParser[(List[FunctionPart], List[DeclarationStatementAST])] =
     opt("|" ~> guardExpression) ~ ("=" ~> expressionOrBlock | blockExpression) ~ opt(
       whereClause | Indent ~> whereClause <~ Newline <~ Dedent
     ) ^^ {
@@ -465,7 +465,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val expression: PackratParser[ExpressionAST] = compoundExpression
 
   lazy val compoundExpressionStatement
-      : PackratParser[StatementAST] = logicalExpression | declaration | directive
+    : PackratParser[StatementAST] = logicalExpression | declaration | directive
 
   lazy val compoundExpression1: PackratParser[ExpressionAST] =
     ("(" ~> compoundExpressionStatement <~ ";") ~ (rep1sep(compoundExpressionStatement, ";") <~ ")") ^^ {
@@ -517,7 +517,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
       constructExpression
 
   lazy val constructExpression
-      : PackratParser[ExpressionAST] = "if" ~> expression ~ ("then" ~> expressionOrBlock | blockExpression) ~ rep(
+    : PackratParser[ExpressionAST] = "if" ~> expression ~ ("then" ~> expressionOrBlock | blockExpression) ~ rep(
     elif
   ) ~ elsePart ^^ {
     case c ~ t ~ ei ~ e => ConditionalExpressionAST((c, t) +: ei, e)
@@ -558,7 +558,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val generators = rep1sep(generator, ";" | nl)
 
   lazy val listgenerator
-      : PackratParser[GeneratorExpressionAST] = (pattern <~ "<-") ~ pos ~ expression ~ opt(
+    : PackratParser[GeneratorExpressionAST] = (pattern <~ "<-") ~ pos ~ expression ~ opt(
     "if" ~> logicalExpression
   ) ^^ {
     case s ~ p ~ t ~ f => GeneratorExpressionAST(s, p, t, f)
@@ -632,7 +632,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
       controlExpression
 
   lazy val controlExpression: PackratParser[ExpressionAST] =
-    "break" ~> pos ~ opt(ident) ~ opt("(" ~> additiveExpression /*consExpression*/ <~ ")") ^^ {
+    "break" ~> pos ~ opt(ident) ~ opt("(" ~> expression <~ ")") ^^ {
       case p ~ l ~ e => BreakExpressionAST(p, l, e)
     } |
       "continue" ~> pos ~ opt(ident) ^^ { case p ~ l => ContinueExpressionAST(p, l) } |
@@ -805,7 +805,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
                 )
               )
             )
-        ) |
+      ) |
       ("(" ~> pos) ~ applyExpression ~ (infix <~ ")") ^^ {
         case p ~ e ~ o =>
           FunctionExpressionAST(
@@ -866,7 +866,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
                 )
               )
             )
-        ) |
+      ) |
       ("(" ~> pos) ~ applyExpression ~ (infixComparison <~ ")") ^^ {
         case p ~ e ~ o =>
           FunctionExpressionAST(

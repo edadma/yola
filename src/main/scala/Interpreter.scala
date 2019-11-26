@@ -177,13 +177,46 @@ class Interpreter(globalScope: Scope) {
         case _ => problem(pos, "not an l-value")
       }
     case RepeatExpressionAST(label, body) =>
-      while (true) eval(body)
-    case WhileExpressionAST(label, cond, body, els) =>
-      while (beval(cond)) {
-        body foreach eval
+      def repeatLoop: Any = {
+        try try eval(body)
+        catch {
+          case ContinueException(_, clabel) if clabel.isEmpty || clabel == label =>
+        } catch {
+          case BreakException(_, blabel, expr) if blabel.isEmpty || blabel == label =>
+            return expr map deval getOrElse ()
+        }
+
+        repeatLoop
       }
 
-      els foreach eval
+      repeatLoop
+    case BreakExpressionAST(pos, label, expr) => throw BreakException(pos, label, expr)
+    case ContinueExpressionAST(pos, label)    => throw ContinueException(pos, label)
+    case WhileExpressionAST(label, cond, body, els) =>
+      def whileLoop: Any = {
+        try {
+          try {
+            if (beval(cond))
+              body foreach deval
+            else
+              return els map deval getOrElse ()
+          } catch {
+            case ContinueException(_, clabel) if clabel.isEmpty || clabel == label =>
+          }
+        } catch {
+          case BreakException(_, blabel, expr) if blabel.isEmpty || blabel == label =>
+            return expr map deval getOrElse ()
+        }
+
+        whileLoop
+      }
+
+      whileLoop
+//      while (beval(cond)) {
+//        body foreach eval
+//      }
+//
+//      els foreach eval
     case ForYieldExpressionAST(gen, body)          => flatMap(gen, scope, body)
     case ListComprehensionExpressionAST(expr, gen) => flatMap(gen, scope, expr).toList
     case ForExpressionAST(label, gen, body, els) =>
@@ -483,3 +516,8 @@ case class Enum(names: String, ordinal: Int) extends (Any => Any) {
       case "ordinal" => ordinal
     }
 }
+
+case class BreakException(pos: Position, blabel: Option[String], expr: Option[ExpressionAST])
+    extends RuntimeException
+
+case class ContinueException(pos: Position, clabel: Option[String]) extends RuntimeException

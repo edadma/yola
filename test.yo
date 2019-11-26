@@ -1,19 +1,12 @@
-/*
-3 ~>
-    2 ->
-        println(2)
-        println(22)
-    3 ->
-        val a = 123
+var count = 0
 
-        println(a)
-        println(3)
-        println(33)
-    5 ->
-        println(5)
-        println(55)
-*/
+println( 'starting' )
 
-import yola.math.{pi, cos}
+l: repeat
+    if ++count == 5 then break
 
-println(cos(pi))
+    if count < 3 then continue
+
+    println( count )
+
+println(count)

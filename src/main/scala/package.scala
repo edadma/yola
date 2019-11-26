@@ -15,8 +15,6 @@ package object yola {
     sys.exit(1)
   }
 
-  private val tupleRegex = "Tuple[0-9]+" r
-
   def display(v: Any): String =
     v match {
       case r: Range =>
