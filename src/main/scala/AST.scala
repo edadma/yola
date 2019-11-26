@@ -4,16 +4,18 @@ import util.parsing.input.Position
 
 trait AST
 
-case class SourceAST(statements: List[StatementAST]) extends AST
+case class SourceAST(stmts: List[StatementAST]) extends AST
 
 trait StatementAST extends AST
+
+trait DirectiveStatementAST extends StatementAST
+
+case class ImportAST(module: List[String], names: List[(String, Option[String])])
+    extends DirectiveStatementAST
 
 trait DeclarationStatementAST extends StatementAST
 
 case class EnumAST(name: String, pos: Position, enumeration: List[(String, Option[Int])])
-    extends DeclarationStatementAST
-
-case class ImportAST(module: List[String], names: List[(String, Option[String])])
     extends DeclarationStatementAST
 
 //case class NativeAST( pkg: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
@@ -31,6 +33,8 @@ case class DefAST(pos: Position, name: String, func: FunctionPieceAST)
     extends DeclarationStatementAST
 
 case class DeclarationBlockAST(decls: List[DeclarationStatementAST]) extends DeclarationStatementAST
+
+case class DirectiveBlockAST(decls: List[DirectiveStatementAST]) extends DirectiveStatementAST
 
 trait ExpressionAST extends StatementAST
 
@@ -84,8 +88,8 @@ case class AssignmentExpressionAST(
     op: String,
     rhs: List[(Position, ExpressionAST)]
 ) extends ExpressionAST
-case class BlockExpressionAST(l: List[StatementAST])      extends ExpressionAST
-case class ListExpressionAST(l: List[ExpressionAST])      extends ExpressionAST
+case class BlockExpressionAST(stmts: List[StatementAST])  extends ExpressionAST
+case class ListExpressionAST(elems: List[ExpressionAST])  extends ExpressionAST
 case class TupleExpressionAST(elems: List[ExpressionAST]) extends ExpressionAST
 
 case class MapExpressionAST(MapExpressionAST: List[(ExpressionAST, ExpressionAST)])

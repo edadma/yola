@@ -5,19 +5,35 @@ import scala.util.parsing.input.Position
 
 class Interpreter(globalScope: Scope) {
 
-  def apply(ast: AST)(implicit scope: Scope): Any = ast match {
+  def apply(ast: AST)(implicit scope: Scope): Any = {
+    decls(ast)
+    exec(ast)
+  }
+
+  def decls(ast: AST)(implicit scope: Scope): Any =
+    ast match {
+      case SourceAST(stmts)          => stmts foreach decls
+      case BlockExpressionAST(stmts) => stmts foreach decls
+      case EnumAST(name, _, _)       =>
+      case ValAST(pat, _, _)         =>
+      case VarAST(_, name, _)        =>
+      case DefAST(pos, name, func)   => implicitly[Scope].add(pos, name, func)
+      case DataAST(_, _, consts)     =>
+    }
+
+  def exec(ast: AST)(implicit scope: Scope): Any = ast match {
     case DeclarationBlockAST(decls) =>
       decls foreach apply
       ()
-    case EnumAST(name, pos, enumeration) =>
+    case EnumAST(names, pos, enumeration) =>
       var idx = 0
 
       enumeration foreach {
-        case (name, None) =>
-          scope.declare(pos, name, Enum(name, idx))
+        case (n, None) =>
+          scope.declare(pos, n, Enum(n, idx))
           idx += 1
-        case (name, Some(ord)) =>
-          scope.declare(pos, name, Enum(name, ord))
+        case (n, Some(ord)) =>
+          scope.declare(pos, n, Enum(n, ord))
           idx = ord + 1
       }
     case ImportAST(module, names) =>
@@ -52,13 +68,14 @@ class Interpreter(globalScope: Scope) {
 
           find(module, globalScope.vars)
       }
-    case ValAST(pat, pos, expr)            => unify(deval(expr), pat, true)
-    case VarAST(pos, name, None)           => implicitly[Scope].declare(pos, name, Var(0))
-    case VarAST(pos, name, Some((_, exp))) => implicitly[Scope].declare(pos, name, Var(deval(exp)))
-    case DefAST(pos, name, func)           => implicitly[Scope].add(pos, name, func)
+    case ValAST(pat, pos, expr)   => unify(deval(expr), pat, true)
+    case VarAST(pos, names, None) => implicitly[Scope].declare(pos, names, Var(0))
+    case VarAST(pos, names, Some((_, exp))) =>
+      implicitly[Scope].declare(pos, names, Var(deval(exp)))
+    case DefAST(pos, names, func) =>
     case DataAST(pos, typ, constructors) =>
-      for ((name, fields) <- constructors)
-        implicitly[Scope].declare(pos, name, Constructor(typ, name, fields))
+      for ((names, fields) <- constructors)
+        implicitly[Scope].declare(pos, names, Constructor(typ, names, fields))
     case exp: ExpressionAST => deval(exp)
   }
 
@@ -200,9 +217,9 @@ class Interpreter(globalScope: Scope) {
         case "%"         => l.asInstanceOf[BigDecimal] % r.asInstanceOf[BigDecimal]
         case "*" | "adj" => l.asInstanceOf[BigDecimal] * r.asInstanceOf[BigDecimal]
       }
-    case VariableExpressionAST(pos, name) =>
-      scope get name match {
-        case None    => problem(pos, s"undeclared variable '$name'")
+    case VariableExpressionAST(pos, names) =>
+      scope get names match {
+        case None    => problem(pos, s"undeclared variable '$names'")
         case Some(v) => v
       }
     case LiteralExpressionAST(v)   => v
@@ -263,13 +280,13 @@ class Interpreter(globalScope: Scope) {
   def call(fpos: Position, f: Any, apos: Position, args: List[Any]): Any =
     f match {
       case func: (List[Any] => Any) => func(args)
-      case Constructor(_, name, Nil) =>
+      case Constructor(_, names, Nil) =>
         problem(fpos, "nullary constructors can't be applied")
-      case con @ Constructor(typ, name, fields) =>
+      case con @ Constructor(typ, names, fields) =>
         if (fields.length != args.length)
           problem(
             apos,
-            s"wrong number of arguments for constructor '$name': got ${args.length}, expected ${fields.length}"
+            s"wrong number of arguments for constructor '$names': got ${args.length}, expected ${fields.length}"
           )
 
         Record(con, mutable.LinkedHashMap(fields zip args: _*))
@@ -367,8 +384,8 @@ class Interpreter(globalScope: Scope) {
             false
         else
           true
-      case VariablePatternAST(pos, name) =>
-        implicitly[Scope].declare(pos, name, v)
+      case VariablePatternAST(pos, names) =>
+        implicitly[Scope].declare(pos, names, v)
         true
       case ListPatternAST(pos, elems) =>
         v match {
@@ -407,16 +424,16 @@ class Interpreter(globalScope: Scope) {
             else
               false
         }
-      case RecordPatternAST(pos, name, args) =>
+      case RecordPatternAST(pos, names, args) =>
         v match {
           case Record(Constructor(_, rname, _), rargs)
-              if name == rname && args.length == rargs.size =>
+              if names == rname && args.length == rargs.size =>
             rargs.values zip args forall { case (e, a) => unify(e, a, errors) }
-          case p: Product if name == p.productPrefix && args.length == p.productArity =>
+          case p: Product if names == p.productPrefix && args.length == p.productArity =>
             p.productIterator.toList zip args forall { case (e, a) => unify(e, a, errors) }
           case _ =>
             if (errors)
-              problem(pos, s"expected record '$name'")
+              problem(pos, s"expected record '$names'")
             else
               false
         }
@@ -452,11 +469,11 @@ case class Record(con: Constructor, args: mutable.LinkedHashMap[String, Any]) ex
   def apply(field: Any) = args(field.asInstanceOf[String])
 }
 
-case class Enum(name: String, ordinal: Int) extends (Any => Any) {
+case class Enum(names: String, ordinal: Int) extends (Any => Any) {
 
   def apply(v: Any) =
     v match {
-      case "name"    => name
+      case "names"   => names
       case "ordinal" => ordinal
     }
 }

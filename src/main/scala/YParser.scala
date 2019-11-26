@@ -322,26 +322,27 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val statement: PackratParser[StatementAST] =
     expressionStatement |
-      declarationStatement
+      declarationStatement |
+      directiveStatement
 
   lazy val expressionStatement: PackratParser[ExpressionAST] = expression <~ Newline
 
   lazy val declarationStatement: PackratParser[DeclarationStatementAST] = declaration <~ Newline
 
-  def declarationdef: PackratParser[DeclarationStatementAST] =
-    imports |
-      //		natives |
-      constants |
+  lazy val directiveStatement: PackratParser[DirectiveStatementAST] = directive <~ Newline
+
+  lazy val declaration: PackratParser[DeclarationStatementAST] =
+    constants |
       variables |
       datatypes |
       enums |
       definitions
 
-  lazy val declaration: PackratParser[DeclarationStatementAST] = declarationdef
+  lazy val directive: PackratParser[DirectiveStatementAST] = imports
 
   lazy val imports =
-    "import" ~> rep1sep(imprt, ",") ^^ DeclarationBlockAST |
-      "import" ~> Indent ~> rep1(imprt <~ Newline) <~ Dedent ^^ DeclarationBlockAST
+    "import" ~> rep1sep(imprt, ",") ^^ DirectiveBlockAST |
+      "import" ~> Indent ~> rep1(imprt <~ Newline) <~ Dedent ^^ DirectiveBlockAST
 
   lazy val imprt = rep1sep(ident, ".") ~ "." ~ "{" ~ rep1sep(ident ~ opt("=>" ~> ident), ",") ~ "}" ^^ {
     case m ~ _ ~ _ ~ e ~ _ =>
@@ -411,7 +412,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
     }
 
   lazy val optionallyGuardedPart
-    : PackratParser[(List[FunctionPart], List[DeclarationStatementAST])] =
+      : PackratParser[(List[FunctionPart], List[DeclarationStatementAST])] =
     opt("|" ~> guardExpression) ~ ("=" ~> expressionOrBlock | blockExpression) ~ opt(
       whereClause | Indent ~> whereClause <~ Newline <~ Dedent
     ) ^^ {
@@ -464,7 +465,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val expression: PackratParser[ExpressionAST] = compoundExpression
 
   lazy val compoundExpressionStatement
-    : PackratParser[StatementAST] = logicalExpression | declaration
+      : PackratParser[StatementAST] = logicalExpression | declaration | directive
 
   lazy val compoundExpression1: PackratParser[ExpressionAST] =
     ("(" ~> compoundExpressionStatement <~ ";") ~ (rep1sep(compoundExpressionStatement, ";") <~ ")") ^^ {
@@ -516,7 +517,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
       constructExpression
 
   lazy val constructExpression
-    : PackratParser[ExpressionAST] = "if" ~> expression ~ ("then" ~> expressionOrBlock | blockExpression) ~ rep(
+      : PackratParser[ExpressionAST] = "if" ~> expression ~ ("then" ~> expressionOrBlock | blockExpression) ~ rep(
     elif
   ) ~ elsePart ^^ {
     case c ~ t ~ ei ~ e => ConditionalExpressionAST((c, t) +: ei, e)
@@ -557,7 +558,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val generators = rep1sep(generator, ";" | nl)
 
   lazy val listgenerator
-    : PackratParser[GeneratorExpressionAST] = (pattern <~ "<-") ~ pos ~ expression ~ opt(
+      : PackratParser[GeneratorExpressionAST] = (pattern <~ "<-") ~ pos ~ expression ~ opt(
     "if" ~> logicalExpression
   ) ^^ {
     case s ~ p ~ t ~ f => GeneratorExpressionAST(s, p, t, f)
@@ -590,11 +591,13 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val lambda: PackratParser[FunctionPieceAST] =
     pos ~ parameters ~ opt("|" ~> guardExpression) ~ ("->" ~> opt(expressionOrBlock)) ^^ {
       case p ~ ((parms, a)) ~ g ~ b =>
-        FunctionPieceAST(p,
-                         parms,
-                         a,
-                         List(FunctionPart(g, b.getOrElse(LiteralExpressionAST(())))),
-                         Nil)
+        FunctionPieceAST(
+          p,
+          parms,
+          a,
+          List(FunctionPart(g, b.getOrElse(LiteralExpressionAST(())))),
+          Nil
+        )
     }
   //		"else" ~> "->" ~> opt(expressionOrBlock) ^^ {
   //			b => FunctionExpressionAST( List(VariablePatternAST(null, "_")), false, List(FunctionPartExpressionAST(None, b.getOrElse(LiteralExpressionAST(())))), WhereClauseAST(Nil) ) }
@@ -778,19 +781,31 @@ class YParser extends StandardTokenParsers with PackratParsers {
           } else
             LiteralExpressionAST(s)
       } |
-      "(" ~> infix <~ ")" ^^ (op =>
-        FunctionExpressionAST(List(FunctionPieceAST(
-          null,
-          List(VariablePatternAST(null, "#a"), VariablePatternAST(null, "#b")),
-          false,
-          List(FunctionPart(None,
-                            BinaryExpressionAST(null,
-                                                VariableExpressionAST(null, "#a"),
-                                                op,
-                                                null,
-                                                VariableExpressionAST(null, "#b")))),
-          Nil
-        )))) |
+      "(" ~> infix <~ ")" ^^ (
+          op =>
+            FunctionExpressionAST(
+              List(
+                FunctionPieceAST(
+                  null,
+                  List(VariablePatternAST(null, "#a"), VariablePatternAST(null, "#b")),
+                  false,
+                  List(
+                    FunctionPart(
+                      None,
+                      BinaryExpressionAST(
+                        null,
+                        VariableExpressionAST(null, "#a"),
+                        op,
+                        null,
+                        VariableExpressionAST(null, "#b")
+                      )
+                    )
+                  ),
+                  Nil
+                )
+              )
+            )
+        ) |
       ("(" ~> pos) ~ applyExpression ~ (infix <~ ")") ^^ {
         case p ~ e ~ o =>
           FunctionExpressionAST(
@@ -806,7 +821,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
                   )
                 ),
                 Nil
-              )))
+              )
+            )
+          )
       } |
       "(" ~> infix ~ pos ~ applyExpression <~ ")" ^^ {
         case o ~ p ~ e =>
@@ -823,20 +840,33 @@ class YParser extends StandardTokenParsers with PackratParsers {
                   )
                 ),
                 Nil
-              )))
+              )
+            )
+          )
       } |
-      "(" ~> infixComparison <~ ")" ^^ (op =>
-        FunctionExpressionAST(List(FunctionPieceAST(
-          null,
-          List(VariablePatternAST(null, "#a"), VariablePatternAST(null, "#b")),
-          false,
-          List(FunctionPart(
-            None,
-            ComparisonExpressionAST(null,
-                                    VariableExpressionAST(null, "#a"),
-                                    List((op, null, VariableExpressionAST(null, "#b")))))),
-          Nil
-        )))) |
+      "(" ~> infixComparison <~ ")" ^^ (
+          op =>
+            FunctionExpressionAST(
+              List(
+                FunctionPieceAST(
+                  null,
+                  List(VariablePatternAST(null, "#a"), VariablePatternAST(null, "#b")),
+                  false,
+                  List(
+                    FunctionPart(
+                      None,
+                      ComparisonExpressionAST(
+                        null,
+                        VariableExpressionAST(null, "#a"),
+                        List((op, null, VariableExpressionAST(null, "#b")))
+                      )
+                    )
+                  ),
+                  Nil
+                )
+              )
+            )
+        ) |
       ("(" ~> pos) ~ applyExpression ~ (infixComparison <~ ")") ^^ {
         case p ~ e ~ o =>
           FunctionExpressionAST(
@@ -848,13 +878,17 @@ class YParser extends StandardTokenParsers with PackratParsers {
                 List(
                   FunctionPart(
                     None,
-                    ComparisonExpressionAST(null,
-                                            e,
-                                            List((o, p, VariableExpressionAST(null, "#a"))))
+                    ComparisonExpressionAST(
+                      null,
+                      e,
+                      List((o, p, VariableExpressionAST(null, "#a")))
+                    )
                   )
                 ),
                 Nil
-              )))
+              )
+            )
+          )
       } |
       "(" ~> infixComparison ~ pos ~ applyExpression <~ ")" ^^ {
         case o ~ p ~ e =>
@@ -867,13 +901,17 @@ class YParser extends StandardTokenParsers with PackratParsers {
                 List(
                   FunctionPart(
                     None,
-                    ComparisonExpressionAST(null,
-                                            VariableExpressionAST(null, "#a"),
-                                            List((o, p, e)))
+                    ComparisonExpressionAST(
+                      null,
+                      VariableExpressionAST(null, "#a"),
+                      List((o, p, e))
+                    )
                   )
                 ),
                 Nil
-              )))
+              )
+            )
+          )
       } |
       ("true" | "false") ^^ (b => LiteralExpressionAST(b.toBoolean)) |
       "(" ~ ")" ^^^ LiteralExpressionAST(()) |
