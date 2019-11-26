@@ -34,7 +34,7 @@ case class DefAST(pos: Position, name: String, func: FunctionPieceAST)
 
 case class DeclarationBlockAST(decls: List[DeclarationStatementAST]) extends DeclarationStatementAST
 
-case class DirectiveBlockAST(decls: List[DirectiveStatementAST]) extends DirectiveStatementAST
+case class DirectiveBlockAST(dirs: List[DirectiveStatementAST]) extends DirectiveStatementAST
 
 trait ExpressionAST extends StatementAST
 

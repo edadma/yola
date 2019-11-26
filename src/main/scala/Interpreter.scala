@@ -6,78 +6,84 @@ import scala.util.parsing.input.Position
 class Interpreter(globalScope: Scope) {
 
   def apply(ast: AST)(implicit scope: Scope): Any = {
-    decls(ast)
-    exec(ast)
+    declarations(ast)
+    execute(ast)
   }
 
-  def decls(ast: AST)(implicit scope: Scope): Any =
+  def declarations(ast: AST)(implicit scope: Scope): Any =
     ast match {
-      case SourceAST(stmts)          => stmts foreach decls
-      case BlockExpressionAST(stmts) => stmts foreach decls
-      case EnumAST(name, _, _)       =>
-      case ValAST(pat, _, _)         =>
-      case VarAST(_, name, _)        =>
-      case DefAST(pos, name, func)   => implicitly[Scope].add(pos, name, func)
-      case DataAST(_, _, consts)     =>
+      case SourceAST(stmts)           => stmts foreach declarations
+      case BlockExpressionAST(stmts)  => stmts foreach declarations
+      case DeclarationBlockAST(decls) => decls foreach declarations
+      case EnumAST(name, _, _)        =>
+      case ValAST(pat, _, _)          =>
+      case VarAST(_, name, _)         =>
+      case DefAST(pos, name, func)    => implicitly[Scope].add(pos, name, func)
+      case DataAST(_, _, consts)      =>
+      case _                          =>
     }
 
-  def exec(ast: AST)(implicit scope: Scope): Any = ast match {
-    case DeclarationBlockAST(decls) =>
-      decls foreach apply
-      ()
-    case EnumAST(names, pos, enumeration) =>
-      var idx = 0
+  def execute(ast: AST)(implicit scope: Scope): Any =
+    ast match {
+      case DeclarationBlockAST(decls) =>
+        decls foreach execute
+        ()
+      case DirectiveBlockAST(dirs) =>
+        dirs foreach execute
+        ()
+      case EnumAST(names, pos, enumeration) =>
+        var idx = 0
 
-      enumeration foreach {
-        case (n, None) =>
-          scope.declare(pos, n, Enum(n, idx))
-          idx += 1
-        case (n, Some(ord)) =>
-          scope.declare(pos, n, Enum(n, ord))
-          idx = ord + 1
-      }
-    case ImportAST(module, names) =>
-      names foreach {
-        case (n, r) =>
-          def find(ms: List[String], map: collection.Map[String, Any]): Unit =
-            ms match {
-              case Nil =>
-                val mod = map.asInstanceOf[Map[String, List[Any] => Any]]
+        enumeration foreach {
+          case (n, None) =>
+            scope.declare(pos, n, Enum(n, idx))
+            idx += 1
+          case (n, Some(ord)) =>
+            scope.declare(pos, n, Enum(n, ord))
+            idx = ord + 1
+        }
+      case ImportAST(module, names) =>
+        names foreach {
+          case (n, r) =>
+            def find(ms: List[String], map: collection.Map[String, Any]): Unit =
+              ms match {
+                case Nil =>
+                  val mod = map.asInstanceOf[Map[String, List[Any] => Any]]
 
-                if (n == "_")
-                  for ((k, v) <- mod)
-                    scope.declare(null, k, v)
-                else
-                  mod get n match {
-                    case None => perror(s"member '$n' not found")
-                    case Some(o) =>
-                      val mem =
-                        r match {
-                          case None          => n
-                          case Some(newname) => newname
-                        }
+                  if (n == "_")
+                    for ((k, v) <- mod)
+                      scope.declare(null, k, v)
+                  else
+                    mod get n match {
+                      case None => perror(s"member '$n' not found")
+                      case Some(o) =>
+                        val mem =
+                          r match {
+                            case None          => n
+                            case Some(newname) => newname
+                          }
 
-                      scope.declare(null, mem, o)
+                        scope.declare(null, mem, o)
+                    }
+                case h :: t =>
+                  map get h match {
+                    case None    => perror(s"module '$h' not found")
+                    case Some(m) => find(t, m.asInstanceOf[Map[String, Any]])
                   }
-              case h :: t =>
-                map get h match {
-                  case None    => perror(s"module '$h' not found")
-                  case Some(m) => find(t, m.asInstanceOf[Map[String, Any]])
-                }
-            }
+              }
 
-          find(module, globalScope.vars)
-      }
-    case ValAST(pat, pos, expr)   => unify(deval(expr), pat, true)
-    case VarAST(pos, names, None) => implicitly[Scope].declare(pos, names, Var(0))
-    case VarAST(pos, names, Some((_, exp))) =>
-      implicitly[Scope].declare(pos, names, Var(deval(exp)))
-    case DefAST(pos, names, func) =>
-    case DataAST(pos, typ, constructors) =>
-      for ((names, fields) <- constructors)
-        implicitly[Scope].declare(pos, names, Constructor(typ, names, fields))
-    case exp: ExpressionAST => deval(exp)
-  }
+            find(module, globalScope.vars)
+        }
+      case ValAST(pat, pos, expr)   => unify(deval(expr), pat, true)
+      case VarAST(pos, names, None) => implicitly[Scope].declare(pos, names, Var(0))
+      case VarAST(pos, names, Some((_, exp))) =>
+        implicitly[Scope].declare(pos, names, Var(deval(exp)))
+      case DefAST(pos, names, func) => ()
+      case DataAST(pos, typ, constructors) =>
+        for ((names, fields) <- constructors)
+          implicitly[Scope].declare(pos, names, Constructor(typ, names, fields))
+      case exp: ExpressionAST => deval(exp)
+    }
 
   def deval(expr: ExpressionAST)(implicit scope: Scope) = deref(eval(expr))
 
