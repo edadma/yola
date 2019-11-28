@@ -23,8 +23,9 @@ class Interpreter(globalScope: Scope) {
       case _                          =>
     }
 
-  def execute(ast: AST)(implicit scope: Scope): Any =
+  def execute(ast: AST)(implicit scope: Scope): Any = {
     ast match {
+      case SourceAST(stmts)           => execute(stmts, scope)
       case DeclarationBlockAST(decls) => decls foreach execute
       case DirectiveBlockAST(dirs)    => dirs foreach execute
       case EnumAST(names, pos, enumeration) =>
@@ -80,6 +81,7 @@ class Interpreter(globalScope: Scope) {
           implicitly[Scope].declare(pos, names, Constructor(typ, names, fields))
       case exp: ExpressionAST => deval(exp)
     }
+  }
 
   def deval(expr: ExpressionAST)(implicit scope: Scope) = deref(eval(expr))
 
@@ -94,6 +96,14 @@ class Interpreter(globalScope: Scope) {
       case Var(v) => v
       case _      => a
     }
+
+  def execute(l: List[StatementAST], scope: Scope): Any = l match {
+    case h :: Nil =>
+      execute(h)(scope)
+    case h :: t =>
+      execute(h)(scope)
+      execute(t, scope)
+  }
 
   def eval(expr: ExpressionAST)(implicit scope: Scope): Any = expr match {
     case InterpolationExpressionAST(es) => es map deval map display mkString
@@ -117,18 +127,12 @@ class Interpreter(globalScope: Scope) {
         }
 
       comp(deval(left), comparisons)
-    case BlockExpressionAST(stmts) =>
+    case block @ BlockExpressionAST(stmts) =>
       val inner = new Scope(scope)
 
-      def evals(l: List[StatementAST]): Any = l match {
-        case h :: Nil =>
-          apply(h)(inner)
-        case h :: t =>
-          apply(h)(inner)
-          evals(t)
-      }
+      declarations(block)(inner)
 
-      evals(stmts)
+      execute(stmts, inner)
     case AssignmentExpressionAST(lhs, op, rhs) =>
       val ll = lhs.length
       val rl = rhs.length

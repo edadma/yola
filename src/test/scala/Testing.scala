@@ -5,7 +5,7 @@ object Testing {
   def run(snippet: String, output: Any => Unit) = {
     val parser          = new YParser
     val ast             = parser.parseFromString(snippet, parser.source)
-    implicit val global = globalScope
+    implicit val global = new Scope(globalScope)
 
     global.vars("println") = (args: List[Any]) => output(args map display mkString ", ")
 

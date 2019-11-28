@@ -314,9 +314,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
 //            }
 //      )
 
-  lazy val source: PackratParser[BlockExpressionAST] =
-    Newline ^^^ BlockExpressionAST(Nil) |
-      statements ^^ BlockExpressionAST
+  lazy val source: PackratParser[SourceAST] =
+    Newline ^^^ SourceAST(Nil) |
+      statements ^^ SourceAST
 
   lazy val statements = rep1(statement)
 
