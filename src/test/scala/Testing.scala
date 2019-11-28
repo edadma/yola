@@ -24,10 +24,5 @@ object Testing {
     out.toString.trim
   }
 
-  def runResult(snippet: String) = {
-    val res = run(snippet, println)
-
-    println(res)
-    res
-  }
+  def runResult(snippet: String) = run(snippet, println)
 }

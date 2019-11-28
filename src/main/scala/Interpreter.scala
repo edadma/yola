@@ -25,12 +25,8 @@ class Interpreter(globalScope: Scope) {
 
   def execute(ast: AST)(implicit scope: Scope): Any =
     ast match {
-      case DeclarationBlockAST(decls) =>
-        decls foreach execute
-        ()
-      case DirectiveBlockAST(dirs) =>
-        dirs foreach execute
-        ()
+      case DeclarationBlockAST(decls) => decls foreach execute
+      case DirectiveBlockAST(dirs)    => dirs foreach execute
       case EnumAST(names, pos, enumeration) =>
         var idx = 0
 
@@ -126,9 +122,9 @@ class Interpreter(globalScope: Scope) {
 
       def evals(l: List[StatementAST]): Any = l match {
         case h :: Nil =>
-          execute(h)(inner)
+          apply(h)(inner)
         case h :: t =>
-          execute(h)(inner)
+          apply(h)(inner)
           evals(t)
       }
 
