@@ -126,9 +126,9 @@ class Interpreter(globalScope: Scope) {
 
       def evals(l: List[StatementAST]): Any = l match {
         case h :: Nil =>
-          apply(h)(inner)
+          execute(h)(inner)
         case h :: t =>
-          apply(h)(inner)
+          execute(h)(inner)
           evals(t)
       }
 

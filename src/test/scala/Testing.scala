@@ -1,7 +1,6 @@
 package xyz.hyperreal.yola
 
 object Testing {
-  def loader(module: List[String], name: String, rename: Option[String], scope: Scope): Unit = {}
 
   def run(snippet: String, output: Any => Unit) = {
     val parser          = new YParser
@@ -25,5 +24,10 @@ object Testing {
     out.toString.trim
   }
 
-  def runResult(snippet: String) = run(snippet, println)
+  def runResult(snippet: String) = {
+    val res = run(snippet, println)
+
+    println(res)
+    res
+  }
 }

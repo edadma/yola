@@ -61,7 +61,7 @@ object LanguageTests extends TestSuite {
                          |  g(x) = x + 4
                          |
                          |5 ~> g ~> f
-                         |""".stripMargin) == 27)
+                         |""".stripMargin) == BigDecimal(27))
       assert(runResult("""
                          |def
                          |  foldl( f, z, [] )    =  z

@@ -1,12 +1,15 @@
-var count = 0
+/*
+def
+  f(x) = 3x
+  g(x) = x + 4
 
-println( 'starting' )
+println( 5 ~> g ~> f )
+*/
 
-l: repeat
-    if ++count == 5 then break
+val a = 4
+val b = 5
+val c = 6
 
-    if count < 3 then continue
+def f(x) = x*a
 
-    println( count )
-
-println(count)
+println( 7 ~> f ~> x -> x + b ~> (+ c) )

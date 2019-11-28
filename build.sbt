@@ -1,6 +1,6 @@
 name := "yola"
 
-version := "0.1t.0"
+version := "0.1u.0"
 
 scalaVersion := "2.11.12"
 
