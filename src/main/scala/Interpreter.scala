@@ -98,8 +98,7 @@ class Interpreter(globalScope: Scope) {
     }
 
   def execute(l: List[StatementAST], scope: Scope): Any = l match {
-    case h :: Nil =>
-      execute(h)(scope)
+    case h :: Nil => execute(h)(scope)
     case h :: t =>
       execute(h)(scope)
       execute(t, scope)
@@ -116,10 +115,30 @@ class Interpreter(globalScope: Scope) {
 
             if (op match {
                   case "==" => left == right
-                  case "<"  => left.asInstanceOf[BigDecimal] < right.asInstanceOf[BigDecimal]
-                  case ">"  => left.asInstanceOf[BigDecimal] > right.asInstanceOf[BigDecimal]
-                  case "<=" => left.asInstanceOf[BigDecimal] <= right.asInstanceOf[BigDecimal]
-                  case ">=" => left.asInstanceOf[BigDecimal] >= right.asInstanceOf[BigDecimal]
+                  case "<" =>
+                    (left, right) match {
+                      case (s: String, _)                 => s < String.valueOf(right)
+                      case (_, s: String)                 => String.valueOf(left) < s
+                      case (a: BigDecimal, b: BigDecimal) => a < b
+                    }
+                  case ">" =>
+                    (left, right) match {
+                      case (s: String, _)                 => s > String.valueOf(right)
+                      case (_, s: String)                 => String.valueOf(left) > s
+                      case (a: BigDecimal, b: BigDecimal) => a > b
+                    }
+                  case "<=" =>
+                    (left, right) match {
+                      case (s: String, _)                 => s <= String.valueOf(right)
+                      case (_, s: String)                 => String.valueOf(left) <= s
+                      case (a: BigDecimal, b: BigDecimal) => a <= b
+                    }
+                  case ">=" =>
+                    (left, right) match {
+                      case (s: String, _)                 => s >= String.valueOf(right)
+                      case (_, s: String)                 => String.valueOf(left) >= s
+                      case (a: BigDecimal, b: BigDecimal) => a >= b
+                    }
                 })
               comp(right, t)
             else
@@ -148,8 +167,15 @@ class Interpreter(globalScope: Scope) {
           eval(el) match {
             case h: Var =>
               op match {
-                case "="  => h.v = v
-                case "+=" => h.v = h.v.asInstanceOf[BigDecimal] + v.asInstanceOf[BigDecimal]
+                case "=" => h.v = v
+                case "+=" =>
+                  h.v = h.v match {
+                    case s: String     => s + String.valueOf(v)
+                    case n: BigDecimal => n + v.asInstanceOf[BigDecimal]
+                  }
+                case "-=" => h.v = h.v.asInstanceOf[BigDecimal] - v.asInstanceOf[BigDecimal]
+                case "*=" => h.v = h.v.asInstanceOf[BigDecimal] * v.asInstanceOf[BigDecimal]
+                case "/=" => h.v = h.v.asInstanceOf[BigDecimal] / v.asInstanceOf[BigDecimal]
               }
               h.v
             case _ => problem(pl, "not an l-value")
@@ -212,11 +238,6 @@ class Interpreter(globalScope: Scope) {
       }
 
       whileLoop
-//      while (beval(cond)) {
-//        body foreach eval
-//      }
-//
-//      els foreach eval
     case ForYieldExpressionAST(gen, body)          => flatMap(gen, scope, body)
     case ListComprehensionExpressionAST(expr, gen) => flatMap(gen, scope, expr).toList
     case ForExpressionAST(label, gen, body, els) =>
@@ -252,7 +273,14 @@ class Interpreter(globalScope: Scope) {
       val r = deval(right)
 
       op match {
-        case "+"         => l.asInstanceOf[BigDecimal] + r.asInstanceOf[BigDecimal]
+        case "+" =>
+          (l, r) match {
+            case (s: String, _)                 => (new mutable.StringBuilder(s) ++= String.valueOf(r)).toString
+            case (_, s: String)                 => (new mutable.StringBuilder(String.valueOf(l)) ++= s).toString
+            case (a: BigDecimal, b: BigDecimal) => a + b
+          }
+        case "-"         => l.asInstanceOf[BigDecimal] - r.asInstanceOf[BigDecimal]
+        case "/"         => l.asInstanceOf[BigDecimal] / r.asInstanceOf[BigDecimal]
         case "%"         => l.asInstanceOf[BigDecimal] % r.asInstanceOf[BigDecimal]
         case "*" | "adj" => l.asInstanceOf[BigDecimal] * r.asInstanceOf[BigDecimal]
       }

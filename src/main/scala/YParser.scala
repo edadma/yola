@@ -568,7 +568,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val lvalueExpression = applyExpression
 
-  lazy val assignment = "=" | "+=" | "++=" | "-=" | "--=" | "*=" | "/=" | "//=" | "\\=" | "^=" | "<:=" | ">:="
+  lazy val assignment = "=" | "+=" | "++=" | "-=" | "--=" | "*=" | "/=" | "\\=" | "^="
 
   lazy val sendExpression: PackratParser[ExpressionAST] =
     pos ~ sendExpression ~ "~>" ~ pos ~ functionExpression ^^ {
