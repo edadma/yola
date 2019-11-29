@@ -204,7 +204,7 @@ class YolaLexical
     "def",
     "var",
     "val",
-    "data",
+    "type",
     "module",
     "null",
     "true",
@@ -384,8 +384,8 @@ class YParser extends StandardTokenParsers with PackratParsers {
     }
 
   lazy val datatypes =
-    "data" ~> datatype |
-      "data" ~> Indent ~> rep1(datatype <~ Newline) <~ Dedent ^^ DeclarationBlockAST
+    "type" ~> datatype |
+      "type" ~> Indent ~> rep1(datatype <~ Newline) <~ Dedent ^^ DeclarationBlockAST
 
   lazy val datatype =
     pos ~ (ident <~ "=") ~ rep1sep(constructor, "|") ^^ {
@@ -543,7 +543,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
     opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
       case l ~ b => RepeatExpressionAST(l, b)
     } |
-    sendExpression //functionExpression
+    sendExpression
 
   lazy val elsePart: PackratParser[Option[ExpressionAST]] = opt(onl ~> "else" ~> expressionOrBlock)
 
@@ -743,9 +743,6 @@ class YParser extends StandardTokenParsers with PackratParsers {
       pos ~ applyExpression ~ ("." ~> pos) ~ (ident | stringLit) ^^ {
         case fp ~ e ~ ap ~ f => DotExpressionAST(fp, e, ap, f)
       } |
-//      pos ~ applyExpression ~ "~>" ~ pos ~ primaryExpression ^^ {
-//        case ap ~ a ~ _ ~ fp ~ f => ApplyExpressionAST(fp, f, ap, List((ap, a)), false)
-//      } |
       primaryExpression
 
   lazy val mapEntry = keyExpression ~ (":" ~> expression) ^^ {
