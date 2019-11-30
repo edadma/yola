@@ -24,6 +24,16 @@ object LanguageTests extends TestSuite {
             |3, 4, 5, [4, 5]
             |""".stripMargin.trim
       )
+      assert(runResult("""
+                         |val [a, b] = [3, 4]
+                         |
+                         |[b, a]
+                         |""".stripMargin) == List(4, 3))
+      assert(runResult("""
+                         |val (a, b) = (3, 4)
+                         |
+                         |[b, a]
+                         |""".stripMargin) == List(4, 3))
     }
 
     test("arithmetic") {
