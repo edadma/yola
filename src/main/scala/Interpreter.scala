@@ -204,9 +204,12 @@ class Interpreter(globalScope: Scope) {
       }
     case RepeatExpressionAST(label, body) =>
       def repeatLoop: Any = {
-        try try eval(body)
-        catch {
-          case ContinueException(_, clabel) if clabel.isEmpty || clabel == label =>
+        try {
+          try {
+            eval(body)
+          } catch {
+            case ContinueException(_, clabel) if clabel.isEmpty || clabel == label =>
+          }
         } catch {
           case BreakException(_, blabel, expr) if blabel.isEmpty || blabel == label =>
             return expr map deval getOrElse ()
@@ -241,23 +244,33 @@ class Interpreter(globalScope: Scope) {
     case ForYieldExpressionAST(gen, body)          => flatMap(gen, scope, body)
     case ListComprehensionExpressionAST(expr, gen) => flatMap(gen, scope, expr).toList
     case ForExpressionAST(label, gen, body, els) =>
-      def foreach(gs: List[GeneratorExpressionAST], outer: Scope): Unit =
+      def foreach(gs: List[GeneratorExpressionAST], outer: Scope): Any =
         gs match {
           case Nil => deval(body)(outer)
           case GeneratorExpressionAST(pattern, pos, iterable, filter) :: tail =>
             ieval(iterable).foreach(v => {
-              val inner = new Scope(outer)
-              val v1    = if (v.isInstanceOf[Int]) BigDecimal(v.asInstanceOf[Int]) else v
+              try {
+                try {
+                  val inner = new Scope(outer)
+                  val v1    = if (v.isInstanceOf[Int]) BigDecimal(v.asInstanceOf[Int]) else v
 
-              unify(v1, pattern, true)(inner)
+                  unify(v1, pattern, true)(inner)
 
-              if (!filter.isDefined || beval(filter.get)(inner))
-                foreach(tail, inner)
+                  if (!filter.isDefined || beval(filter.get)(inner))
+                    foreach(tail, inner)
+                } catch {
+                  case ContinueException(_, clabel) if clabel.isEmpty || clabel == label =>
+                }
+              } catch {
+                case BreakException(_, blabel, expr) if blabel.isEmpty || blabel == label =>
+                  return expr map deval getOrElse ()
+              }
             })
+
+            els map deval getOrElse ()
         }
 
       foreach(gen, scope)
-      els foreach eval
     case ConditionalExpressionAST(cond, els) =>
       deval(
         cond find { case (c, _) => beval(c) } map { case (_, a) => a } getOrElse (els getOrElse LiteralExpressionAST(
