@@ -45,7 +45,7 @@ package object yola {
 
   val globalScope =
     new Scope(null) {
-      vars ++= Map(
+      bindings(
         "None" -> None,
         "yola" -> Map(
           "math" -> xyz.hyperreal.yola.module.Math.exports

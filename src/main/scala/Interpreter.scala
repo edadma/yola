@@ -18,7 +18,7 @@ class Interpreter(globalScope: Scope) {
       case EnumAST(name, _, _)        =>
       case ValAST(pat, _, _)          =>
       case VarAST(_, name, _)         =>
-      case DefAST(pos, name, func)    => implicitly[Scope].add(pos, name, func)
+      case DefAST(pos, name, func)    => implicitly[Scope].addFunctionPiece(pos, name, func)
       case DataAST(_, _, consts)      =>
       case _                          =>
     }
@@ -69,7 +69,7 @@ class Interpreter(globalScope: Scope) {
                   }
               }
 
-            find(module, globalScope.vars)
+            find(module, globalScope.decls)
         }
       case ValAST(pat, pos, expr)   => unify(deval(expr), pat, true)
       case VarAST(pos, names, None) => implicitly[Scope].declare(pos, names, Var(0))

@@ -1,11 +1,16 @@
 package xyz.hyperreal.yola
 
-class YClass(val name: String, constructor: ExpressionAST, outer: Scope) {
+class YClass(val name: String,
+             val parent: YType,
+             constructor: ExpressionAST,
+             definingScope: Scope,
+             global: Scope)
+    extends YInstantiableType {
 
-  def instance: YObject = {
-    implicit val scope = new Scope(outer)
+  def instantiate(args: Any*): YInstance = {
+    implicit val instanceScope = new Scope(definingScope)
 
-    new Interpreter(null)(constructor)
-    new YObject(this, scope)
+    new Interpreter(global)(constructor)
+    new YInstance(this, instanceScope)
   }
 }
