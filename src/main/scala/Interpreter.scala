@@ -328,9 +328,9 @@ class Interpreter(globalScope: Scope) {
       val step  = neval(by).toIntExact
 
       if (incl)
-        start to end by step
+        YRange(start to end by step)
       else
-        start until end by step
+        YRange(start until end by step)
     case AndExpressionAST(left, right) => beval(left) && beval(right)
     case OrExpressionAST(left, right)  => beval(left) || beval(right)
     case NotExpressionAST(cond)        => !beval(cond)
