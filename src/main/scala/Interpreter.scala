@@ -182,7 +182,7 @@ class Interpreter(globalScope: Scope) {
       if (lhs.length < rhs.length)
         problem(lhs.head._1, s"right hand side has too many items: l.h.s. has $ll, r.h.s has $rl")
 
-      (lhs zip rhs.map { case (pr, er) => eval(er) }) map {
+      YList((lhs zip rhs.map { case (pr, er) => eval(er) }) map {
         case ((pl, el), v) =>
           eval(el) match {
             case h: Var =>
@@ -203,7 +203,7 @@ class Interpreter(globalScope: Scope) {
               h.v
             case _ => problem(pl, "not an l-value")
           }
-      }
+      })
     case UnaryExpressionAST(op, pos, expr) =>
       eval(expr) match {
         case h: Var =>
