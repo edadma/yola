@@ -175,13 +175,16 @@ class Interpreter(globalScope: Scope) {
                 case "=" => h.v = v
                 case "+=" =>
                   h.v = h.v match {
-                    case s: String     => s + String.valueOf(v)
-                    case n: BigDecimal => n + v.asInstanceOf[BigDecimal]
+                    case s: YString => s append String.valueOf(v)
+                    case n: YNumber => n + v.asInstanceOf[YNumber].wrapped
                   }
-                case "-=" => h.v = h.v.asInstanceOf[BigDecimal] - v.asInstanceOf[BigDecimal]
-                case "*=" => h.v = h.v.asInstanceOf[BigDecimal] * v.asInstanceOf[BigDecimal]
-                case "/=" => h.v = h.v.asInstanceOf[BigDecimal] / v.asInstanceOf[BigDecimal]
+                case "-=" => h.v = h.v.asInstanceOf[YNumber] - v.asInstanceOf[YNumber].wrapped
+                case "*=" =>
+                  h.v = YNumber(h.v.asInstanceOf[YNumber].wrapped * v.asInstanceOf[YNumber].wrapped)
+                case "/=" =>
+                  h.v = YNumber(h.v.asInstanceOf[YNumber].wrapped / v.asInstanceOf[YNumber].wrapped)
               }
+
               h.v
             case _ => problem(pl, "not an l-value")
           }
@@ -192,23 +195,23 @@ class Interpreter(globalScope: Scope) {
           op match {
             case "_++" =>
               val res = h.v
-              h.v = h.v.asInstanceOf[BigDecimal] + 1
+              h.v = h.v.asInstanceOf[YNumber] + 1
               res
             case "_--" =>
               val res = h.v
-              h.v = h.v.asInstanceOf[BigDecimal] - 1
+              h.v = h.v.asInstanceOf[YNumber] - 1
               res
             case "++_" =>
-              h.v = h.v.asInstanceOf[BigDecimal] + 1
+              h.v = h.v.asInstanceOf[YNumber] + 1
               h.v
             case "--_" =>
-              h.v = h.v.asInstanceOf[BigDecimal] - 1
+              h.v = h.v.asInstanceOf[YNumber] - 1
               h.v
           }
         case _ => problem(pos, "not an l-value")
       }
     case RepeatExpressionAST(label, body) =>
-      def repeatLoop: Any = {
+      def repeatLoop: Value = {
         try {
           try {
             eval(body)
@@ -217,7 +220,7 @@ class Interpreter(globalScope: Scope) {
           }
         } catch {
           case BreakException(_, blabel, expr) if blabel.isEmpty || blabel == label =>
-            return expr map deval getOrElse ()
+            return expr map deval getOrElse YUnit
         }
 
         repeatLoop
@@ -233,13 +236,13 @@ class Interpreter(globalScope: Scope) {
             if (beval(cond))
               body foreach deval
             else
-              return els map deval getOrElse ()
+              return els map deval getOrElse YUnit
           } catch {
             case ContinueException(_, clabel) if clabel.isEmpty || clabel == label =>
           }
         } catch {
           case BreakException(_, blabel, expr) if blabel.isEmpty || blabel == label =>
-            return expr map deval getOrElse ()
+            return expr map deval getOrElse YUnit
         }
 
         whileLoop
@@ -268,11 +271,11 @@ class Interpreter(globalScope: Scope) {
                 }
               } catch {
                 case BreakException(_, blabel, expr) if blabel.isEmpty || blabel == label =>
-                  return expr map deval getOrElse ()
+                  return expr map deval getOrElse YUnit
               }
             })
 
-            els map deval getOrElse ()
+            els map deval getOrElse YUnit
         }
 
       foreach(gen, scope)
@@ -284,7 +287,7 @@ class Interpreter(globalScope: Scope) {
       )
     case DotExpressionAST(epos, expr, apos, field) =>
       deval(expr) match {
-        case f: (Any => Any) => f(field)
+        case f: (Value => Value) => f(field)
       }
     case BinaryExpressionAST(lpos, left, op, rpos, right) =>
       val l = deval(left)
