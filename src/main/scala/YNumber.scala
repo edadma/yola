@@ -1,11 +1,8 @@
 package xyz.hyperreal.yola
 
-object YNumber extends YInstantiableType {
+object YNumberType extends YType {
   val name   = "Number"
   val parent = YObject
-
-  def instantiate(args: Any*) = {
-    new YInstance(YNumber, null)
-  }
-
 }
+
+case class YNumber(primitive: BigDecimal) extends PrimitiveValue[BigDecimal](YNumberType, null)

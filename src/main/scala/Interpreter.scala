@@ -28,7 +28,7 @@ class Interpreter(globalScope: Scope) {
       case SourceAST(stmts)           => execute(stmts, scope)
       case DeclarationBlockAST(decls) => decls foreach execute
       case DirectiveBlockAST(dirs)    => dirs foreach execute
-      case EnumAST(names, pos, enumeration) =>
+      case EnumAST(name, pos, enumeration) =>
         var idx = 0
 
         enumeration foreach {
@@ -104,7 +104,7 @@ class Interpreter(globalScope: Scope) {
       execute(t, scope)
   }
 
-  def eval(expr: ExpressionAST)(implicit scope: Scope): Any = expr match {
+  def eval(expr: ExpressionAST)(implicit scope: Scope): Value = expr match {
     case InterpolationExpressionAST(es) => es map deval map display mkString
     case ComparisonExpressionAST(pos, left, comparisons) =>
       def comp(left: Any, cs: List[(String, Position, ExpressionAST)]): Boolean =
@@ -302,9 +302,12 @@ class Interpreter(globalScope: Scope) {
         case None    => problem(pos, s"undeclared variable '$names'")
         case Some(v) => v
       }
-    case LiteralExpressionAST(v)   => v
-    case TupleExpressionAST(elems) => NTuple(elems map deval)
-    case ListExpressionAST(l)      => l map deval
+    case LiteralExpressionAST(n: BigDecimal) => YNumber(n)
+    case LiteralExpressionAST(s: String)     => YString(s)
+    case LiteralExpressionAST(b: Boolean)    => YBoolean(b)
+    case LiteralExpressionAST(null)          => NullValue
+    case TupleExpressionAST(elems)           => NTuple(elems map deval)
+    case ListExpressionAST(l)                => l map deval
     case MapExpressionAST(entries) =>
       entries map {
         case (k, v) =>
@@ -547,15 +550,6 @@ case class Constructor(typ: String, name: String, fields: List[String])
 
 case class Record(con: Constructor, args: mutable.LinkedHashMap[String, Any]) extends (Any => Any) {
   def apply(field: Any) = args(field.asInstanceOf[String])
-}
-
-case class Enum(names: String, ordinal: Int) extends (Any => Any) {
-
-  def apply(v: Any) =
-    v match {
-      case "names"   => names
-      case "ordinal" => ordinal
-    }
 }
 
 case class BreakException(pos: Position, blabel: Option[String], expr: Option[ExpressionAST])
