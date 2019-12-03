@@ -13,7 +13,3 @@ abstract class WrapperValue[T](containing: YType, instanceScope: Scope)
 
   override def toString = String.valueOf(wrapped)
 }
-
-object NullValue extends WrapperValue[Null](NullType, null) {
-  val wrapped = null
-}

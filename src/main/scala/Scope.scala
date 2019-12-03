@@ -48,4 +48,10 @@ class Scope(val outer: Scope) {
   override def toString: String = s"Scope:$decls"
 }
 
-case class Functions(map: mutable.HashMap[Int, FunctionExpressionAST])
+object YFunctionsType extends YType {
+  val name   = "Functions"
+  val parent = YObject
+}
+
+case class Functions(wrapped: mutable.HashMap[Int, FunctionExpressionAST])
+    extends WrapperValue[mutable.HashMap[Int, FunctionExpressionAST]](YFunctionsType, null)

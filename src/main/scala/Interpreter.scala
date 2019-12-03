@@ -227,7 +227,7 @@ class Interpreter(globalScope: Scope) {
     case BreakExpressionAST(pos, label, expr) => throw BreakException(pos, label, expr)
     case ContinueExpressionAST(pos, label)    => throw ContinueException(pos, label)
     case WhileExpressionAST(label, cond, body, els) =>
-      def whileLoop: Any = {
+      def whileLoop: Value = {
         try {
           try {
             if (beval(cond))
@@ -246,10 +246,10 @@ class Interpreter(globalScope: Scope) {
       }
 
       whileLoop
-    case ForYieldExpressionAST(gen, body)          => flatMap(gen, scope, body)
-    case ListComprehensionExpressionAST(expr, gen) => flatMap(gen, scope, expr).toList
+    case ForYieldExpressionAST(gen, body)          => YIterable(flatMap(gen, scope, body))
+    case ListComprehensionExpressionAST(expr, gen) => YList(flatMap(gen, scope, expr).toList)
     case ForExpressionAST(label, gen, body, els) =>
-      def foreach(gs: List[GeneratorExpressionAST], outer: Scope): Any =
+      def foreach(gs: List[GeneratorExpressionAST], outer: Scope): Value =
         gs match {
           case Nil => deval(body)(outer)
           case GeneratorExpressionAST(pattern, pos, iterable, filter) :: tail =>
@@ -307,11 +307,12 @@ class Interpreter(globalScope: Scope) {
         case None    => problem(pos, s"undeclared variable '$names'")
         case Some(v) => v
       }
+    case LiteralExpressionAST(())            => YUnit
     case LiteralExpressionAST(n: BigDecimal) => YNumber(n)
     case LiteralExpressionAST(s: String)     => YString(s)
     case LiteralExpressionAST(b: Boolean)    => YBoolean(b)
-    case LiteralExpressionAST(null)          => NullValue
-    case TupleExpressionAST(elems)           => NTuple(elems map deval)
+    case LiteralExpressionAST(null)          => YNull
+    case TupleExpressionAST(elems)           => YTuple(elems map deval)
     case ListExpressionAST(l)                => YList(l map deval)
     case MapExpressionAST(entries) =>
       YMap(entries map {
@@ -395,14 +396,14 @@ class Interpreter(globalScope: Scope) {
               problem(apos, s"too few arguments: expected $plen, found $alen")
         }
 
-        def testPieces(ps: List[FunctionPieceAST]): Any =
+        def testPieces(ps: List[FunctionPieceAST]): Value =
           ps match {
             case Nil => problem(fpos, s"could not find matching function piece")
             case FunctionPieceAST(pos, parms, arb, parts, where) :: t =>
               implicit val scope = new Scope(fexp.scope)
 
               if (args zip parms forall { case (a, p) => unify(a, p, false) }) {
-                def testParts(ps: List[FunctionPart]): Any =
+                def testParts(ps: List[FunctionPart]): Value =
                   ps match {
                     case Nil => problem(pos, s"could not apply function")
                     case h :: t =>

@@ -17,11 +17,6 @@ object AnyType extends YType {
   val parent = null
 }
 
-object NullType extends YType {
-  val name   = "Null"
-  val parent = AnyType
-}
-
 object YObject extends YInstantiableType {
   val name   = "Object"
   val parent = null
