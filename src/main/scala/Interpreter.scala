@@ -23,11 +23,15 @@ class Interpreter(globalScope: Scope) {
       case _                          =>
     }
 
-  def execute(ast: AST)(implicit scope: Scope): Any = {
+  def execute(ast: AST)(implicit scope: Scope): Value = {
     ast match {
-      case SourceAST(stmts)           => execute(stmts, scope)
-      case DeclarationBlockAST(decls) => decls foreach execute
-      case DirectiveBlockAST(dirs)    => dirs foreach execute
+      case SourceAST(stmts) => execute(stmts, scope)
+      case DeclarationBlockAST(decls) =>
+        decls foreach execute
+        YUnit
+      case DirectiveBlockAST(dirs) =>
+        dirs foreach execute
+        YUnit
       case EnumAST(name, pos, enumeration) =>
         var idx = 0
 
@@ -39,6 +43,8 @@ class Interpreter(globalScope: Scope) {
             scope.declare(pos, n, Enum(n, ord))
             idx = ord + 1
         }
+
+        YUnit
       case ImportAST(module, names) =>
         names foreach {
           case (n, r) =>
@@ -71,14 +77,23 @@ class Interpreter(globalScope: Scope) {
 
             find(module, globalScope.decls)
         }
-      case ValAST(pat, pos, expr)   => unify(deval(expr), pat, true)
-      case VarAST(pos, names, None) => implicitly[Scope].declare(pos, names, Var(YNumber(0)))
+
+        YUnit
+      case ValAST(pat, pos, expr) =>
+        unify(deval(expr), pat, true)
+        YUnit
+      case VarAST(pos, names, None) =>
+        implicitly[Scope].declare(pos, names, Var(YNumber(0)))
+        YUnit
       case VarAST(pos, names, Some((_, exp))) =>
         implicitly[Scope].declare(pos, names, Var(deval(exp)))
-      case DefAST(pos, names, func) => ()
+        YUnit
+      case DefAST(pos, names, func) => YUnit
       case DataAST(pos, typ, constructors) =>
         for ((names, fields) <- constructors)
           implicitly[Scope].declare(pos, names, Constructor(typ, names, fields))
+
+        YUnit
       case exp: ExpressionAST => deval(exp)
     }
   }
@@ -102,7 +117,7 @@ class Interpreter(globalScope: Scope) {
       case _      => a
     }
 
-  def execute(l: List[StatementAST], scope: Scope): Any = l match {
+  def execute(l: List[StatementAST], scope: Scope): Value = l match {
     case h :: Nil => execute(h)(scope)
     case h :: t =>
       execute(h)(scope)
@@ -112,9 +127,9 @@ class Interpreter(globalScope: Scope) {
   def eval(expr: ExpressionAST)(implicit scope: Scope): Value = expr match {
     case InterpolationExpressionAST(es) => es map deval map display mkString
     case ComparisonExpressionAST(pos, left, comparisons) =>
-      def comp(left: Value, cs: List[(String, Position, ExpressionAST)]): Boolean =
+      def comp(left: Value, cs: List[(String, Position, ExpressionAST)]): YBoolean =
         cs match {
-          case Nil => true
+          case Nil => YBoolean(true)
           case (op, pos, exp) :: t =>
             val right = deval(exp)
 
@@ -134,20 +149,20 @@ class Interpreter(globalScope: Scope) {
                     }
                   case "<=" =>
                     (left, right) match {
-                      case (s: String, _)                 => s <= String.valueOf(right)
-                      case (_, s: String)                 => String.valueOf(left) <= s
-                      case (a: BigDecimal, b: BigDecimal) => a <= b
+                      case (YString(s), _)          => s <= right.toString
+                      case (_, YString(s))          => left.toString <= s
+                      case (YNumber(a), YNumber(b)) => a <= b
                     }
                   case ">=" =>
                     (left, right) match {
-                      case (s: String, _)                 => s >= String.valueOf(right)
-                      case (_, s: String)                 => String.valueOf(left) >= s
-                      case (a: BigDecimal, b: BigDecimal) => a >= b
+                      case (YString(s), _)          => s >= right.toString
+                      case (_, YString(s))          => left.toString >= s
+                      case (YNumber(a), YNumber(b)) => a >= b
                     }
                 })
               comp(right, t)
             else
-              false
+              YBoolean(false)
         }
 
       comp(deval(left), comparisons)
