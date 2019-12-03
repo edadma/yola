@@ -72,7 +72,7 @@ class Interpreter(globalScope: Scope) {
             find(module, globalScope.decls)
         }
       case ValAST(pat, pos, expr)   => unify(deval(expr), pat, true)
-      case VarAST(pos, names, None) => implicitly[Scope].declare(pos, names, Var(0))
+      case VarAST(pos, names, None) => implicitly[Scope].declare(pos, names, Var(YNumber(0)))
       case VarAST(pos, names, Some((_, exp))) =>
         implicitly[Scope].declare(pos, names, Var(deval(exp)))
       case DefAST(pos, names, func) => ()
@@ -85,9 +85,11 @@ class Interpreter(globalScope: Scope) {
 
   def deval(expr: ExpressionAST)(implicit scope: Scope) = deref(eval(expr))
 
-  def beval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[Boolean]
+  def beval(expr: ExpressionAST)(implicit scope: Scope) =
+    deval(expr).asInstanceOf[YBoolean].primitive
 
-  def neval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[BigDecimal]
+  def neval(expr: ExpressionAST)(implicit scope: Scope) =
+    deval(expr).asInstanceOf[YNumber].primitive
 
   def ieval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[Iterable[Any]]
 
@@ -107,7 +109,7 @@ class Interpreter(globalScope: Scope) {
   def eval(expr: ExpressionAST)(implicit scope: Scope): Value = expr match {
     case InterpolationExpressionAST(es) => es map deval map display mkString
     case ComparisonExpressionAST(pos, left, comparisons) =>
-      def comp(left: Any, cs: List[(String, Position, ExpressionAST)]): Boolean =
+      def comp(left: Value, cs: List[(String, Position, ExpressionAST)]): Boolean =
         cs match {
           case Nil => true
           case (op, pos, exp) :: t =>
@@ -117,15 +119,15 @@ class Interpreter(globalScope: Scope) {
                   case "==" => left == right
                   case "<" =>
                     (left, right) match {
-                      case (s: String, _)                 => s < String.valueOf(right)
-                      case (_, s: String)                 => String.valueOf(left) < s
-                      case (a: BigDecimal, b: BigDecimal) => a < b
+                      case (YString(s), _)          => s < right.toString
+                      case (_, YString(s))          => left.toString < s
+                      case (YNumber(a), YNumber(b)) => a < b
                     }
                   case ">" =>
                     (left, right) match {
-                      case (s: String, _)                 => s > String.valueOf(right)
-                      case (_, s: String)                 => String.valueOf(left) > s
-                      case (a: BigDecimal, b: BigDecimal) => a > b
+                      case (YString(s), _)          => s > right.toString
+                      case (_, YString(s))          => left.toString > s
+                      case (YNumber(a), YNumber(b)) => a > b
                     }
                   case "<=" =>
                     (left, right) match {
