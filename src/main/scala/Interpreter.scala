@@ -91,7 +91,7 @@ class Interpreter(globalScope: Scope) {
 
   def ieval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[Iterable[Any]]
 
-  def deref(a: Any) =
+  def deref(a: Value) =
     a match {
       case Var(v) => v
       case _      => a
@@ -541,7 +541,7 @@ class Interpreter(globalScope: Scope) {
         }
     }
 
-  case class Var(var v: Any)
+  case class Var(var v: Value)
 }
 
 case class NTuple(elems: List[Any])
