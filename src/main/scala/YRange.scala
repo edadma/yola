@@ -5,4 +5,4 @@ object YRangeType extends YType {
   val parent = YObject
 }
 
-case class YRange(primitive: Range) extends PrimitiveValue[Range](YRangeType, null)
+case class YRange(wrapped: Range) extends WrapperValue[Range](YRangeType, null)

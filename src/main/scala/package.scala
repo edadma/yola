@@ -4,6 +4,8 @@ import scala.collection.immutable.Range
 import scala.util.parsing.input.Position
 
 package object yola {
+  type MapType = collection.immutable.Map[Value, Value]
+
   def perror(msg: String) = problem(null, msg)
 
   def problem(pos: Position, error: String) = {

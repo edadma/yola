@@ -4,7 +4,7 @@ import scala.collection.mutable
 import scala.util.parsing.input.Position
 
 class Scope(val outer: Scope) {
-  private[yola] val decls = new mutable.HashMap[String, Any]
+  private[yola] val decls = new mutable.HashMap[String, Value]
   private[yola] val types = new mutable.HashMap[String, YType]
 
   def apply(name: String) = decls(name)
@@ -21,7 +21,7 @@ class Scope(val outer: Scope) {
     decls(name) = value
   }
 
-  def get(name: String): Option[Any] =
+  def get(name: String): Option[Value] =
     decls get name orElse (if (outer eq null) None else outer.get(name))
 
   def addFunctionPiece(pos: Position, name: String, piece: FunctionPieceAST)(

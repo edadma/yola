@@ -5,4 +5,4 @@ object YBooleanType extends YType {
   val parent = YObject
 }
 
-case class YBoolean(primitive: Boolean) extends PrimitiveValue[Boolean](YBooleanType, null)
+case class YBoolean(wrapped: Boolean) extends WrapperValue[Boolean](YBooleanType, null)

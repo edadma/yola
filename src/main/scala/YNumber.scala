@@ -5,4 +5,4 @@ object YNumberType extends YType {
   val parent = YObject
 }
 
-case class YNumber(primitive: BigDecimal) extends PrimitiveValue[BigDecimal](YNumberType, null)
+case class YNumber(wrapped: BigDecimal) extends WrapperValue[BigDecimal](YNumberType, null)

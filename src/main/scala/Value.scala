@@ -7,13 +7,13 @@ class Value(val containing: YType, instanceScope: Scope) {
 
 }
 
-abstract class PrimitiveValue[T](containing: YType, instanceScope: Scope)
+abstract class WrapperValue[T](containing: YType, instanceScope: Scope)
     extends Value(containing, instanceScope) {
-  val primitive: T
+  val wrapped: T
 
-  override def toString = String.valueOf(primitive)
+  override def toString = String.valueOf(wrapped)
 }
 
-object NullValue extends PrimitiveValue[Null](NullType, null) {
-  val primitive = null
+object NullValue extends WrapperValue[Null](NullType, null) {
+  val wrapped = null
 }

@@ -85,11 +85,14 @@ class Interpreter(globalScope: Scope) {
 
   def deval(expr: ExpressionAST)(implicit scope: Scope) = deref(eval(expr))
 
+  def leval(expr: ExpressionAST)(implicit scope: Scope) =
+    deval(expr).asInstanceOf[YList].wrapped
+
   def beval(expr: ExpressionAST)(implicit scope: Scope) =
-    deval(expr).asInstanceOf[YBoolean].primitive
+    deval(expr).asInstanceOf[YBoolean].wrapped
 
   def neval(expr: ExpressionAST)(implicit scope: Scope) =
-    deval(expr).asInstanceOf[YNumber].primitive
+    deval(expr).asInstanceOf[YNumber].wrapped
 
   def ieval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[Iterable[Any]]
 
@@ -287,17 +290,17 @@ class Interpreter(globalScope: Scope) {
       val l = deval(left)
       val r = deval(right)
 
-      op match {
-        case "+" =>
-          (l, r) match {
-            case (s: String, _)                 => (new mutable.StringBuilder(s) ++= String.valueOf(r)).toString
-            case (_, s: String)                 => (new mutable.StringBuilder(String.valueOf(l)) ++= s).toString
-            case (a: BigDecimal, b: BigDecimal) => a + b
+      (l, r) match {
+        case (YNumber(a), YNumber(b)) =>
+          op match {
+            case "+"         => YNumber(a + b)
+            case "-"         => YNumber(a - b)
+            case "/"         => YNumber(a / b)
+            case "%"         => YNumber(a % b)
+            case "*" | "adj" => YNumber(a * b)
           }
-        case "-"         => l.asInstanceOf[BigDecimal] - r.asInstanceOf[BigDecimal]
-        case "/"         => l.asInstanceOf[BigDecimal] / r.asInstanceOf[BigDecimal]
-        case "%"         => l.asInstanceOf[BigDecimal] % r.asInstanceOf[BigDecimal]
-        case "*" | "adj" => l.asInstanceOf[BigDecimal] * r.asInstanceOf[BigDecimal]
+        case (s: YString, _) if op == "+" => s append r.toString
+        case (_, s: YString) if op == "+" => s prepend l.toString
       }
     case VariableExpressionAST(pos, names) =>
       scope get names match {
@@ -309,19 +312,19 @@ class Interpreter(globalScope: Scope) {
     case LiteralExpressionAST(b: Boolean)    => YBoolean(b)
     case LiteralExpressionAST(null)          => NullValue
     case TupleExpressionAST(elems)           => NTuple(elems map deval)
-    case ListExpressionAST(l)                => l map deval
+    case ListExpressionAST(l)                => YList(l map deval)
     case MapExpressionAST(entries) =>
-      entries map {
+      YMap(entries map {
         case (k, v) =>
           (k match {
-            case VariableExpressionAST(_, key) => key
+            case VariableExpressionAST(_, key) => YString(key)
             case _                             => deval(k)
           }) -> deval(v)
-      } toMap
+      } toMap)
     case ApplyExpressionAST(fpos, f, apos, args, tailrecursive) =>
       call(fpos, deval(f), apos, args map { case (_, e) => deval(e) })
     case ConsExpressionAST(lpos, left, rpos, right) =>
-      deval(left) :: deval(right).asInstanceOf[List[Any]]
+      YList(deval(left) :: leval(right))
     case RangeExpressionAST(fpos, from, tpos, to, bpos, by, incl) =>
       val start = neval(from).toIntExact
       val end   = neval(to).toIntExact
@@ -331,12 +334,12 @@ class Interpreter(globalScope: Scope) {
         YRange(start to end by step)
       else
         YRange(start until end by step)
-    case AndExpressionAST(left, right) => beval(left) && beval(right)
-    case OrExpressionAST(left, right)  => beval(left) || beval(right)
-    case NotExpressionAST(cond)        => !beval(cond)
-    case f: FunctionExpressionAST =>
-      if (f.scope eq null)
-        f.scope = scope
+    case AndExpressionAST(left, right) => YBoolean(beval(left) && beval(right))
+    case OrExpressionAST(left, right)  => YBoolean(beval(left) || beval(right))
+    case NotExpressionAST(cond)        => YBoolean(!beval(cond))
+    case f @ YFunction(fexp) =>
+      if (fexp.scope eq null)
+        fexp.scope = scope
 
       f
   }
@@ -362,9 +365,9 @@ class Interpreter(globalScope: Scope) {
         })
     }
 
-  def call(fpos: Position, f: Any, apos: Position, args: List[Any]): Any =
+  def call(fpos: Position, f: Any, apos: Position, args: List[Value]): Value =
     f match {
-      case func: (List[Any] => Any) => func(args)
+      case func: (List[Value] => Value) => func(args)
       case Constructor(_, names, Nil) =>
         problem(fpos, "nullary constructors can't be applied")
       case con @ Constructor(typ, names, fields) =>
@@ -524,7 +527,7 @@ class Interpreter(globalScope: Scope) {
         }
       case TuplePatternAST(pos, elems) =>
         v match {
-          case NTuple(elems2) =>
+          case YTuple(elems2) =>
             if (elems.length != elems2.length)
               if (errors)
                 problem(pos, "tuple has wrong number of elems")
@@ -545,8 +548,6 @@ class Interpreter(globalScope: Scope) {
 
   case class Var(var v: Value)
 }
-
-case class NTuple(elems: List[Any])
 
 case class Constructor(typ: String, name: String, fields: List[String])
 
