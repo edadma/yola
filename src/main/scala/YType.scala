@@ -25,3 +25,8 @@ object YObject extends YInstantiableType {
     new Value(YObject, null)
   }
 }
+
+object YFunctionType extends YType {
+  val name   = "Function"
+  val parent = YObject
+}

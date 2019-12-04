@@ -101,13 +101,13 @@ class Interpreter(globalScope: Scope) {
   def deval(expr: ExpressionAST)(implicit scope: Scope) = deref(eval(expr))
 
   def leval(expr: ExpressionAST)(implicit scope: Scope) =
-    deval(expr).asInstanceOf[YList].wrapped
+    deval(expr).asInstanceOf[YList].v
 
   def beval(expr: ExpressionAST)(implicit scope: Scope) =
-    deval(expr).asInstanceOf[YBoolean].wrapped
+    deval(expr).asInstanceOf[YBoolean].v
 
   def neval(expr: ExpressionAST)(implicit scope: Scope) =
-    deval(expr).asInstanceOf[YNumber].wrapped
+    deval(expr).asInstanceOf[YNumber].v
 
   def ieval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[Iterable[Any]]
 
@@ -125,7 +125,7 @@ class Interpreter(globalScope: Scope) {
   }
 
   def eval(expr: ExpressionAST)(implicit scope: Scope): Value = expr match {
-    case InterpolationExpressionAST(es) => es map deval map display mkString
+    case InterpolationExpressionAST(es) => YString(es map deval map (_.toString) mkString)
     case ComparisonExpressionAST(pos, left, comparisons) =>
       def comp(left: Value, cs: List[(String, Position, ExpressionAST)]): YBoolean =
         cs match {
@@ -191,13 +191,13 @@ class Interpreter(globalScope: Scope) {
                 case "+=" =>
                   h.v = h.v match {
                     case s: YString => s append String.valueOf(v)
-                    case n: YNumber => n + v.asInstanceOf[YNumber].wrapped
+                    case n: YNumber => n + v.asInstanceOf[YNumber].v
                   }
-                case "-=" => h.v = h.v.asInstanceOf[YNumber] - v.asInstanceOf[YNumber].wrapped
+                case "-=" => h.v = h.v.asInstanceOf[YNumber] - v.asInstanceOf[YNumber].v
                 case "*=" =>
-                  h.v = YNumber(h.v.asInstanceOf[YNumber].wrapped * v.asInstanceOf[YNumber].wrapped)
+                  h.v = YNumber(h.v.asInstanceOf[YNumber].v * v.asInstanceOf[YNumber].v)
                 case "/=" =>
-                  h.v = YNumber(h.v.asInstanceOf[YNumber].wrapped / v.asInstanceOf[YNumber].wrapped)
+                  h.v = YNumber(h.v.asInstanceOf[YNumber].v / v.asInstanceOf[YNumber].v)
               }
 
               h.v
@@ -566,12 +566,6 @@ class Interpreter(globalScope: Scope) {
     }
 
   case class Var(var v: Value)
-}
-
-case class Constructor(typ: String, name: String, fields: List[String])
-
-case class Record(con: Constructor, args: mutable.LinkedHashMap[String, Any]) extends (Any => Any) {
-  def apply(field: Any) = args(field.asInstanceOf[String])
 }
 
 case class BreakException(pos: Position, blabel: Option[String], expr: Option[ExpressionAST])

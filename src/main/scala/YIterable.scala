@@ -5,5 +5,7 @@ object YIterableType extends YType {
   val parent = YObject
 }
 
-case class YIterable(wrapped: Iterable[Any])
-    extends WrapperValue[Iterable[Any]](YIterableType, null)
+case class YIterable(v: Iterable[Value])
+    extends WrappedValue[Iterable[Value]](YIterableType, null) {
+  override def toString: String = v map quoted mkString (s"${v.stringPrefix}(", ", ", ")")
+}

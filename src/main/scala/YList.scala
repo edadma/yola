@@ -5,4 +5,6 @@ object YListType extends YType {
   val parent = YObject
 }
 
-case class YList(wrapped: List[Any]) extends WrapperValue[List[Any]](YListType, null)
+case class YList(v: List[Value]) extends WrappedValue[List[Value]](YListType, null) {
+  override def toString: String = v map quoted mkString ("[", ", ", "]")
+}

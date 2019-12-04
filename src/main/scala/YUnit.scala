@@ -5,6 +5,6 @@ object UnitType extends YType {
   val parent = YObject
 }
 
-object YUnit extends WrapperValue[Unit](UnitType, null) {
-  val wrapped = ()
+object YUnit extends WrappedValue[Unit](UnitType, null) {
+  val v = ()
 }

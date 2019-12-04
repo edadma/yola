@@ -9,12 +9,12 @@ class Scope(val outer: Scope) {
 
   def apply(name: String) = decls(name)
 
-  def bindings(binding: (String, Any)*): Unit = decls ++= binding
+  def bindings(binding: (String, Value)*): Unit = decls ++= binding
 
   def duplicate(pos: Position, name: String) =
     problem(pos, s"duplicate declaration: '$name'")
 
-  def declare(pos: Position, name: String, value: Any) = {
+  def declare(pos: Position, name: String, value: Value) = {
     if (decls contains name)
       duplicate(pos, name)
 
@@ -53,5 +53,5 @@ object YFunctionsType extends YType {
   val parent = YObject
 }
 
-case class Functions(wrapped: mutable.HashMap[Int, FunctionExpressionAST])
-    extends WrapperValue[mutable.HashMap[Int, FunctionExpressionAST]](YFunctionsType, null)
+case class Functions(v: mutable.HashMap[Int, FunctionExpressionAST])
+    extends WrappedValue[mutable.HashMap[Int, FunctionExpressionAST]](YFunctionsType, null)

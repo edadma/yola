@@ -5,4 +5,7 @@ object YMapType extends YType {
   val parent = YObject
 }
 
-case class YMap(wrapped: MapType) extends WrapperValue[MapType](YMapType, null)
+case class YMap(v: MapType) extends WrappedValue[MapType](YMapType, null) {
+  override def toString =
+    v map { case (k, v) => s"${quoted(k)}: ${quoted(v)}" } mkString ("{", ", ", "}")
+}

@@ -17,41 +17,25 @@ package object yola {
     sys.exit(1)
   }
 
-  def display(v: Any): String =
-    v match {
-      case r: Range =>
-        s"Range(start: ${r.start}, end: ${r.end}, step: ${r.step}, incl: ${r.isInclusive})"
-      case NTuple(elems)     => elems map quotedDisplay mkString ("(", ", ", ")")
-      case Record(con, args) => args.values map quotedDisplay mkString (s"${con.name}(", ", ", ")")
-      case elems: List[_]    => elems map quotedDisplay mkString ("[", ", ", "]")
-      case elems: collection.Seq[_] =>
-        elems map quotedDisplay mkString (s"${elems.stringPrefix}(", ", ", ")")
-      case map: collection.Map[_, _] =>
-        map map { case (k, v) => s"${quotedDisplay(k)}: ${quotedDisplay(v)}" } mkString ("{", ", ", "}")
-      case Constructor(typ, name, Nil)       => name
-      case Constructor(typ, name, fields)    => fields mkString (s"$typ:$name(", ", ", ")")
-      case Enum(name, ordinal)               => s"$name<$ordinal>"
-      case p: Product if p.productArity == 0 => p.productPrefix
-      case p: Product =>
-        val prefix = if (p.productPrefix.matches("Tuple[0-9]+")) "(" else p.productPrefix
+//  def display(v: Any): String =
+//    v match {
+//      case Constructor(typ, name, Nil)    => name
+//      case Constructor(typ, name, fields) => fields mkString (s"$typ:$name(", ", ", ")")
+//      case _                              => String.valueOf(v)
+//    }
 
-        p.productIterator map quotedDisplay mkString (s"$prefix(", ", ", ")")
-      case _ => String.valueOf(v)
-    }
-
-  def quotedDisplay(v: Any): String =
+  def quoted(v: Value): String =
     v match {
-      case s: String => s"""'${s replace ("'", "\\'")}'"""
-      case _         => display(v)
+      case YString(s) => s"""'${s replace ("'", "\\'")}'"""
+      case _          => v.toString
     }
 
   val globalScope =
     new Scope(null) {
-      bindings(
-        "None" -> None,
-        "yola" -> Map(
-          "math" -> xyz.hyperreal.yola.module.Math.exports
-        )
-      )
+      bindings("None" -> YProduct(None),
+               "yola" -> YModule(
+                 Map(
+                   "math" -> xyz.hyperreal.yola.module.Math.exports
+                 )))
     }
 }

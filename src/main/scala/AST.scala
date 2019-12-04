@@ -138,7 +138,9 @@ case class ContinueExpressionAST(pos: Position, label: Option[String]) extends E
 case class ReturnExpressionAST(expr: ExpressionAST)                    extends ExpressionAST
 case class InterpolationExpressionAST(l: List[ExpressionAST])          extends ExpressionAST
 
-case class FunctionExpressionAST(pieces: List[FunctionPieceAST]) extends ExpressionAST {
+case class FunctionExpressionAST(pieces: List[FunctionPieceAST])
+    extends Value(YFunctionType, null)
+    with ExpressionAST {
   var scope: Scope = null
 }
 

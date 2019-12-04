@@ -7,4 +7,6 @@ case class Enum(name: String, ordinal: Int) extends (Any => Any) {
       case "name"    => name
       case "ordinal" => ordinal
     }
+
+  override def toString = s"$name<$ordinal>"
 }

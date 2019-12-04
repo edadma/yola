@@ -7,9 +7,9 @@ class Value(val containing: YType, instanceScope: Scope) {
 
 }
 
-abstract class WrapperValue[T](containing: YType, instanceScope: Scope)
+abstract class WrappedValue[T](containing: YType, instanceScope: Scope)
     extends Value(containing, instanceScope) {
-  val wrapped: T
+  val v: T
 
-  override def toString = String.valueOf(wrapped)
+  override def toString = String.valueOf(v)
 }

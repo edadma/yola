@@ -5,6 +5,6 @@ object NullType extends YType {
   val parent = AnyType
 }
 
-object YNull extends WrapperValue[Null](NullType, null) {
-  val wrapped = null
+object YNull extends WrappedValue[Null](NullType, null) {
+  val v = null
 }

@@ -5,7 +5,7 @@ object YNumberType extends YType {
   val parent = YObject
 }
 
-case class YNumber(wrapped: BigDecimal) extends WrapperValue[BigDecimal](YNumberType, null) {
-  def +(n: BigDecimal) = YNumber(wrapped + n)
-  def -(n: BigDecimal) = YNumber(wrapped + n)
+case class YNumber(v: BigDecimal) extends WrappedValue[BigDecimal](YNumberType, null) {
+  def +(n: BigDecimal) = YNumber(v + n)
+  def -(n: BigDecimal) = YNumber(v + n)
 }
