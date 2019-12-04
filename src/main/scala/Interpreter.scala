@@ -356,9 +356,9 @@ class Interpreter(globalScope: Scope) {
     case AndExpressionAST(left, right) => YBoolean(beval(left) && beval(right))
     case OrExpressionAST(left, right)  => YBoolean(beval(left) || beval(right))
     case NotExpressionAST(cond)        => YBoolean(!beval(cond))
-    case f @ YFunction(fexp) =>
-      if (fexp.scope eq null)
-        fexp.scope = scope
+    case f: FunctionExpressionAST =>
+      if (f.scope eq null)
+        f.scope = scope
 
       f
   }
@@ -367,7 +367,7 @@ class Interpreter(globalScope: Scope) {
       gs: List[GeneratorExpressionAST],
       outer: Scope,
       expr: ExpressionAST
-  ): collection.Iterable[Any] =
+  ): collection.Iterable[Value] =
     gs match {
       case Nil => List(deval(expr)(outer))
       case GeneratorExpressionAST(pattern, pos, iterable, filter) :: tail =>
@@ -443,7 +443,7 @@ class Interpreter(globalScope: Scope) {
         testPieces(pieces)
     }
 
-  def unify(v: Any, s: PatternAST, errors: Boolean)(implicit scope: Scope): Boolean =
+  def unify(v: Value, s: PatternAST, errors: Boolean)(implicit scope: Scope): Boolean =
     s match {
       case AlternationPatternAST(pos, alts) =>
         def alternate(as: List[PatternAST]): Boolean =
@@ -497,7 +497,7 @@ class Interpreter(globalScope: Scope) {
       case ListPatternAST(pos, elems) =>
         v match {
           case l: List[_] =>
-            def unifyList(l: List[_], elems: List[PatternAST]): Boolean =
+            def unifyList(l: List[Value], elems: List[PatternAST]): Boolean =
               (l, elems) match {
                 case (Nil, Nil)         => true
                 case (h :: t, eh :: et) => unify(h, eh, errors) && unifyList(t, et)
@@ -523,8 +523,8 @@ class Interpreter(globalScope: Scope) {
           false
       case ConsPatternAST(pos, head, tail) =>
         v match {
-          case h :: t =>
-            unify(h, head, errors) && unify(t, tail, errors)
+          case YList(h :: t) =>
+            unify(h, head, errors) && unify(YList(t), tail, errors)
           case _ =>
             if (errors)
               problem(pos, "expected list")
@@ -536,8 +536,8 @@ class Interpreter(globalScope: Scope) {
           case Record(Constructor(_, rname, _), rargs)
               if names == rname && args.length == rargs.size =>
             rargs.values zip args forall { case (e, a) => unify(e, a, errors) }
-          case p: Product if names == p.productPrefix && args.length == p.productArity =>
-            p.productIterator.toList zip args forall { case (e, a) => unify(e, a, errors) }
+//          case p: Product if names == p.productPrefix && args.length == p.productArity =>
+//            p.productIterator.toList zip args forall { case (e, a) => unify(e, a, errors) }
           case _ =>
             if (errors)
               problem(pos, s"expected record '$names'")
@@ -554,9 +554,10 @@ class Interpreter(globalScope: Scope) {
                 false
             else
               elems2 zip elems forall { case (e, a) => unify(e, a, errors) }
-          case p: Product
-              if p.productPrefix == s"Tuple${elems.length}" && elems.length == p.productArity =>
-            p.productIterator.toList zip elems forall { case (e, a) => unify(e, a, errors) }
+          // todo: Product destructuring
+//          case p: Product
+//              if p.productPrefix == s"Tuple${elems.length}" && elems.length == p.productArity =>
+//            p.productIterator.toList zip elems forall { case (e, a) => unify(e, a, errors) }
           case _ =>
             if (errors)
               problem(pos, "expected tuple")
@@ -565,7 +566,7 @@ class Interpreter(globalScope: Scope) {
         }
     }
 
-  case class Var(var v: Value)
+  case class Var(var v: Value) extends Value(v.containing, null) // todo: var typing
 }
 
 case class BreakException(pos: Position, blabel: Option[String], expr: Option[ExpressionAST])

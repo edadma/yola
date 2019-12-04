@@ -4,34 +4,34 @@ import scala.collection.mutable
 import scala.util.parsing.input.Position
 
 class Scope(val outer: Scope) {
-  private[yola] val decls = new mutable.HashMap[String, Value]
-  private[yola] val types = new mutable.HashMap[String, YType]
+  private[yola] val values = new mutable.HashMap[String, Value]
+  private[yola] val types  = new mutable.HashMap[String, YType]
 
-  def apply(name: String) = decls(name)
+  def apply(name: String) = values(name)
 
-  def bindings(binding: (String, Value)*): Unit = decls ++= binding
+  def bindings(binding: (String, Value)*): Unit = values ++= binding
 
   def duplicate(pos: Position, name: String) =
     problem(pos, s"duplicate declaration: '$name'")
 
   def declare(pos: Position, name: String, value: Value) = {
-    if (decls contains name)
+    if (values contains name)
       duplicate(pos, name)
 
-    decls(name) = value
+    values(name) = value
   }
 
   def get(name: String): Option[Value] =
-    decls get name orElse (if (outer eq null) None else outer.get(name))
+    values get name orElse (if (outer eq null) None else outer.get(name))
 
   def addFunctionPiece(pos: Position, name: String, piece: FunctionPieceAST)(
       implicit scope: Scope) = {
-    decls get name match {
+    values get name match {
       case None =>
         val fexp = FunctionExpressionAST(List(piece))
 
         fexp.scope = scope
-        decls(name) = Functions(
+        values(name) = Functions(
           mutable.HashMap[Int, FunctionExpressionAST](piece.parms.length -> fexp))
       case Some(Functions(map)) =>
         val fexp = FunctionExpressionAST(map get piece.parms.length match {
@@ -45,7 +45,7 @@ class Scope(val outer: Scope) {
     }
   }
 
-  override def toString: String = s"Scope:$decls"
+  override def toString: String = s"Scope:$values"
 }
 
 object YFunctionsType extends YType {
