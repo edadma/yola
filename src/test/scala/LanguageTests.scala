@@ -48,6 +48,18 @@ object LanguageTests extends TestSuite {
 
     test("arithmetic") {
       assert(runResult("1 + 2") == YNumber(3))
+      assert(runResult("1.3 + 2.4") == YNumber(3.7))
+      assert(runResult("1 + 2 - 3") == YNumber(0))
+      assert(runResult("1 - 2 + 3") == YNumber(2))
+      assert(runResult("3 * 4") == YNumber(12))
+      assert(runResult("3 * 4 + 5") == YNumber(17))
+      assert(runResult("3 + 4 * 5") == YNumber(23))
+      assert(runResult("3 * (4 + 5)") == YNumber(27))
+      assert(runResult("(3 + 4) * 5") == YNumber(35))
+      assert(runResult("3 * 4 / 5") == YNumber(2.4))
+      assert(runResult("3 / 4 * 5") == YNumber(3.75))
+      assert(runResult("3 * 4 % 5") == YNumber(2))
+      assert(runResult("5 % 3 * 4") == YNumber(8))
     }
 
     test("functions") {
