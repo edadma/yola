@@ -81,6 +81,8 @@ case class ConsExpressionAST(
     rpos: Position,
     right: ExpressionAST
 ) extends ExpressionAST
+case class PreExpressionAST(op: String, pos: Position, expr: ExpressionAST)   extends ExpressionAST
+case class PostExpressionAST(op: String, pos: Position, expr: ExpressionAST)  extends ExpressionAST
 case class UnaryExpressionAST(op: String, pos: Position, expr: ExpressionAST) extends ExpressionAST
 
 case class AssignmentExpressionAST(

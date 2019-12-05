@@ -60,6 +60,9 @@ object LanguageTests extends TestSuite {
       assert(runResult("3 / 4 * 5") == YNumber(3.75))
       assert(runResult("3 * 4 % 5") == YNumber(2))
       assert(runResult("5 % 3 * 4") == YNumber(8))
+      assert(runResult("-3") == YNumber(-3))
+      assert(runResult("1 + 2 + -3") == YNumber(0))
+      assert(runResult("1 + 2 + -a", "a" -> YNumber(3)) == YNumber(0))
     }
 
     test("functions") {

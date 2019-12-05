@@ -204,22 +204,32 @@ class Interpreter(globalScope: Scope) {
             case _ => problem(pl, "not an l-value")
           }
       })
-    case UnaryExpressionAST(op, pos, expr) =>
+    case UnaryExpressionAST("-", _, expr) => YNumber(-neval(expr))
+    case PostExpressionAST(op, pos, expr) =>
       eval(expr) match {
         case h: Var =>
           op match {
-            case "_++" =>
+            case "++" =>
               val res = h.v
+
               h.v = h.v.asInstanceOf[YNumber] + 1
               res
-            case "_--" =>
+            case "--" =>
               val res = h.v
+
               h.v = h.v.asInstanceOf[YNumber] - 1
               res
-            case "++_" =>
+          }
+        case _ => problem(pos, "not an l-value")
+      }
+    case PreExpressionAST(op, pos, expr) =>
+      eval(expr) match {
+        case h: Var =>
+          op match {
+            case "++" =>
               h.v = h.v.asInstanceOf[YNumber] + 1
               h.v
-            case "--_" =>
+            case "--" =>
               h.v = h.v.asInstanceOf[YNumber] - 1
               h.v
           }

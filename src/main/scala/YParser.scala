@@ -720,18 +720,18 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val unaryExpression: PackratParser[ExpressionAST] =
     "-" ~> pos ~ incrementExpression ^^ {
-      case _ ~ LiteralExpressionAST(n: Number) => LiteralExpressionAST(n) // todo: negate
-      case p ~ v                               => UnaryExpressionAST("-", p, v)
+      case _ ~ LiteralExpressionAST(n: BigDecimal) => LiteralExpressionAST(-n)
+      case p ~ v                                   => UnaryExpressionAST("-", p, v)
     } |
 //      "." ~> incrementExpression ^^ DereferenceExpressionAST |
       incrementExpression
 
   lazy val incrementExpression: PackratParser[ExpressionAST] =
     ("++" | "--") ~ pos ~ applyExpression ^^ {
-      case o ~ p ~ e => UnaryExpressionAST(o + "_", p, e)
+      case o ~ p ~ e => PreExpressionAST(o, p, e)
     } |
       pos ~ applyExpression ~ ("++" | "--") ^^ {
-        case p ~ e ~ o => UnaryExpressionAST("_" + o, p, e)
+        case p ~ e ~ o => PostExpressionAST(o, p, e)
       } |
       applyExpression
 

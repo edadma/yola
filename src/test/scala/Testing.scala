@@ -2,11 +2,12 @@ package xyz.hyperreal.yola
 
 object Testing {
 
-  def run(snippet: String, output: Any => Unit) = {
+  def run(snippet: String, output: Any => Unit, defs: Seq[(String, Value)]) = {
     val parser          = new YParser
     val ast             = parser.parseFromString(snippet, parser.source)
     implicit val global = new Scope(globalScope)
 
+    global.values ++= defs
     global.values("println") = NativeFunction(
       (args: List[Value]) => {
         output(args map (_.toString) mkString ", ")
@@ -25,9 +26,9 @@ object Testing {
       out += '\n'
     }
 
-    run(snippet, output)
+    run(snippet, output, Nil)
     out.toString.trim
   }
 
-  def runResult(snippet: String) = run(snippet, println)
+  def runResult(snippet: String, defs: (String, Value)*) = run(snippet, println, defs)
 }
