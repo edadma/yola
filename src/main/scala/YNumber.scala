@@ -7,5 +7,5 @@ object YNumberType extends YType {
 
 case class YNumber(v: BigDecimal) extends WrappedValue[BigDecimal](YNumberType, null) {
   def +(n: BigDecimal) = YNumber(v + n)
-  def -(n: BigDecimal) = YNumber(v + n)
+  def -(n: BigDecimal) = YNumber(v - n)
 }

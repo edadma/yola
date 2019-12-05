@@ -111,6 +111,12 @@ class Interpreter(globalScope: Scope) {
 
   def ieval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf(YIterableType)
 
+  def veval(pos: Position, expr: ExpressionAST)(implicit scope: Scope) =
+    eval(expr) match {
+      case v: Var => v
+      case _      => problem(pos, "not an l-value")
+    }
+
   def deref(a: Value) =
     a match {
       case Var(v) => v
@@ -183,57 +189,52 @@ class Interpreter(globalScope: Scope) {
         problem(lhs.head._1, s"right hand side has too many items: l.h.s. has $ll, r.h.s has $rl")
 
       YList((lhs zip rhs.map { case (pr, er) => eval(er) }) map {
-        case ((pl, el), v) =>
-          eval(el) match {
-            case h: Var =>
-              op match {
-                case "=" => h.v = v
-                case "+=" =>
-                  h.v = h.v match {
-                    case s: YString => s append String.valueOf(v)
-                    case n: YNumber => n + v.asInstanceOf[YNumber].v
-                  }
-                case "-=" => h.v = h.v.asInstanceOf[YNumber] - v.asInstanceOf[YNumber].v
-                case "*=" =>
-                  h.v = YNumber(h.v.asInstanceOf[YNumber].v * v.asInstanceOf[YNumber].v)
-                case "/=" =>
-                  h.v = YNumber(h.v.asInstanceOf[YNumber].v / v.asInstanceOf[YNumber].v)
-              }
+        case ((pl, el), v) => {
+          val h = veval(pl, el)
 
-              h.v
-            case _ => problem(pl, "not an l-value")
+          op match {
+            case "=" => h.v = v
+            case "+=" =>
+              h.v = h.v match {
+                case s: YString => s append String.valueOf(v)
+                case n: YNumber => n + v.asInstanceOf[YNumber].v
+              }
+            case "-=" => h.v = h.v.asInstanceOf[YNumber] - v.asInstanceOf[YNumber].v
+            case "*=" =>
+              h.v = YNumber(h.v.asInstanceOf[YNumber].v * v.asInstanceOf[YNumber].v)
+            case "/=" =>
+              h.v = YNumber(h.v.asInstanceOf[YNumber].v / v.asInstanceOf[YNumber].v)
           }
+
+          h.v
+        }
       })
     case UnaryExpressionAST("-", _, expr) => YNumber(-neval(expr))
     case PostExpressionAST(op, pos, expr) =>
-      eval(expr) match {
-        case h: Var =>
-          op match {
-            case "++" =>
-              val res = h.v
+      val h = veval(pos, expr)
 
-              h.v = h.v.asInstanceOf[YNumber] + 1
-              res
-            case "--" =>
-              val res = h.v
+      op match {
+        case "++" =>
+          val res = h.v
 
-              h.v = h.v.asInstanceOf[YNumber] - 1
-              res
-          }
-        case _ => problem(pos, "not an l-value")
+          h.v = h.v.asInstanceOf[YNumber] + 1
+          res
+        case "--" =>
+          val res = h.v
+
+          h.v = h.v.asInstanceOf[YNumber] - 1
+          res
       }
     case PreExpressionAST(op, pos, expr) =>
-      eval(expr) match {
-        case h: Var =>
-          op match {
-            case "++" =>
-              h.v = h.v.asInstanceOf[YNumber] + 1
-              h.v
-            case "--" =>
-              h.v = h.v.asInstanceOf[YNumber] - 1
-              h.v
-          }
-        case _ => problem(pos, "not an l-value")
+      val h = veval(pos, expr)
+
+      op match {
+        case "++" =>
+          h.v = h.v.asInstanceOf[YNumber] + 1
+          h.v
+        case "--" =>
+          h.v = h.v.asInstanceOf[YNumber] - 1
+          h.v
       }
     case RepeatExpressionAST(label, body) =>
       def repeatLoop: Value = {
@@ -567,9 +568,9 @@ class Interpreter(globalScope: Scope) {
               false
         }
     }
-
-  case class Var(var v: Value) extends Value(v.containing, null) // todo: var typing
 }
+
+case class Var(var v: Value) extends Value(v.containing, null) // todo: var typing
 
 case class BreakException(pos: Position, blabel: Option[String], expr: Option[ExpressionAST])
     extends RuntimeException

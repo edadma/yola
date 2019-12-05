@@ -61,6 +61,7 @@ object LanguageTests extends TestSuite {
       assert(runResult("3 * 4 % 5") == YNumber(2))
       assert(runResult("5 % 3 * 4") == YNumber(8))
       assert(runResult("-3") == YNumber(-3))
+      assert(runResult("-a", "a" -> YNumber(3)) == YNumber(-3))
       assert(runResult("1 + 2 + -3") == YNumber(0))
       assert(runResult("1 + 2 + -a", "a" -> YNumber(3)) == YNumber(0))
     }
@@ -111,12 +112,32 @@ object LanguageTests extends TestSuite {
                          |""".stripMargin) == YList(List(12, 60)))
     }
 
-    test("variables") {
+    test("pre/post") {
       assert(runCapture("""
-                          |val a = 3
+                          |var a = 3
                           |
-                          |println( a + 1 )
-                          |""".stripMargin) == "4")
+                          |println( a++, a )
+                          |""".stripMargin) == "3, 4")
+      assert(runCapture("""
+                          |var a = 3
+                          |
+                          |println( a--, a )
+                          |""".stripMargin) == "3, 2")
+      assert(runCapture("""
+                          |var a = 3
+                          |
+                          |println( ++a, a )
+                          |""".stripMargin) == "4, 4")
+      assert(runCapture("""
+                          |var a = 3
+                          |
+                          |println( --a, a )
+                          |""".stripMargin) == "2, 2")
+      assert(runCapture("""
+                          |var a = 3
+                          |
+                          |println( a++, a )
+                          |""".stripMargin) == "3, 4")
     }
 
     test("for") {
