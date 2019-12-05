@@ -377,7 +377,7 @@ class Interpreter(globalScope: Scope) {
 
   def call(fpos: Position, f: Any, apos: Position, args: List[Value]): Value =
     f match {
-      case func: (List[Value] => Value) => func(args)
+      case NativeFunction(func) => func(args)
       case Constructor(_, names, Nil) =>
         problem(fpos, "nullary constructors can't be applied")
       case con @ Constructor(typ, names, fields) =>
@@ -488,7 +488,7 @@ class Interpreter(globalScope: Scope) {
         true
       case ListPatternAST(pos, elems) =>
         v match {
-          case l: List[Value] =>
+          case YList(l) =>
             def unifyList(l: List[Value], elems: List[PatternAST]): Boolean =
               (l, elems) match {
                 case (Nil, Nil)         => true

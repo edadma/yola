@@ -7,10 +7,10 @@ object LanguageTests extends TestSuite {
 
   val tests = Tests {
     test("values") {
-      assert(runResult("[]") == Nil)
-      assert(runResult("3::[]") == List(3))
-      assert(runResult("3::4::[]") == List(3, 4))
-      assert(runResult("3::4::[5]") == List(3, 4, 5))
+      assert(runResult("[]") == YList(Nil))
+      assert(runResult("3::[]") == YList(List(YNumber(3))))
+      assert(runResult("3::4::[]") == YList(List(YNumber(3), YNumber(4))))
+      assert(runResult("3::4::[5]") == YList(List(YNumber(3), YNumber(4), YNumber(5))))
     }
 
     test("destructuring") {
@@ -28,16 +28,16 @@ object LanguageTests extends TestSuite {
                          |val [a, b] = [3, 4]
                          |
                          |[b, a]
-                         |""".stripMargin) == List(4, 3))
+                         |""".stripMargin) == YList(List(YNumber(4), YNumber(3))))
       assert(runResult("""
                          |val (a, b) = (3, 4)
                          |
                          |[b, a]
-                         |""".stripMargin) == List(4, 3))
+                         |""".stripMargin) == YList(List(YNumber(4), YNumber(3))))
     }
 
     test("arithmetic") {
-      assert(runResult("1 + 2") == 3)
+      assert(runResult("1 + 2") == YNumber(3))
     }
 
     test("functions") {
@@ -45,17 +45,17 @@ object LanguageTests extends TestSuite {
                          |def f(x) = x + 3
                          |
                          |f(4)
-                         |""".stripMargin) == 7)
+                         |""".stripMargin) == YNumber(7))
       assert(runResult("""
                          |(x -> x + 3)(4)
-                         |""".stripMargin) == 7)
+                         |""".stripMargin) == YNumber(7))
       assert(runResult("""
                          |def
                          |  map( f, [] ) = []
                          |  map( f, x::xs ) = f(x) :: map( f, xs )
                          |
                          |map( (*2), [3, 4, 5] )
-                         |""".stripMargin) == List(6, 8, 10))
+                         |""".stripMargin) == YList(List(6, 8, 10)))
       assert(runResult("""
                          |def
                          |    filter( p, [] ) = []
@@ -64,14 +64,14 @@ object LanguageTests extends TestSuite {
                          |        | else = filter( p, xs )
                          |
                          |filter( (>4), [3, 4, 5, 6] )
-                         |""".stripMargin) == List(5, 6))
+                         |""".stripMargin) == YList(List(5, 6)))
       assert(runResult("""
                          |def
                          |  f(x) = 3x
                          |  g(x) = x + 4
                          |
                          |5 ~> g ~> f
-                         |""".stripMargin) == BigDecimal(27))
+                         |""".stripMargin) == YNumber(27))
       assert(runResult("""
                          |def
                          |  foldl( f, z, [] )    =  z
@@ -83,7 +83,7 @@ object LanguageTests extends TestSuite {
                          |val l = [3, 4, 5]
                          |
                          |[sum(l), product(l)]
-                         |""".stripMargin) == List(12, 60))
+                         |""".stripMargin) == YList(List(12, 60)))
     }
 
     test("variables") {
@@ -116,7 +116,7 @@ object LanguageTests extends TestSuite {
                           |    yield (i, j)
                           |
                           |println( l )
-                          |""".stripMargin) == "Vector((2, 5), (2, 7), (4, 5), (4, 7))")
+                          |""".stripMargin) == "List((2, 5), (2, 7), (4, 5), (4, 7))")
     }
 
     test("list comprehensions") {
@@ -134,7 +134,7 @@ object LanguageTests extends TestSuite {
                          |def f(x) = x*a
                          |
                          |7 ~> f ~> x -> x + b ~> (+ c)
-                         |""".stripMargin) == 39)
+                         |""".stripMargin) == YNumber(39))
       assert(
         runCapture("""
                      |val a = 3
