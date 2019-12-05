@@ -4,7 +4,9 @@ class EnumType(val name: String) extends YType {
   val parent = YObject
 }
 
-case class Enum(name: String, ordinal: Int) extends (Any => Any) {
+case class Enum(name: String, ordinal: Int)
+    extends Value(new EnumType("Enum"), null)
+    with (Any => Any) {
 
   def apply(v: Any) =
     v match {

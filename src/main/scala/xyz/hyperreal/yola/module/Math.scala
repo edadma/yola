@@ -8,12 +8,12 @@ object Math {
   val exports =
     YModule(
       Map(
-        "cos" -> ((args: List[Any]) =>
+        "cos" -> NativeFunction((args: List[Value]) =>
           args match {
-            case List(a: BigDecimal) => BigDecimal(cos(a.toDouble))
-            case _                   => perror("math.cos: expected a number")
-          }),
-        "pi" -> BigDecimal(Pi)
+            case List(YNumber(a)) => YNumber(BigDecimal(cos(a.toDouble)))
+            case _                => perror("math.cos: expected a number")
+        }),
+        "pi" -> YNumber(BigDecimal(Pi))
       ))
 
 }

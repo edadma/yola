@@ -48,10 +48,10 @@ class Interpreter(globalScope: Scope) {
       case ImportAST(module, names) =>
         names foreach {
           case (n, r) =>
-            def find(ms: List[String], map: collection.Map[String, Any]): Unit =
+            def find(ms: List[String], map: collection.Map[String, Value]): Unit =
               ms match {
                 case Nil =>
-                  val mod = map.asInstanceOf[Map[String, List[Any] => Any]]
+                  val mod = map.asInstanceOf[Map[String, Value]]
 
                   if (n == "_")
                     for ((k, v) <- mod)
@@ -71,11 +71,11 @@ class Interpreter(globalScope: Scope) {
                 case h :: t =>
                   map get h match {
                     case None    => perror(s"module '$h' not found")
-                    case Some(m) => find(t, m.asInstanceOf[Map[String, Any]])
+                    case Some(m) => find(t, m.asInstanceOf[Map[String, Value]])
                   }
               }
 
-            find(module, globalScope.decls)
+            find(module, globalScope.values)
         }
 
         YUnit
@@ -109,7 +109,7 @@ class Interpreter(globalScope: Scope) {
   def neval(expr: ExpressionAST)(implicit scope: Scope) =
     deval(expr).asInstanceOf[YNumber].v
 
-  def ieval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf[Iterable[Any]]
+  def ieval(expr: ExpressionAST)(implicit scope: Scope) = deval(expr).asInstanceOf(YIterableType)
 
   def deref(a: Value) =
     a match {
@@ -271,13 +271,12 @@ class Interpreter(globalScope: Scope) {
         gs match {
           case Nil => deval(body)(outer)
           case GeneratorExpressionAST(pattern, pos, iterable, filter) :: tail =>
-            ieval(iterable).foreach(v => {
+            ieval(iterable).iterator.foreach(v => {
               try {
                 try {
                   val inner = new Scope(outer)
-                  val v1    = if (v.isInstanceOf[Int]) BigDecimal(v.asInstanceOf[Int]) else v
 
-                  unify(v1, pattern, true)(inner)
+                  unify(v, pattern, true)(inner)
 
                   if (!filter.isDefined || beval(filter.get)(inner))
                     foreach(tail, inner)
@@ -302,7 +301,7 @@ class Interpreter(globalScope: Scope) {
       )
     case DotExpressionAST(epos, expr, apos, field) =>
       deval(expr) match {
-        case f: (Value => Value) => f(field)
+        case f: (Value => Value) => f(YString(field))
       }
     case BinaryExpressionAST(lpos, left, op, rpos, right) =>
       val l = deval(left)
@@ -345,14 +344,7 @@ class Interpreter(globalScope: Scope) {
     case ConsExpressionAST(lpos, left, rpos, right) =>
       YList(deval(left) :: leval(right))
     case RangeExpressionAST(fpos, from, tpos, to, bpos, by, incl) =>
-      val start = neval(from).toIntExact
-      val end   = neval(to).toIntExact
-      val step  = neval(by).toIntExact
-
-      if (incl)
-        YRange(start to end by step)
-      else
-        YRange(start until end by step)
+      YRange(neval(from), neval(to), neval(by), incl)
     case AndExpressionAST(left, right) => YBoolean(beval(left) && beval(right))
     case OrExpressionAST(left, right)  => YBoolean(beval(left) || beval(right))
     case NotExpressionAST(cond)        => YBoolean(!beval(cond))
@@ -371,11 +363,10 @@ class Interpreter(globalScope: Scope) {
     gs match {
       case Nil => List(deval(expr)(outer))
       case GeneratorExpressionAST(pattern, pos, iterable, filter) :: tail =>
-        ieval(iterable)(outer).flatMap(v => {
+        ieval(iterable)(outer).iterator.toList.flatMap(v => {
           val inner = new Scope(outer)
-          val v1    = if (v.isInstanceOf[Int]) BigDecimal(v.asInstanceOf[Int]) else v
 
-          unify(v1, pattern, true)(inner)
+          unify(v, pattern, true)(inner)
 
           if (!filter.isDefined || beval(filter.get)(inner))
             flatMap(tail, inner, expr)
@@ -463,12 +454,13 @@ class Interpreter(globalScope: Scope) {
         alternate(alts)
       case MapPatternAST(pos, entries) =>
         v match {
-          case m: collection.Map[_, _] =>
+          case YMap(m) =>
             val keySet = m.keySet.asInstanceOf[Set[String]]
 
             if (entries subsetOf keySet) {
               for (e <- entries)
-                implicitly[Scope].declare(null, e, m.asInstanceOf[Map[String, Any]](e))
+                implicitly[Scope].declare(null, e, m.asInstanceOf[Map[String, Value]](e))
+
               true
             } else if (errors)
               problem(
@@ -496,7 +488,7 @@ class Interpreter(globalScope: Scope) {
         true
       case ListPatternAST(pos, elems) =>
         v match {
-          case l: List[_] =>
+          case l: List[Value] =>
             def unifyList(l: List[Value], elems: List[PatternAST]): Boolean =
               (l, elems) match {
                 case (Nil, Nil)         => true

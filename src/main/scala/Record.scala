@@ -2,7 +2,13 @@ package xyz.hyperreal.yola
 
 import scala.collection.mutable
 
+object ConstructorType extends YType {
+  val name   = "Constructor"
+  val parent = YObject
+}
+
 case class Constructor(typ: String, name: String, fields: List[String])
+    extends Value(ConstructorType, null)
 
 object RecordType extends YType {
   val name   = "Record"
