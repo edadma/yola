@@ -8,9 +8,19 @@ object LanguageTests extends TestSuite {
   val tests = Tests {
     test("values") {
       assert(runResult("[]") == YList(Nil))
-      assert(runResult("3::[]") == YList(List(YNumber(3))))
-      assert(runResult("3::4::[]") == YList(List(YNumber(3), YNumber(4))))
-      assert(runResult("3::4::[5]") == YList(List(YNumber(3), YNumber(4), YNumber(5))))
+      assert(runResult("3::[]") == YList(List(3)))
+      assert(runResult("3::4::[]") == YList(List(3, 4)))
+      assert(runResult("3::4::[5]") == YList(List(3, 4, 5)))
+      assert(runResult("[3]") == YList(List(3)))
+      assert(runResult("[3, 4]") == YList(List(3, 4)))
+      assert(runResult("[3, 4, 5]") == YList(List(3, 4, 5)))
+      assert(runResult("(3, 4)") == YTuple(List(3, 4)))
+      assert(runResult("(3, 4, 5)") == YTuple(List(3, 4, 5)))
+      assert(runResult("{}") == YMap(Map()))
+      assert(runResult("{a: 3}") == YMap(Map(YString("a") -> YNumber(3))))
+      assert(
+        runResult("{'a': 3, 4: 5, (6 + 7): (8 + 9)}") == YMap(
+          Map(YString("a") -> YNumber(3), YNumber(4) -> YNumber(5), YNumber(13) -> YNumber(17))))
     }
 
     test("destructuring") {
@@ -28,12 +38,12 @@ object LanguageTests extends TestSuite {
                          |val [a, b] = [3, 4]
                          |
                          |[b, a]
-                         |""".stripMargin) == YList(List(YNumber(4), YNumber(3))))
+                         |""".stripMargin) == YList(List(4, 3)))
       assert(runResult("""
                          |val (a, b) = (3, 4)
                          |
                          |[b, a]
-                         |""".stripMargin) == YList(List(YNumber(4), YNumber(3))))
+                         |""".stripMargin) == YList(List(4, 3)))
     }
 
     test("arithmetic") {
@@ -58,10 +68,10 @@ object LanguageTests extends TestSuite {
                          |""".stripMargin) == YList(List(6, 8, 10)))
       assert(runResult("""
                          |def
-                         |    filter( p, [] ) = []
-                         |    filter( p, x::xs )
-                         |        | p( x ) = x :: filter( p, xs )
-                         |        | else = filter( p, xs )
+                         |  filter( p, [] ) = []
+                         |  filter( p, x::xs )
+                         |    | p( x ) = x :: filter( p, xs )
+                         |    | else = filter( p, xs )
                          |
                          |filter( (>4), [3, 4, 5, 6] )
                          |""".stripMargin) == YList(List(5, 6)))
