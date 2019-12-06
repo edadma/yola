@@ -28,7 +28,7 @@ package object yola {
   val globalScope =
     new Scope(null) {
       bindings(
-        "None" -> YProduct(None),
+//        "None" -> YProduct(None), // todo: implement None/Some correctly
         "yola" -> YModule(
           Map(
             "math" -> xyz.hyperreal.yola.module.Math.exports

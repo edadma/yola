@@ -20,7 +20,9 @@ object LanguageTests extends TestSuite {
       assert(runResult("{a: 3}") == YMap(Map(YString("a") -> YNumber(3))))
       assert(
         runResult("{'a': 3, 4: 5, (6 + 7): (8 + 9)}") == YMap(
-          Map(YString("a") -> YNumber(3), YNumber(4) -> YNumber(5), YNumber(13) -> YNumber(17))))
+          Map(YString("a") -> YNumber(3), YNumber(4) -> YNumber(5), YNumber(13) -> YNumber(17))
+        )
+      )
     }
 
     test("destructuring") {
@@ -44,6 +46,18 @@ object LanguageTests extends TestSuite {
                          |
                          |[b, a]
                          |""".stripMargin) == YList(List(4, 3)))
+      assert(
+        runCapture("""
+                     |type r(a, b)
+                     |
+                     |val r(x, y) = r(3, 4)
+                     |
+                     |println( x, y )
+                     |""".stripMargin) ==
+          """
+            |3, 4
+            |""".stripMargin.trim
+      )
     }
 
     test("arithmetic") {

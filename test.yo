@@ -1,3 +1,5 @@
-var a = 3
+type r(a, b)
 
-println( a--, a )
+val r(x, y) = r(3, 4)
+
+println( x, y )

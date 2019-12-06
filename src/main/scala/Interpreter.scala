@@ -539,8 +539,8 @@ class Interpreter(globalScope: Scope) {
           case Record(Constructor(_, rname, _), rargs)
               if names == rname && args.length == rargs.size =>
             rargs.values zip args forall { case (e, a) => unify(e, a, errors) }
-//          case p: Product if names == p.productPrefix && args.length == p.productArity =>
-//            p.productIterator.toList zip args forall { case (e, a) => unify(e, a, errors) }
+          // case YProduct(p) if names == p.productPrefix && args.length == p.productArity =>
+          //   p.productIterator.toList zip args forall { case (e, a) => unify(e, a, errors) }
           case _ =>
             if (errors)
               problem(pos, s"expected record '$names'")
