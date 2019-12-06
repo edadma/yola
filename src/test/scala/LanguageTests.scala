@@ -112,6 +112,43 @@ object LanguageTests extends TestSuite {
                          |""".stripMargin) == YList(List(12, 60)))
     }
 
+    test("comparisons") {
+      assert(
+        runCapture("""
+                     |val a = 3
+                     |val b = 4
+                     |val c = 5
+                     |val d = 3
+                     |
+                     |println( a == b )
+                     |println( a == d )
+                     |println( a < b )
+                     |println( a > b )
+                     |println( a <= b )
+                     |println( a >= b )
+                     |println( a < d )
+                     |println( a > d )
+                     |println( a <= d )
+                     |println( a >= d )
+                     |println( a == b < c )
+                     |println( a == d < c )
+                     |""".stripMargin) ==
+          """
+            |false
+            |true
+            |true
+            |false
+            |true
+            |false
+            |false
+            |false
+            |true
+            |true
+            |false
+            |true
+            |""".stripMargin.trim)
+    }
+
     test("pre/post") {
       assert(runCapture("""
                           |var a = 3
