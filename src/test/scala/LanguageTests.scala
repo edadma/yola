@@ -216,6 +216,45 @@ object LanguageTests extends TestSuite {
                           |""".stripMargin) == "List((2, 5), (2, 7), (4, 5), (4, 7))")
     }
 
+    test("if") {
+      assert(
+        runCapture("""
+                     |def f( a ) =
+                     |  if a == 3
+                     |    'three'
+                     |  elif a == 4
+                     |    'four'
+                     |  elif a == 5
+                     |    'five'
+                     |  else
+                     |    'else'
+                     |
+                     |println( f(0), f(3), f(4), f(5), f(6) )
+                     |""".stripMargin) ==
+          """
+            |else, three, four, five, else
+            |""".stripMargin.trim
+      )
+      assert(
+        runCapture("""
+                     |def f( a ) =
+                     |  if a == 3
+                     |    'three'
+                     |  else if a == 4
+                     |    'four'
+                     |  else if a == 5
+                     |    'five'
+                     |  else
+                     |    'else'
+                     |
+                     |println( f(0), f(3), f(4), f(5), f(6) )
+                     |""".stripMargin) ==
+          """
+            |else, three, four, five, else
+            |""".stripMargin.trim
+      )
+    }
+
     test("list comprehensions") {
       assert(
         runCapture("""println( [(i, j) | i <- 1..4 if i%2 == 0, j <- 5..8 if j%2 == 1] )""") == "[(2, 5), (2, 7), (4, 5), (4, 7)]"

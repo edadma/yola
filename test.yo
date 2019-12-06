@@ -1,5 +1,11 @@
-type r(a, b)
+def f( a ) =
+  if a == 3
+    'three'
+  elif a == 4
+    'four'
+  elif a == 5
+    'five'
+  else
+    'else'
 
-val r(x, y) = r(3, 4)
-
-println( x, y )
+println( f(0), f(3), f(4), f(5), f(6) )
