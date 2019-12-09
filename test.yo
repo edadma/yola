@@ -1,11 +1,12 @@
-def f( a ) =
-  if a == 3
-    'three'
-  elif a == 4
-    'four'
-  elif a == 5
-    'five'
-  else
-    'else'
+var a = 0
 
-println( f(0), f(3), f(4), f(5), f(6) )
+val res =
+    while ++a <= 5
+        if a > 3
+            break ('break')
+
+        println( a )
+    else
+        'else'
+
+println( res )

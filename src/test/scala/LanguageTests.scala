@@ -255,6 +255,111 @@ object LanguageTests extends TestSuite {
       )
     }
 
+    test("while") {
+      assert(
+        runCapture("""
+                     |var a = 0
+                     |
+                     |val res =
+                     |    while ++a <= 2
+                     |      println( a )
+                     |
+                     |println( res )
+                     |""".stripMargin) ==
+          """
+            |1
+            |2
+            |()
+            |""".stripMargin.trim
+      )
+
+      assert(
+        runCapture("""
+                     |var a = 0
+                     |
+                     |val res =
+                     |    while ++a <= 2
+                     |      println( a )
+                     |    else
+                     |      'else'
+                     |
+                     |println( res )
+                     |""".stripMargin) ==
+          """
+            |1
+            |2
+            |else
+            |""".stripMargin.trim
+      )
+
+      assert(
+        runCapture("""
+                     |var a = 0
+                     |
+                     |val res =
+                     |    while ++a <= 5
+                     |        if a > 3
+                     |            break
+                     |
+                     |        println( a )
+                     |    else
+                     |        'else'
+                     |
+                     |println( res )
+                     |""".stripMargin) ==
+          """
+            |1
+            |2
+            |3
+            |()
+            |""".stripMargin.trim
+      )
+
+      assert(
+        runCapture("""
+                     |var a = 0
+                     |
+                     |val res =
+                     |    while ++a <= 5
+                     |        if a > 3
+                     |            break ('break')
+                     |
+                     |        println( a )
+                     |    else
+                     |        'else'
+                     |
+                     |println( res )
+                     |""".stripMargin) ==
+          """
+            |1
+            |2
+            |3
+            |break
+            |""".stripMargin.trim
+      )
+
+      assert(
+        runCapture("""
+                     |var a = 0
+                     |
+                     |val res =
+                     |    while ++a <= 5
+                     |        if a > 3
+                     |            break ('break')
+                     |
+                     |        println( a )
+                     |
+                     |println( res )
+                     |""".stripMargin) ==
+          """
+            |1
+            |2
+            |3
+            |break
+            |""".stripMargin.trim
+      )
+    }
+
     test("list comprehensions") {
       assert(
         runCapture("""println( [(i, j) | i <- 1..4 if i%2 == 0, j <- 5..8 if j%2 == 1] )""") == "[(2, 5), (2, 7), (4, 5), (4, 7)]"
