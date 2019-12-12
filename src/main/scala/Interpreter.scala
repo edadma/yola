@@ -2,6 +2,7 @@ package xyz.hyperreal.yola
 
 import scala.collection.mutable
 import scala.util.parsing.input.Position
+import math._
 
 class Interpreter(globalScope: Scope) {
 
@@ -321,10 +322,12 @@ class Interpreter(globalScope: Scope) {
       (l, r) match {
         case (YNumber(a), YNumber(b)) =>
           op match {
-            case "+"         => YNumber(a + b)
-            case "-"         => YNumber(a - b)
-            case "/"         => YNumber(a / b)
-            case "%"         => YNumber(a % b)
+            case "+" => YNumber(a + b)
+            case "-" => YNumber(a - b)
+            case "/" => YNumber(a / b)
+            case "%" => YNumber(a % b)
+            case "^" => YNumber(if (b isValidInt) a pow b.toInt else pow(a.toDouble, b.toDouble))
+
             case "*" | "adj" => YNumber(a * b)
           }
         case (s: YString, _) if op == "+" => s append r.toString

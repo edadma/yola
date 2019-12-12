@@ -208,7 +208,8 @@ class YolaLexical
     "module",
     "null",
     "true",
-    "false"
+    "false",
+    "otherwise"
   )
 
   delimiters ++= List(
@@ -441,7 +442,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
     }
 
   lazy val guardedPart =
-    "|" ~> ("else" ^^^ None | guardExpression ^^ (Some(_))) ~ ("=" ~> expressionOrBlock) <~ Newline ^^ {
+    "|" ~> ("otherwise" ^^^ None | guardExpression ^^ (Some(_))) ~ ("=" ~> expressionOrBlock) <~ Newline ^^ {
       case g ~ b => FunctionPart(g, b)
     }
 

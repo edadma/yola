@@ -78,9 +78,30 @@ object LanguageTests extends TestSuite {
       assert(runResult("-a", "a" -> YNumber(3)) == YNumber(-3))
       assert(runResult("1 + 2 + -3") == YNumber(0))
       assert(runResult("1 + 2 + -a", "a" -> YNumber(3)) == YNumber(0))
+      assert(runResult("3 ^ 4 * 5") == YNumber(405))
+      assert(runResult("3 * 4 ^ 5") == YNumber(3072))
+      assert(runResult("3 ^ (4 * 5)") == YNumber(3486784401L))
+      assert(runResult("(3 * 4) ^ 5") == YNumber(248832))
     }
 
     test("functions") {
+      assert(
+        runCapture("""
+                     |def bmiTell( weight, height )
+                     |  | bmi <= 18.5 = "You're underweight, you emo, you!"
+                     |  | bmi <= 25.0 = "You're supposedly normal. Pffft, I bet you're ugly!"
+                     |  | bmi <= 30.0 = "You're fat! Lose some weight, fatty!"
+                     |  | otherwise   = "You're a whale, congratulations!"
+                     |  where bmi = weight / height ^ 2
+                     |
+                     |println( bmiTell(95.2544, 1.675) )
+                     |println( bmiTell(70, 1.675) )
+                  """.stripMargin) ==
+          """
+            |You're a whale, congratulations!
+            |You're supposedly normal. Pffft, I bet you're ugly!
+          """.stripMargin.trim)
+
       assert(runResult("""
                          |def f(x) = x + 3
                          |
@@ -100,8 +121,8 @@ object LanguageTests extends TestSuite {
                          |def
                          |  filter( p, [] ) = []
                          |  filter( p, x::xs )
-                         |    | p( x ) = x :: filter( p, xs )
-                         |    | else = filter( p, xs )
+                         |    | p( x )    = x :: filter( p, xs )
+                         |    | otherwise = filter( p, xs )
                          |
                          |filter( (>4), [3, 4, 5, 6] )
                          |""".stripMargin) == YList(List(5, 6)))
