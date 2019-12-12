@@ -102,6 +102,33 @@ object LanguageTests extends TestSuite {
             |You're supposedly normal. Pffft, I bet you're ugly!
           """.stripMargin.trim)
 
+      assert(
+        runCapture("""
+                     |def bmiTell( weight, height )
+                     |  | bmi <= skinny = "You're underweight, you emo, you!"
+                     |  | bmi <= normal = "You're supposedly normal. Pffft, I bet you're ugly!"
+                     |  | bmi <= fat = "You're fat! Lose some weight, fatty!"
+                     |  | otherwise   = "You're a whale, congratulations!"
+                     |  where
+                     |    bmi = weight / height ^ 2
+                     |    (skinny, normal, fat) = (18.5, 25.0, 30.0)
+                     |
+                     |println( bmiTell(95.2544, 1.675) )
+                     |println( bmiTell(70, 1.675) )
+                  """.stripMargin) ==
+          """
+            |You're a whale, congratulations!
+            |You're supposedly normal. Pffft, I bet you're ugly!
+          """.stripMargin.trim)
+
+//      assert(
+//        runCapture(
+//          """
+//            |def calcBmis( xs ) = [bmi( w, h ) | (w, h) <- xs] where bmi( weight, height ) = weight / height ^ 2
+//            |
+//            |println( calcBmis([(95.2544, 1.675), (70, 1.675)]) )
+//          """.stripMargin) == "[33.95122298952996, 24.94987747828024]\n")
+
       assert(runResult("""
                          |def f(x) = x + 3
                          |

@@ -1,8 +1,3 @@
-def bmiTell( weight, height )
-  | bmi <= 18.5 = "You're underweight, you emo, you!"
-  | bmi <= 25.0 = "You're supposedly normal. Pffft, I bet you're ugly!"
-  | bmi <= 30.0 = "You're fat! Lose some weight, fatty!"
-  | otherwise   = "You're a whale, congratulations!"
-  where bmi = weight / height ^ 2
+def calcBmis( xs ) = [bmi( w, h ) | (w, h) <- xs] where bmi( weight, height ) = weight / height ^ 2
 
-println( bmiTell(80, 1.675) )
+println( calcBmis([(95.2544, 1.675), (70, 1.675)]) )
