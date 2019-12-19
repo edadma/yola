@@ -611,7 +611,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
     ) ^^ {
       case pl ~ l ~ cs => ComparisonExpressionAST(pl, l, cs)
     } |
-      pos ~ alternationExpression ~ ("in" | "not" ~ "in" ^^^ "notin") ~ pos ~ alternationExpression ^^ {
+      pos ~ alternationExpression ~ ("div" | "in" | "not" ~ "in" ^^^ "notin") ~ pos ~ alternationExpression ^^ {
         case pl ~ l ~ op ~ pr ~ r => BinaryExpressionAST(pl, l, op, pr, r)
       } |
       alternationExpression ~ "is" ~ ident ^^ { case e ~ _ ~ t => TypeExpressionAST(e, t) } |
@@ -705,7 +705,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
       multiplicativeExpression
 
   lazy val multiplicativeExpression: PackratParser[ExpressionAST] =
-    pos ~ multiplicativeExpression ~ ("*" | "/" | """\""" | "%" | "\\%" | "//" | "mod" | "div" | ">>>" | "<<") ~ pos ~ exponentialExpression ^^ {
+    pos ~ multiplicativeExpression ~ ("*" | "/" | """\""" | "%" | "\\%" | "//" | "mod" | ">>>" | "<<") ~ pos ~ exponentialExpression ^^ {
       case pl ~ l ~ o ~ pr ~ r => BinaryExpressionAST(pl, l, o, pr, r)
     } |
       pos ~ multiplicativeExpression ~ pos ~ applyExpression ^^ {
@@ -929,7 +929,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val infix =
     "+" | "-" | "*" | "/" | """\""" | "\\%" | "^" | "%" |
-      "mod" | "div" | "in" | "not" ~ "in" ^^^ "notin" |
+      "mod" | "in" | "not" ~ "in" ^^^ "notin" |
       "::" //todo: add support for ranges
 
   lazy val infixComparison = "==" | "!=" | "<" | ">" | "<=" | ">="

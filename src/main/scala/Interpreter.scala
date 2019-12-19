@@ -322,20 +322,26 @@ class Interpreter(globalScope: Scope) {
       (l, r) match {
         case (YNumber(a), YNumber(b)) =>
           op match {
-            case "+" => YNumber(a + b)
-            case "-" => YNumber(a - b)
-            case "/" => YNumber(a / b)
-            case "%" => YNumber(a % b)
-            case "^" => YNumber(if (b isValidInt) a pow b.toInt else pow(a.toDouble, b.toDouble))
-
+            case "+"         => YNumber(a + b)
+            case "-"         => YNumber(a - b)
+            case "/"         => YNumber(a / b)
+            case "%"         => YNumber(a % b)
+            case "^"         => YNumber(if (b isValidInt) a pow b.toInt else pow(a.toDouble, b.toDouble))
             case "*" | "adj" => YNumber(a * b)
+            case "div" =>
+              YBoolean((a.toBigIntExact, b.toBigIntExact) match {
+                case (Some(ba), Some(bb)) => bb % ba == 0
+                case _                    => false
+              })
           }
         case (s: YString, _) if op == "+" => s append r.toString
         case (_, s: YString) if op == "+" => s prepend l.toString
       }
-    case VariableExpressionAST(pos, names) =>
-      scope get names match {
-        case None    => problem(pos, s"undeclared variable '$names'")
+    case VariableExpressionAST(pos, "_") =>
+      problem(pos, "single underscore is not a legal identifier")
+    case VariableExpressionAST(pos, name) =>
+      scope get name match {
+        case None    => problem(pos, s"undeclared variable '$name'")
         case Some(v) => v
       }
     case LiteralExpressionAST(())            => YUnit
@@ -497,6 +503,7 @@ class Interpreter(globalScope: Scope) {
             false
         else
           true
+      case VariablePatternAST(pos, "_") => true
       case VariablePatternAST(pos, names) =>
         implicitly[Scope].declare(pos, names, v)
         true
