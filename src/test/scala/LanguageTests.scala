@@ -123,6 +123,65 @@ object LanguageTests extends TestSuite {
 
       assert(
         runCapture("""
+                     |def pow( _, 0 ) = 1
+                     |def pow( x, n ) | n > 0 = f( x, n - 1, x )
+                     |  where
+                     |    f( _, 0, y ) = y
+                     |    f( x, n, y ) = g( x, n )
+                     |      where
+                     |        g( x, n )
+                     |          | 2 div n = g( x*x, n/2 )
+                     |          | otherwise = f( x, n - 1, x*y )
+                     |def pow( _, _ ) = error( "pow: negative exponent" )
+                     |
+                     |for n <- 0..18
+                     |  println( n, pow(2, n) )
+                     |for n <- 0..18
+                     |  println( n, pow(3, n) )
+                  """.stripMargin) ==
+          """
+            |0, 1
+            |1, 2
+            |2, 4
+            |3, 8
+            |4, 16
+            |5, 32
+            |6, 64
+            |7, 128
+            |8, 256
+            |9, 512
+            |10, 1024
+            |11, 2048
+            |12, 4096
+            |13, 8192
+            |14, 16384
+            |15, 32768
+            |16, 65536
+            |17, 131072
+            |18, 262144
+            |0, 1
+            |1, 3
+            |2, 9
+            |3, 27
+            |4, 81
+            |5, 243
+            |6, 729
+            |7, 2187
+            |8, 6561
+            |9, 19683
+            |10, 59049
+            |11, 177147
+            |12, 531441
+            |13, 1594323
+            |14, 4782969
+            |15, 14348907
+            |16, 43046721
+            |17, 129140163
+            |18, 387420489
+          """.stripMargin.trim)
+
+      assert(
+        runCapture("""
                      |def bmiTell( weight, height )
                      |  | bmi <= 18.5 = "You're underweight, you emo, you!"
                      |  | bmi <= 25.0 = "You're supposedly normal. Pffft, I bet you're ugly!"
