@@ -164,6 +164,6 @@ case class TuplePatternAST(pos: Position, elems: List[PatternAST])              
 case class ListPatternAST(pos: Position, elems: List[PatternAST])                extends PatternAST
 case class ConsPatternAST(pos: Position, head: PatternAST, tail: PatternAST)     extends PatternAST
 case class MapPatternAST(pos: Position, entries: Set[String])                    extends PatternAST
-case class LiteralPatternAST(pos: Position, lit: Any)                            extends PatternAST
+case class LiteralPatternAST(pos: Position, lit: Value)                          extends PatternAST
 case class AlternationPatternAST(pos: Position, alts: List[PatternAST])          extends PatternAST
 case class RecordPatternAST(pos: Position, name: String, args: List[PatternAST]) extends PatternAST

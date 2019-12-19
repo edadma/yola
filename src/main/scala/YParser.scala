@@ -292,7 +292,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val onl = rep(Newline)
 
-  lazy val number: PackratParser[Number] =
+  lazy val number: PackratParser[BigDecimal] =
     numericLit ^^ BigDecimal.apply
 //      (
 //          n =>
@@ -955,10 +955,10 @@ class YParser extends StandardTokenParsers with PackratParsers {
       primaryPattern
 
   lazy val primaryPattern: PackratParser[PatternAST] =
-    pos ~ number ^^ { case p ~ l          => LiteralPatternAST(p, l) } |
-      pos ~ stringLit ^^ { case p ~ l     => LiteralPatternAST(p, l) } |
-      pos ~ "(" ~ ")" ^^ { case p ~ _ ~ _ => LiteralPatternAST(p, ()) } |
-      pos ~ "null" ^^ { case p ~ _        => LiteralPatternAST(p, null) } |
+    pos ~ number ^^ { case p ~ l          => LiteralPatternAST(p, YNumber(l)) } |
+      pos ~ stringLit ^^ { case p ~ l     => LiteralPatternAST(p, YString(l)) } |
+      pos ~ "(" ~ ")" ^^ { case p ~ _ ~ _ => LiteralPatternAST(p, YUnit) } |
+      pos ~ "null" ^^ { case p ~ _        => LiteralPatternAST(p, YNull) } |
       pos ~ ident ~ ("(" ~> rep1sep(pattern, ",") <~ ")") ^^ {
         case p ~ n ~ l => RecordPatternAST(p, n, l)
       } |
