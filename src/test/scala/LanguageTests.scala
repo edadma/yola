@@ -180,6 +180,48 @@ object LanguageTests extends TestSuite {
             |18, 387420489
           """.stripMargin.trim)
 
+      test(
+        runCapture(
+          """
+				|def pow( _, 0 ) = 1
+				|def pow( x, n ) | n > 0 = pow_( x, n - 1, x )
+				|  where
+				|    pow_( _, 0, v ) = v
+				|    pow_( u, n, v )
+				|      | even( n ) = pow_( u*u, n/2, v )
+				|      | otherwise = pow_( u, n - 1, u*v )
+				|    even( 0 ) = true
+				|    even( n ) = odd( n - 1 )
+				|    odd( 0 ) = false
+				|    odd( n ) = even( n - 1 )
+				|def pow( _, _ ) = error( "pow: negative exponent" )
+				|
+				|for n <- 0..18
+				|  println( n, pow(3, n) )
+			""".stripMargin
+        ) ==
+          """
+				|0, 1
+				|1, 3
+				|2, 9
+				|3, 27
+				|4, 81
+				|5, 243
+				|6, 729
+				|7, 2187
+				|8, 6561
+				|9, 19683
+				|10, 59049
+				|11, 177147
+				|12, 531441
+				|13, 1594323
+				|14, 4782969
+				|15, 14348907
+				|16, 43046721
+				|17, 129140163
+				|18, 387420489
+			""".stripMargin.trim)
+
       assert(
         runCapture("""
                      |def bmiTell( weight, height )

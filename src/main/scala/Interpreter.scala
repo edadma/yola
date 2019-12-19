@@ -199,6 +199,7 @@ class Interpreter(globalScope: Scope) {
               h.v = h.v match {
                 case s: YString => s append String.valueOf(v)
                 case n: YNumber => n + v.asInstanceOf[YNumber].v
+                case YList(l)   => YList(l :+ v)
               }
             case "-=" => h.v = h.v.asInstanceOf[YNumber] - v.asInstanceOf[YNumber].v
             case "*=" =>
