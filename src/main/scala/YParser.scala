@@ -541,6 +541,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
     opt(ident <~ ":") ~ ("while" ~> expression) ~ opt("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
       case l ~ c ~ b ~ e => WhileExpressionAST(l, c, b, e)
     } |
+    opt(ident <~ ":") ~ ("do" ~> expressionOrBlock) ~ (onl ~> "while" ~> expression) ~ elsePart ^^ {
+      case l ~ b ~ c ~ e => DoWhileExpressionAST(l, b, c, e)
+    } |
     opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
       case l ~ b => RepeatExpressionAST(l, b)
     } |

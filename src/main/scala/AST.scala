@@ -45,18 +45,15 @@ case class ApplyExpressionAST(
     args: List[(Position, ExpressionAST)],
     var tailrecursive: Boolean
 ) extends ExpressionAST
-
 case class DotExpressionAST(epos: Position, expr: ExpressionAST, apos: Position, field: String)
     extends ExpressionAST
 case class LiteralExpressionAST(v: Any)                           extends ExpressionAST
 case class VariableExpressionAST(pos: Position, var name: String) extends ExpressionAST
-
 case class ComparisonExpressionAST(
     pos: Position,
     expr: ExpressionAST,
     comparisons: List[(String, Position, ExpressionAST)]
 ) extends ExpressionAST
-
 case class BinaryExpressionAST(
     lpos: Position,
     left: ExpressionAST,
@@ -64,7 +61,6 @@ case class BinaryExpressionAST(
     rpos: Position,
     right: ExpressionAST
 ) extends ExpressionAST
-
 case class RangeExpressionAST(
     fpos: Position,
     from: ExpressionAST,
@@ -74,7 +70,6 @@ case class RangeExpressionAST(
     by: ExpressionAST,
     incl: Boolean
 ) extends ExpressionAST
-
 case class ConsExpressionAST(
     lpos: Position,
     left: ExpressionAST,
@@ -84,7 +79,6 @@ case class ConsExpressionAST(
 case class PreExpressionAST(op: String, pos: Position, expr: ExpressionAST)   extends ExpressionAST
 case class PostExpressionAST(op: String, pos: Position, expr: ExpressionAST)  extends ExpressionAST
 case class UnaryExpressionAST(op: String, pos: Position, expr: ExpressionAST) extends ExpressionAST
-
 case class AssignmentExpressionAST(
     lhs: List[(Position, ExpressionAST)],
     op: String,
@@ -93,53 +87,49 @@ case class AssignmentExpressionAST(
 case class BlockExpressionAST(stmts: List[StatementAST])  extends ExpressionAST
 case class ListExpressionAST(elems: List[ExpressionAST])  extends ExpressionAST
 case class TupleExpressionAST(elems: List[ExpressionAST]) extends ExpressionAST
-
 case class MapExpressionAST(MapExpressionAST: List[(ExpressionAST, ExpressionAST)])
     extends ExpressionAST
 case class OrExpressionAST(left: ExpressionAST, right: ExpressionAST)  extends ExpressionAST
 case class AndExpressionAST(left: ExpressionAST, right: ExpressionAST) extends ExpressionAST
 case class NotExpressionAST(expr: ExpressionAST)                       extends ExpressionAST
-
 case class ConditionalExpressionAST(
     cond: Seq[(ExpressionAST, ExpressionAST)],
     els: Option[ExpressionAST]
 ) extends ExpressionAST
-
 case class WhileExpressionAST(
     label: Option[String],
     cond: ExpressionAST,
     body: Option[ExpressionAST],
     els: Option[ExpressionAST]
 ) extends ExpressionAST
+case class DoWhileExpressionAST(label: Option[String],
+                                body: ExpressionAST,
+                                cond: ExpressionAST,
+                                els: Option[ExpressionAST])
+    extends ExpressionAST
 case class RepeatExpressionAST(label: Option[String], body: ExpressionAST) extends ExpressionAST
-
 case class ForYieldExpressionAST(gen: List[GeneratorExpressionAST], body: ExpressionAST)
     extends ExpressionAST
-
 case class ListComprehensionExpressionAST(expr: ExpressionAST, gen: List[GeneratorExpressionAST])
     extends ExpressionAST
 case class TypeExpressionAST(expr: ExpressionAST, typ: String) extends ExpressionAST
-
 case class ForExpressionAST(
     label: Option[String],
     gen: List[GeneratorExpressionAST],
     body: ExpressionAST,
     els: Option[ExpressionAST]
 ) extends ExpressionAST
-
 case class GeneratorExpressionAST(
     pattern: PatternAST,
     pos: Position,
     iterable: ExpressionAST,
     filter: Option[ExpressionAST]
 ) extends ExpressionAST
-
 case class BreakExpressionAST(pos: Position, label: Option[String], expr: Option[ExpressionAST])
     extends ExpressionAST
 case class ContinueExpressionAST(pos: Position, label: Option[String]) extends ExpressionAST
 case class ReturnExpressionAST(expr: ExpressionAST)                    extends ExpressionAST
 case class InterpolationExpressionAST(l: List[ExpressionAST])          extends ExpressionAST
-
 case class FunctionExpressionAST(pieces: List[FunctionPieceAST])
     extends Value(YFunctionType, null)
     with ExpressionAST {

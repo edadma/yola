@@ -10,15 +10,6 @@
 
 //println( [x | x <- 1..3] )
 
-def fib( n )
-  var result = []
-  var a = 0
-  var b = 1
+var a = 0
 
-  while a < n
-    result += a
-    a, b = b, a + b
-
-  result
-
-println( fib(10) )
+do println( a ) while ++a < 3 else println( 'done' )
