@@ -179,37 +179,38 @@ class YolaLexical
   }
 
   reserved ++= List(
-    "enum",
-    "import",
-    "if",
-    "then",
-    "else",
-    "elif",
-    "for",
-    "while",
-    "break",
-    "continue",
-    "return",
-    "do",
-    "yield",
-    "repeat",
-    "by",
-    "or",
     "and",
-    "is",
-    "not",
-    "div",
-    "mod",
-    "where",
+    "break",
+    "by",
+    "continue",
     "def",
-    "var",
-    "val",
-    "type",
-    "module",
-    "null",
-    "true",
+    "div",
+    "do",
+    "elif",
+    "else",
+    "enum",
     "false",
-    "otherwise"
+    "for",
+    "if",
+    "import",
+    "is",
+    "match",
+    "mod",
+    "module",
+    "not",
+    "null",
+    "or",
+    "otherwise",
+    "repeat",
+    "return",
+    "then",
+    "true",
+    "type",
+    "val",
+    "var",
+    "where",
+    "while",
+    "yield"
   )
 
   delimiters ++= List(
@@ -517,37 +518,38 @@ class YParser extends StandardTokenParsers with PackratParsers {
     } |
       constructExpression
 
-  lazy val constructExpression
-    : PackratParser[ExpressionAST] = "if" ~> expression ~ ("then" ~> expressionOrBlock | blockExpression) ~ rep(
-    elif
-  ) ~ elsePart ^^ {
-    case c ~ t ~ ei ~ e => ConditionalExpressionAST((c, t) +: ei, e)
-  } |
-    (("for" ~ Indent) ~> generators <~ nl) ~ ("yield" ~> expressionOrBlock <~ (Newline ~ Dedent)) ^^ {
-      case g ~ b => ForYieldExpressionAST(g, b)
+  lazy val constructExpression: PackratParser[ExpressionAST] =
+    sendExpression ~ "match" ~ partialFunctionExpression ^^ {
+      case e ~ _ ~ f => ApplyExpressionAST(null, f, null, List((null, e)), false)
     } |
-    ("for" ~> generators) ~ ((Indent ~ "yield") ~> expressionOrBlock) <~ (Newline ~ Dedent) ^^ {
-      case g ~ b => ForYieldExpressionAST(g, b)
-    } |
-    ("for" ~> generators) ~ ("yield" ~> expressionOrBlock) ^^ {
-      case g ~ b => ForYieldExpressionAST(g, b)
-    } |
-    opt(ident <~ ":") ~ ("for" ~> generators) ~ ("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
-      case l ~ g ~ b ~ e => ForExpressionAST(l, g, b, e)
-    } |
-    opt(ident <~ ":") ~ (("for" ~ Indent) ~> generators <~ (opt("do") ~ nl)) ~ ((statements ^^ BlockExpressionAST) <~ Dedent) ~ elsePart ^^ {
-      case l ~ g ~ b ~ e => ForExpressionAST(l, g, b, e)
-    } |
-    opt(ident <~ ":") ~ ("while" ~> expression) ~ opt("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
-      case l ~ c ~ b ~ e => WhileExpressionAST(l, c, b, e)
-    } |
-    opt(ident <~ ":") ~ ("do" ~> expressionOrBlock) ~ (onl ~> "while" ~> expression) ~ elsePart ^^ {
-      case l ~ b ~ c ~ e => DoWhileExpressionAST(l, b, c, e)
-    } |
-    opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
-      case l ~ b => RepeatExpressionAST(l, b)
-    } |
-    sendExpression
+      "if" ~> expression ~ ("then" ~> expressionOrBlock | blockExpression) ~ rep(elif) ~ elsePart ^^ {
+        case c ~ t ~ ei ~ e => ConditionalExpressionAST((c, t) +: ei, e)
+      } |
+      (("for" ~ Indent) ~> generators <~ nl) ~ ("yield" ~> expressionOrBlock <~ (Newline ~ Dedent)) ^^ {
+        case g ~ b => ForYieldExpressionAST(g, b)
+      } |
+      ("for" ~> generators) ~ ((Indent ~ "yield") ~> expressionOrBlock) <~ (Newline ~ Dedent) ^^ {
+        case g ~ b => ForYieldExpressionAST(g, b)
+      } |
+      ("for" ~> generators) ~ ("yield" ~> expressionOrBlock) ^^ {
+        case g ~ b => ForYieldExpressionAST(g, b)
+      } |
+      opt(ident <~ ":") ~ ("for" ~> generators) ~ ("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
+        case l ~ g ~ b ~ e => ForExpressionAST(l, g, b, e)
+      } |
+      opt(ident <~ ":") ~ (("for" ~ Indent) ~> generators <~ (opt("do") ~ nl)) ~ ((statements ^^ BlockExpressionAST) <~ Dedent) ~ elsePart ^^ {
+        case l ~ g ~ b ~ e => ForExpressionAST(l, g, b, e)
+      } |
+      opt(ident <~ ":") ~ ("while" ~> expression) ~ opt("do" ~> expressionOrBlock | blockExpression) ~ elsePart ^^ {
+        case l ~ c ~ b ~ e => WhileExpressionAST(l, c, b, e)
+      } |
+      opt(ident <~ ":") ~ ("do" ~> expressionOrBlock) ~ (onl ~> "while" ~> expression) ~ elsePart ^^ {
+        case l ~ b ~ c ~ e => DoWhileExpressionAST(l, b, c, e)
+      } |
+      opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
+        case l ~ b => RepeatExpressionAST(l, b)
+      } |
+      sendExpression
 
   lazy val elsePart: PackratParser[Option[ExpressionAST]] = opt(onl ~> "else" ~> expressionOrBlock)
 
@@ -589,8 +591,8 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val parameters: PackratParser[(List[PatternAST], Boolean)] =
     "(" ~ ")" ^^^ (Nil, false) |
-      "(" ~> rep1sep(pattern, ",") ~ opt("...") <~ ")" ^^ { case p ~ a => (p, a isDefined) } |
-      repN(1, pattern) ~ opt("...") ^^ { case p ~ a                    => (p, a isDefined) }
+      "\\" ~> rep1sep(pattern, ",") ~ opt("...") ^^ { case p ~ a => (p, a isDefined) } |
+      repN(1, pattern) ~ opt("...") ^^ { case p ~ a              => (p, a isDefined) }
 
   lazy val lambda: PackratParser[FunctionPieceAST] =
     pos ~ parameters ~ opt("|" ~> guardExpression) ~ ("->" ~> opt(expressionOrBlock)) ^^ {

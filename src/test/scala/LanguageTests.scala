@@ -273,6 +273,9 @@ object LanguageTests extends TestSuite {
                          |(x -> x + 3)(4)
                          |""".stripMargin) == YNumber(7))
       assert(runResult("""
+                         |(\x, y -> x + y)(3, 4)
+                         |""".stripMargin) == YNumber(7))
+      assert(runResult("""
                          |def
                          |  map( f, [] ) = []
                          |  map( f, x::xs ) = f(x) :: map( f, xs )
