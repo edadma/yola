@@ -12,4 +12,10 @@
 
 var a = 0
 
-do println( a ) while ++a < 3 else println( 'done' )
+val res =
+    do
+      println( a )
+    while ++a <= 2
+    else 'else'
+
+println( res )
