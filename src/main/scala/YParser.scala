@@ -182,6 +182,7 @@ class YolaLexical
     "and",
     "break",
     "by",
+    "class",
     "continue",
     "def",
     "div",
@@ -204,6 +205,7 @@ class YolaLexical
     "repeat",
     "return",
     "then",
+    "trait",
     "true",
     "type",
     "val",
@@ -334,7 +336,8 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val directiveStatement: PackratParser[DirectiveStatementAST] = directive <~ Newline
 
   lazy val declaration: PackratParser[DeclarationStatementAST] =
-    constants |
+    clazz |
+      constants |
       variables |
       datatypes |
       enums |
@@ -356,6 +359,11 @@ class YParser extends StandardTokenParsers with PackratParsers {
         val name   = n.last
 
         ImportAST(module, List((name, None)))
+    }
+
+  lazy val clazz =
+    ("class" ~> ident) ~ (Indent ~> rep1(statement <~ Newline) <~ Dedent) ^^ {
+      case n ~ s => ClassAST(n, s)
     }
 
   lazy val enums =

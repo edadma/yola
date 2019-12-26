@@ -15,26 +15,21 @@ case class ImportAST(module: List[String], names: List[(String, Option[String])]
 
 trait DeclarationStatementAST extends StatementAST
 
+case class ClassAST(name: String, stmts: List[StatementAST]) extends DeclarationStatementAST
 case class EnumAST(name: String, pos: Position, enumeration: List[(String, Option[Int])])
     extends DeclarationStatementAST
-
 //case class NativeAST( pkg: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
 //case class FunctionAST( cls: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
 case class ValAST(pat: PatternAST, pos: Position, expr: ExpressionAST)
     extends DeclarationStatementAST
-
 case class VarAST(pos: Position, var name: String, init: Option[(Position, ExpressionAST)])
     extends DeclarationStatementAST
-
 case class DataAST(pos: Position, name: String, constructors: List[(String, List[String])])
     extends DeclarationStatementAST
-
 case class DefAST(pos: Position, name: String, func: FunctionPieceAST)
     extends DeclarationStatementAST
-
 case class DeclarationBlockAST(decls: List[DeclarationStatementAST]) extends DeclarationStatementAST
-
-case class DirectiveBlockAST(dirs: List[DirectiveStatementAST]) extends DirectiveStatementAST
+case class DirectiveBlockAST(dirs: List[DirectiveStatementAST])      extends DirectiveStatementAST
 
 trait ExpressionAST extends StatementAST
 

@@ -58,6 +58,27 @@ object LanguageTests extends TestSuite {
             |3, 4
             |""".stripMargin.trim
       )
+      assert(
+        runCapture("""
+                     |def f(x) =
+                     |    x match
+                     |        (3, b) -> [b]
+                     |        (a, 4) -> [a]
+                     |        (a, b) -> [a, b]
+                     |        _ -> 'asdf'
+                     |
+                     |println( f((3, 4)) )
+                     |println( f((5, 4)) )
+                     |println( f((5, 6)) )
+                     |println( f(123) )
+                    """.stripMargin) ==
+          """
+            |[4]
+            |[5]
+            |[5, 6]
+            |asdf
+          """.stripMargin.trim
+      )
     }
 
     test("arithmetic") {

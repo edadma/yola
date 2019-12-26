@@ -10,12 +10,14 @@
 
 //println( [x | x <- 1..3] )
 
-[(5, 6)] match
-    (3, b) -> println( [b] )
-    (a, 4) -> println( [a] )
-    (a, b) -> println( [a, b] )
-    _ -> println( 'asdf' )
+def f(x) =
+    x match
+        (3, b) -> [b]
+        (a, 4) -> [a]
+        (a, b) -> [a, b]
+        _ -> 'asdf'
 
-val avg = \a, b -> (a + b)/2
-
-println( avg(3, 4) )
+println( f((3, 4)) )
+println( f((5, 4)) )
+println( f((5, 6)) )
+println( f(123) )
