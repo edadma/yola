@@ -11,13 +11,11 @@
 //println( [x | x <- 1..3] )
 
 def f(x) =
-    x match
-        (3, b) -> [b]
-        (a, 4) -> [a]
-        (a, b) -> [a, b]
+    x + 1 match
+        4 -> 'four'
+        5 -> 'five'
         _ -> 'asdf'
 
-println( f((3, 4)) )
-println( f((5, 4)) )
-println( f((5, 6)) )
+println( f(3) )
+println( f(4) )
 println( f(123) )
