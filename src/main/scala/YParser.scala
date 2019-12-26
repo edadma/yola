@@ -390,6 +390,7 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val variable =
     pos ~ ident ~ opt("=" ~> pos ~ noAssignmentExpressionOrBlock) ^^ {
+      case p ~ n ~ None         => VarAST(p, n, None)
       case p ~ n ~ Some(pe ~ e) => VarAST(p, n, Some((pe, e)))
     }
 
