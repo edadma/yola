@@ -3,15 +3,15 @@ package xyz.hyperreal.yola
 class YClass(
     val name: String,
     val parent: YType,
-    constructor: ExpressionAST,
-    definingScope: Scope,
-    global: Scope
+    constructor: List[StatementAST],
+    scope: Scope,
+    interp: Interpreter
 ) extends YInstantiableType {
 
   def instantiate(args: Any*): Value = {
-    implicit val instanceScope = new Scope(definingScope)
+    implicit val instanceScope = new Scope(scope)
 
-    new Interpreter(global)(constructor)
+    interp(constructor)
     new Value(this, instanceScope)
   }
 }

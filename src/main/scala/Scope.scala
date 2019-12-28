@@ -21,8 +21,18 @@ class Scope(val outer: Scope) {
     values(name) = value
   }
 
-  def get(name: String): Option[Value] =
-    values get name orElse (if (outer eq null) None else outer.get(name))
+  def typedef(pos: Position, name: String, typ: YType) = {
+    if (values contains name)
+      duplicate(pos, name)
+
+    types(name) = typ
+  }
+
+  def getValue(name: String): Option[Value] =
+    values get name orElse (if (outer eq null) None else outer.getValue(name))
+
+  def getType(name: String): Option[YType] =
+    types get name orElse (if (outer eq null) None else outer.getType(name))
 
   def addFunctionPiece(pos: Position, name: String, piece: FunctionPieceAST)(
       implicit scope: Scope) = {

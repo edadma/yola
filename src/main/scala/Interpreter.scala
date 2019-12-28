@@ -21,7 +21,9 @@ class Interpreter(globalScope: Scope) {
       case VarAST(_, name, _)         =>
       case DefAST(pos, name, func)    => implicitly[Scope].addFunctionPiece(pos, name, func)
       case DataAST(_, _, consts)      =>
-      case _                          =>
+      case ClassAST(pos, name, stmts) =>
+        implicitly[Scope].typedef(pos, name, new YClass(name, null, stmts, scope, this))
+      case _ =>
     }
 
   def execute(ast: AST)(implicit scope: Scope): Value = {
@@ -95,7 +97,8 @@ class Interpreter(globalScope: Scope) {
           implicitly[Scope].declare(pos, names, Constructor(typ, names, fields))
 
         YUnit
-      case exp: ExpressionAST => deval(exp)
+      case ClassAST(pos, name, stmts) => YUnit
+      case exp: ExpressionAST         => deval(exp)
     }
   }
 
@@ -132,6 +135,12 @@ class Interpreter(globalScope: Scope) {
   }
 
   def eval(expr: ExpressionAST)(implicit scope: Scope): Value = expr match {
+    case InstantiateExpressionAST(pos, name, args) =>
+      scope getType name match {
+        case None                       => problem(pos, "type not found")
+        case Some(t: YInstantiableType) => t.instantiate(args map deval)
+        case _                          => problem(pos, "non-instantiable type")
+      }
     case InterpolationExpressionAST(es) => YString(es map deval map (_.toString) mkString)
     case ComparisonExpressionAST(pos, left, comparisons) =>
       def comp(left: Value, cs: List[(String, Position, ExpressionAST)]): YBoolean =
@@ -361,7 +370,7 @@ class Interpreter(globalScope: Scope) {
     case VariableExpressionAST(pos, "_") =>
       problem(pos, "single underscore is not a legal identifier")
     case VariableExpressionAST(pos, name) =>
-      scope get name match {
+      scope getValue name match {
         case None    => problem(pos, s"undeclared variable '$name'")
         case Some(v) => v
       }

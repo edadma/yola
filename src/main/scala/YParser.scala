@@ -198,6 +198,7 @@ class YolaLexical
     "match",
     "mod",
     "module",
+    "new",
     "not",
     "null",
     "or",
@@ -362,8 +363,8 @@ class YParser extends StandardTokenParsers with PackratParsers {
     }
 
   lazy val clazz =
-    ("class" ~> ident) ~ (Indent ~> rep1(statement <~ Newline) <~ Dedent) ^^ {
-      case n ~ s => ClassAST(n, s)
+    "class" ~> pos ~ ident ~ statementBlock ^^ {
+      case p ~ n ~ s => ClassAST(p, n, s)
     }
 
   lazy val enums =
@@ -471,7 +472,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
 
   lazy val noAssignmentExpressionOrBlock = compoundExpression1 | blockExpression
 
-  lazy val blockExpression = Indent ~> statements <~ Dedent ^^ BlockExpressionAST
+  lazy val statementBlock = Indent ~> statements <~ Dedent
+
+  lazy val blockExpression = statementBlock ^^ BlockExpressionAST
 
   lazy val expression: PackratParser[ExpressionAST] = compoundExpression
 
@@ -750,8 +753,11 @@ class YParser extends StandardTokenParsers with PackratParsers {
       } |
       applyExpression
 
+  lazy val arguments
+    : PackratParser[List[ExpressionAST]] = "(" ~> repsep(pos ~ expression, ",") <~ ")"
+
   lazy val applyExpression: PackratParser[ExpressionAST] =
-    pos ~ applyExpression ~ pos ~ ("(" ~> repsep(pos ~ expression, ",") <~ ")") ^^ {
+    pos ~ applyExpression ~ pos ~ arguments ^^ {
       case fp ~ f ~ ap ~ args =>
         ApplyExpressionAST(fp, f, ap, args map { case p ~ e => (p, e) }, false)
     } |
@@ -770,7 +776,11 @@ class YParser extends StandardTokenParsers with PackratParsers {
   lazy val primaryExpression: PackratParser[ExpressionAST] =
 //    pos ~ regexLit ^^ {
 //      case p ~ r => RegexLiteralAST( p, r ) } |
-    number ^^ LiteralExpressionAST |
+    "new" ~> pos ~ ident ~ opt(arguments) ^^ {
+      case p ~ n ~ Some(args) => InstantiateExpressionAST(p, n, args)
+      case p ~ n ~ None       => InstantiateExpressionAST(p, n, Nil)
+    } |
+      number ^^ LiteralExpressionAST |
       pos ~ stringLit ^^ {
         case p ~ s =>
           if (s.length > 0 && s.charAt(0) >= INTERPOLATION_DELIMITER) {

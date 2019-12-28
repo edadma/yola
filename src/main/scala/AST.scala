@@ -15,7 +15,8 @@ case class ImportAST(module: List[String], names: List[(String, Option[String])]
 
 trait DeclarationStatementAST extends StatementAST
 
-case class ClassAST(name: String, stmts: List[StatementAST]) extends DeclarationStatementAST
+case class ClassAST(pos: Position, name: String, stmts: List[StatementAST])
+    extends DeclarationStatementAST
 case class EnumAST(name: String, pos: Position, enumeration: List[(String, Option[Int])])
     extends DeclarationStatementAST
 //case class NativeAST( pkg: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST
@@ -33,6 +34,8 @@ case class DirectiveBlockAST(dirs: List[DirectiveStatementAST])      extends Dir
 
 trait ExpressionAST extends StatementAST
 
+case class InstantiateExpressionAST(pos: Position, name: String, args: List[ExpressionAST])
+    extends ExpressionAST
 case class ApplyExpressionAST(
     fpos: Position,
     f: ExpressionAST,
