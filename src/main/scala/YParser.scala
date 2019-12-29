@@ -1,12 +1,10 @@
 package xyz.hyperreal.yola
 
 import scala.collection.mutable.ListBuffer
-
 import util.parsing.combinator.PackratParsers
 import util.parsing.combinator.syntactical.StandardTokenParsers
 import util.parsing.input.CharArrayReader.EofCh
-import util.parsing.input.{CharSequenceReader, Positional, Reader}
-
+import util.parsing.input.{CharSequenceReader, Position, Positional, Reader}
 import xyz.hyperreal.indentation_lexical_native._
 
 object Interpolation {
@@ -753,13 +751,14 @@ class YParser extends StandardTokenParsers with PackratParsers {
       } |
       applyExpression
 
-  lazy val arguments
-    : PackratParser[List[ExpressionAST]] = "(" ~> repsep(pos ~ expression, ",") <~ ")"
+  lazy val arguments: PackratParser[List[(Position, ExpressionAST)]] = "(" ~> repsep(
+    pos ~ expression ^^ { case p ~ e => (p, e) },
+    ",") <~ ")"
 
   lazy val applyExpression: PackratParser[ExpressionAST] =
     pos ~ applyExpression ~ pos ~ arguments ^^ {
       case fp ~ f ~ ap ~ args =>
-        ApplyExpressionAST(fp, f, ap, args map { case p ~ e => (p, e) }, false)
+        ApplyExpressionAST(fp, f, ap, args, false)
     } |
       pos ~ applyExpression ~ ("." ~> pos) ~ (ident | stringLit) ^^ {
         case fp ~ e ~ ap ~ f => DotExpressionAST(fp, e, ap, f)

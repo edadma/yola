@@ -15,3 +15,5 @@ class myclass
     var b = 4
 
     def f(x) = a + x
+
+println(123)

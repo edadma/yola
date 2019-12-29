@@ -138,7 +138,7 @@ class Interpreter(globalScope: Scope) {
     case InstantiateExpressionAST(pos, name, args) =>
       scope getType name match {
         case None                       => problem(pos, "type not found")
-        case Some(t: YInstantiableType) => t.instantiate(args map deval)
+        case Some(t: YInstantiableType) => t.instantiate(args map { case (_, e) => deval(e) })
         case _                          => problem(pos, "non-instantiable type")
       }
     case InterpolationExpressionAST(es) => YString(es map deval map (_.toString) mkString)

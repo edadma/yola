@@ -34,7 +34,9 @@ case class DirectiveBlockAST(dirs: List[DirectiveStatementAST])      extends Dir
 
 trait ExpressionAST extends StatementAST
 
-case class InstantiateExpressionAST(pos: Position, name: String, args: List[ExpressionAST])
+case class InstantiateExpressionAST(pos: Position,
+                                    name: String,
+                                    args: List[(Position, ExpressionAST)])
     extends ExpressionAST
 case class ApplyExpressionAST(
     fpos: Position,

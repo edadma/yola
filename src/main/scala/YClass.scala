@@ -11,7 +11,7 @@ class YClass(
   def instantiate(args: Any*): Value = {
     implicit val instanceScope = new Scope(scope)
 
-    interp(constructor)
+//    interp(constructor)
     new Value(this, instanceScope)
   }
 }
