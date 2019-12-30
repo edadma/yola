@@ -17,6 +17,7 @@ trait DeclarationStatementAST extends StatementAST
 
 case class ClassAST(pos: Position, name: String, stmts: List[StatementAST])
     extends DeclarationStatementAST
+case class ConstructorAST(stmts: List[StatementAST]) extends AST
 case class EnumAST(name: String, pos: Position, enumeration: List[(String, Option[Int])])
     extends DeclarationStatementAST
 //case class NativeAST( pkg: String, name: List[(String, Option[String])] ) extends DeclarationStatementAST

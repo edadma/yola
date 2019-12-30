@@ -16,19 +16,23 @@ class Interpreter(globalScope: Scope) {
       case SourceAST(stmts)           => stmts foreach declarations
       case BlockExpressionAST(stmts)  => stmts foreach declarations
       case DeclarationBlockAST(decls) => decls foreach declarations
+      case ConstructorAST(stmts)      => stmts foreach declarations
       case EnumAST(name, _, _)        =>
       case ValAST(pat, _, _)          =>
       case VarAST(_, name, _)         =>
       case DefAST(pos, name, func)    => implicitly[Scope].addFunctionPiece(pos, name, func)
       case DataAST(_, _, consts)      =>
       case ClassAST(pos, name, stmts) =>
-        implicitly[Scope].typedef(pos, name, new YClass(name, null, stmts, scope, this))
+        implicitly[Scope].typedef(pos,
+                                  name,
+                                  new YClass(name, null, ConstructorAST(stmts), scope, this))
       case _ =>
     }
 
   def execute(ast: AST)(implicit scope: Scope): Value = {
     ast match {
-      case SourceAST(stmts) => execute(stmts, scope)
+      case SourceAST(stmts)      => execute(stmts, scope)
+      case ConstructorAST(stmts) => execute(stmts, scope)
       case DeclarationBlockAST(decls) =>
         decls foreach execute
         YUnit
