@@ -16,4 +16,8 @@ class myclass
 
     def f(x) = a + x
 
-println(123)
+val o = new myclass
+
+println(o.a)
+o.a = 123
+//println(o.a)

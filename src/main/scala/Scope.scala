@@ -7,7 +7,7 @@ class Scope(val outer: Scope) {
   private[yola] val values = new mutable.HashMap[String, Value]
   private[yola] val types  = new mutable.HashMap[String, YType]
 
-  def apply(name: String) = values(name)
+  //def apply(name: String) = values(name)
 
   def bindings(binding: (String, Value)*): Unit = values ++= binding
 
@@ -35,7 +35,7 @@ class Scope(val outer: Scope) {
     types get name orElse (if (outer eq null) None else outer.getType(name))
 
   def addFunctionPiece(pos: Position, name: String, piece: FunctionPieceAST)(
-      implicit scope: Scope) = {
+      implicit scope: Scope) =
     values get name match {
       case None =>
         val fexp = FunctionExpressionAST(List(piece))
@@ -53,7 +53,6 @@ class Scope(val outer: Scope) {
         map(piece.parms.length) = fexp
       case _ => duplicate(pos, name)
     }
-  }
 
   override def toString: String = s"Scope:$values"
 }

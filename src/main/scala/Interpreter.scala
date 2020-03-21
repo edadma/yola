@@ -347,6 +347,7 @@ class Interpreter(globalScope: Scope) {
       )
     case DotExpressionAST(epos, expr, apos, field) =>
       deval(expr) match {
+        case v: Value            => v.member(apos, field)
         case f: (Value => Value) => f(YString(field))
       }
     case BinaryExpressionAST(lpos, left, op, rpos, right) =>
