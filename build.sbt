@@ -44,7 +44,7 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.github.scopt" %%% "scopt" % "3.7.0"
+  "com.github.scopt" %%% "scopt" % "3.7.1"
 )
 
 publishMavenStyle := true

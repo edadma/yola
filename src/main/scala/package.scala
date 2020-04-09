@@ -1,9 +1,9 @@
 package xyz.hyperreal
 
-import scala.collection.immutable.Range
 import scala.util.parsing.input.Position
 
 package object yola {
+
   type MapType = collection.immutable.Map[Value, Value]
 
   implicit def int2number(n: Int) = YNumber(n)
@@ -36,4 +36,5 @@ package object yola {
         )
       )
     }
+
 }

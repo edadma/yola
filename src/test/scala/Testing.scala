@@ -31,4 +31,5 @@ object Testing {
   }
 
   def runResult(snippet: String, defs: (String, Value)*) = run(snippet, println, defs)
+
 }
