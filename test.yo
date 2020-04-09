@@ -18,6 +18,7 @@ class myclass
 
 val o = new myclass
 
-println(o.a)
+println("cool ${o.a}")
+println(o)
 o.a = 123
 //println(o.a)

@@ -16,7 +16,8 @@ scalacOptions ++= Seq(
   "-unchecked",
   "-language:postfixOps",
   "-language:implicitConversions",
-  "-language:existentials"
+  "-language:existentials",
+  "-Xmax-classfile-name","128"
 )
 
 organization := "xyz.hyperreal"
