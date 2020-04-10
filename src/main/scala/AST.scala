@@ -108,6 +108,11 @@ case class DoWhileExpressionAST(label: Option[String],
                                 cond: ExpressionAST,
                                 els: Option[ExpressionAST])
     extends ExpressionAST
+case class DoUntilExpressionAST(label: Option[String],
+                                body: ExpressionAST,
+                                cond: ExpressionAST,
+                                els: Option[ExpressionAST])
+    extends ExpressionAST
 case class RepeatExpressionAST(label: Option[String], body: ExpressionAST) extends ExpressionAST
 case class ForYieldExpressionAST(gen: List[GeneratorExpressionAST], body: ExpressionAST)
     extends ExpressionAST

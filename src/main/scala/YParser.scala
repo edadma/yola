@@ -207,6 +207,7 @@ class YolaLexical
     "trait",
     "true",
     "type",
+    "until",
     "val",
     "var",
     "where",
@@ -555,6 +556,9 @@ class YParser extends StandardTokenParsers with PackratParsers {
       } |
       opt(ident <~ ":") ~ ("do" ~> expressionOrBlock) ~ (onl ~> "while" ~> expression) ~ elsePart ^^ {
         case l ~ b ~ c ~ e => DoWhileExpressionAST(l, b, c, e)
+      } |
+      opt(ident <~ ":") ~ ("do" ~> expressionOrBlock) ~ (onl ~> "until" ~> expression) ~ elsePart ^^ {
+        case l ~ b ~ c ~ e => DoUntilExpressionAST(l, b, c, e)
       } |
       opt(ident <~ ":") ~ ("repeat" ~> expressionOrBlock) ^^ {
         case l ~ b => RepeatExpressionAST(l, b)

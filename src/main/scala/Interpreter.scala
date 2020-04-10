@@ -310,6 +310,26 @@ class Interpreter(globalScope: Scope) {
       }
 
       doWhileLoop
+    case DoUntilExpressionAST(label, body, cond, els) =>
+      def doUntilLoop: Value = {
+        try {
+          try {
+            deval(body)
+
+            if (beval(cond))
+              return els map deval getOrElse YUnit
+          } catch {
+            case ContinueException(_, clabel) if clabel.isEmpty || clabel == label =>
+          }
+        } catch {
+          case BreakException(_, blabel, expr) if blabel.isEmpty || blabel == label =>
+            return expr map deval getOrElse YUnit
+        }
+
+        doUntilLoop
+      }
+
+      doUntilLoop
     case ForYieldExpressionAST(gen, body)          => YIterable(flatMap(gen, scope, body))
     case ListComprehensionExpressionAST(expr, gen) => YList(flatMap(gen, scope, expr).toList)
     case ForExpressionAST(label, gen, body, els) =>
