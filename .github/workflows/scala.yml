@@ -14,6 +14,6 @@ jobs:
       with:
         java-version: 1.8
     - name: Install clang libunwind-dev, libgc-dev, libre2-dev
-      run: sudo apt clang install libunwind-dev libgc-dev libre2-dev
+      run: sudo apt install clang libunwind-dev libgc-dev libre2-dev
     - name: Run tests
       run: sbt test
