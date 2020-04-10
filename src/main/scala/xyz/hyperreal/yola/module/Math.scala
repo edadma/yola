@@ -6,7 +6,7 @@ import math._
 object Math {
 
   val exports =
-    YModule(
+    Module(
       Map(
         "cos" -> NativeFunction((args: List[Value]) =>
           args match {

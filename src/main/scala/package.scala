@@ -29,7 +29,7 @@ package object yola {
     new Scope(null) {
       bindings(
 //        "None" -> YProduct(None), // todo: implement None/Some correctly
-        "yola" -> YModule(
+        "yola" -> Module(
           Map(
             "math" -> xyz.hyperreal.yola.module.Math.exports
           )
