@@ -133,6 +133,15 @@ object LanguageTests extends TestSuite {
           """
             |3, 4
             |""".stripMargin.trim)
+      assert(
+        runCapture("""
+                     |val {x, y} = {x: 3, y: 4, z: 5}
+                     |
+                     |println( x, y )
+                     |""".stripMargin) ==
+          """
+            |3, 4
+            |""".stripMargin.trim)
     }
 
     test("arithmetic") {
