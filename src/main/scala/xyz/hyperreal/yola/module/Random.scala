@@ -1,7 +1,6 @@
 package xyz.hyperreal.yola.module
 
 import xyz.hyperreal.yola._
-import math._
 import util.{Random => R}
 
 object Random {
@@ -18,7 +17,7 @@ object Random {
           args match {
             case List(YNumber(a)) if a.isValidInt && a > 0 => YNumber(R.nextInt(a.intValue))
             case _                                         => perror("random.integer: expected positive integer")
-        }),
+        })
       ))
 
 }
