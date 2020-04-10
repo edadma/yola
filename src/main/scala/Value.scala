@@ -22,7 +22,7 @@ abstract class WrappedValue[T](containing: YType, instanceScope: Scope)
     extends Value(containing, instanceScope) {
   val v: T
 
-  override def equals(obj: Any): Boolean = v equals obj
+  override def equals(obj: Any): Boolean = v.equals(obj.asInstanceOf[WrappedValue[T]].v)
 
   override def hashCode: Int = v.hashCode
 
@@ -31,8 +31,8 @@ abstract class WrappedValue[T](containing: YType, instanceScope: Scope)
 
 abstract class WrappedComparableValue[T <: Comparable[T]](containing: YType, instanceScope: Scope)
     extends WrappedValue[T](containing, instanceScope)
-    with Comparable[T] {
+    with Comparable[WrappedValue[T]] {
 
-  override def compareTo(t: T) = v compareTo t
+  override def compareTo(t: WrappedValue[T]) = v compareTo t.v
 
 }

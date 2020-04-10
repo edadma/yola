@@ -23,6 +23,6 @@ println(o)
 o.a = 123
 println(o.a)
 
-val {a} = {a: 5}
+val {b} = {a: 3, b: 4}
 
-println(a)
+println(b)

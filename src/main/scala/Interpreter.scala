@@ -513,7 +513,6 @@ class Interpreter(globalScope: Scope) {
             val keySet      = m.keySet.filter(_.isInstanceOf[YString]).asInstanceOf[Set[YString]]
             val entryvalues = entries map YString
 
-            println(entryvalues, keySet, entryvalues subsetOf keySet)
             if (entryvalues subsetOf keySet) {
               for (e <- entryvalues)
                 implicitly[Scope].declare(null, e.toString, m(e))
