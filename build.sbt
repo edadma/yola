@@ -38,7 +38,7 @@ testFrameworks += new TestFramework("utest.runner.Framework")
 
 libraryDependencies ++= Seq(
   "xyz.hyperreal" %%% "indentation-lexical-native" % "0.9.1",
-//  "xyz.hyperreal" %%% "dal" % "0.1.4"
+  "xyz.hyperreal" %%% "dal" % "0.1.4"
 )
 
 libraryDependencies ++= Seq(

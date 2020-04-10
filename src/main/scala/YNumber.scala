@@ -2,7 +2,7 @@ package xyz.hyperreal.yola
 
 object YNumberType extends YType {
   val name   = "Number"
-  val parent = YObject
+  val parent = YNumericType
 }
 
 case class YNumber(v: BigDecimal) extends WrappedValue[BigDecimal](YNumberType, null) {

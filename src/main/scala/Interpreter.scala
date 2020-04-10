@@ -4,6 +4,8 @@ import scala.collection.mutable
 import scala.util.parsing.input.Position
 import math._
 
+import xyz.hyperreal.dal.Num
+
 class Interpreter(globalScope: Scope) {
 
   def apply(ast: AST)(implicit scope: Scope): Any = {
