@@ -28,3 +28,11 @@ abstract class WrappedValue[T](containing: YType, instanceScope: Scope)
 
   override def toString = String.valueOf(v)
 }
+
+abstract class WrappedComparableValue[T <: Comparable[T]](containing: YType, instanceScope: Scope)
+    extends WrappedValue[T](containing, instanceScope)
+    with Comparable[T] {
+
+  override def compareTo(t: T) = v compareTo t
+
+}

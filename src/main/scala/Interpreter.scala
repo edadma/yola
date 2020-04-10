@@ -510,12 +510,13 @@ class Interpreter(globalScope: Scope) {
       case MapPatternAST(pos, entries) =>
         v match {
           case YMap(m) =>
-            val keySet = m.keySet
+            val keySet      = m.keySet.filter(_.isInstanceOf[YString]).asInstanceOf[Set[YString]]
             val entryvalues = entries map YString
-            println(entryvalues subsetOf keySet)
+
+            println(entryvalues, keySet, entryvalues subsetOf keySet)
             if (entryvalues subsetOf keySet) {
               for (e <- entryvalues)
-                implicitly[Scope].declare(null, e, m(e))
+                implicitly[Scope].declare(null, e.toString, m(e))
 
               true
             } else if (errors)
