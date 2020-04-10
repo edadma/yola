@@ -22,5 +22,9 @@ abstract class WrappedValue[T](containing: YType, instanceScope: Scope)
     extends Value(containing, instanceScope) {
   val v: T
 
+  override def equals(obj: Any): Boolean = v equals obj
+
+  override def hashCode: Int = v.hashCode
+
   override def toString = String.valueOf(v)
 }

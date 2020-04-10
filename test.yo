@@ -21,4 +21,8 @@ val o = new myclass
 println("cool ${o.a}")
 println(o)
 o.a = 123
-//println(o.a)
+println(o.a)
+
+val {a} = {a: 5}
+
+println(a)

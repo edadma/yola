@@ -17,7 +17,7 @@ scalacOptions ++= Seq(
   "-language:postfixOps",
   "-language:implicitConversions",
   "-language:existentials",
-  "-Xmax-classfile-name","128"
+  "-Xmax-classfile-name", "128"
 )
 
 organization := "xyz.hyperreal"
@@ -37,15 +37,12 @@ libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.1" % "test"
 testFrameworks += new TestFramework("utest.runner.Framework")
 
 libraryDependencies ++= Seq(
-  "xyz.hyperreal" %%% "indentation-lexical-native" % "0.9.1"
+  "xyz.hyperreal" %%% "indentation-lexical-native" % "0.9.1",
+//  "xyz.hyperreal" %%% "dal" % "0.1.4"
 )
 
 libraryDependencies ++= Seq(
   "org.scala-lang.modules" %%% "scala-parser-combinators" % "1.1.2"
-)
-
-libraryDependencies ++= Seq(
-  "com.github.scopt" %%% "scopt" % "3.7.1"
 )
 
 publishMavenStyle := true

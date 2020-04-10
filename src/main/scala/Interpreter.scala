@@ -510,17 +510,18 @@ class Interpreter(globalScope: Scope) {
       case MapPatternAST(pos, entries) =>
         v match {
           case YMap(m) =>
-            val keySet = m.keySet.asInstanceOf[Set[String]]
-
-            if (entries subsetOf keySet) {
-              for (e <- entries)
-                implicitly[Scope].declare(null, e, m.asInstanceOf[Map[String, Value]](e))
+            val keySet = m.keySet
+            val entryvalues = entries map YString
+            println(entryvalues subsetOf keySet)
+            if (entryvalues subsetOf keySet) {
+              for (e <- entryvalues)
+                implicitly[Scope].declare(null, e, m(e))
 
               true
             } else if (errors)
               problem(
                 pos,
-                s"missing entry: ${entries diff (entries intersect keySet) mkString ", "}"
+                s"missing entry: ${entryvalues diff (entryvalues intersect keySet) mkString ", "}"
               )
             else
               false
