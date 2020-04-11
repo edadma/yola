@@ -187,11 +187,14 @@ class YolaLexical
     "do",
     "elif",
     "else",
+    "empty",
+    "\u2205",
     "enum",
     "false",
     "for",
     "if",
     "import",
+    "in",
     "is",
     "match",
     "mod",
@@ -212,6 +215,7 @@ class YolaLexical
     "var",
     "where",
     "while",
+    "xor",
     "yield"
   )
 
@@ -242,7 +246,6 @@ class YolaLexical
     "~>",
     ".",
     ";",
-    "!",
     "<-",
     "..",
     "..<",
@@ -487,7 +490,8 @@ class YParser extends StandardTokenParsers with PackratParsers {
       orExpression1
 
   lazy val orExpression1: PackratParser[ExpressionAST] =
-    orExpression1 ~ ("or" ~> andExpression1) ^^ { case lhs ~ rhs => OrExpressionAST(lhs, rhs) } |
+    orExpression1 ~ ("or" ~> andExpression1) ^^ { case lhs ~ rhs    => OrExpressionAST(lhs, rhs) } |
+      orExpression1 ~ ("xor" ~> andExpression1) ^^ { case lhs ~ rhs => XorExpressionAST(lhs, rhs) } |
       andExpression1
 
   lazy val andExpression1: PackratParser[ExpressionAST] =
@@ -941,15 +945,20 @@ class YParser extends StandardTokenParsers with PackratParsers {
       ("true" | "false") ^^ (b => LiteralExpressionAST(b.toBoolean)) |
       "(" ~ ")" ^^^ LiteralExpressionAST(()) |
       "null" ^^^ LiteralExpressionAST(null) |
+      ("empty" | "\u2205") ^^^ LiteralExpressionAST(Set()) |
       pos ~ ident ^^ { case p ~ n => VariableExpressionAST(p, n) } |
-      "[" ~> repsep(expression, ",") <~ "]" ^^ { l =>
-        ListExpressionAST(l)
-      } |
+      "[" ~> repsep(expression, ",") <~ "]" ^^ ListExpressionAST |
       "[" ~> (consExpression <~ "|") ~ listgenerators <~ "]" ^^ {
         case e ~ g => ListComprehensionExpressionAST(e, g)
       } |
+      "{" ~> (consExpression <~ "|") ~ listgenerators <~ "}" ^^ {
+        case e ~ g => SetComprehensionExpressionAST(e, g)
+      } |
       ("(" ~> expression <~ ",") ~ (rep1sep(expression, ",") <~ ")") ^^ {
         case e ~ l => TupleExpressionAST(e +: l)
+      } |
+      ("{" ~> expression <~ ",") ~ (rep1sep(expression, ",") <~ "}") ^^ {
+        case e ~ l => SetExpressionAST(e +: l)
       } |
       "{" ~> repsep(mapEntry, ",") <~ "}" ^^ MapExpressionAST |
       "(" ~> expression <~ ")"

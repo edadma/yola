@@ -87,10 +87,12 @@ case class AssignmentExpressionAST(
 ) extends ExpressionAST
 case class BlockExpressionAST(stmts: List[StatementAST])  extends ExpressionAST
 case class ListExpressionAST(elems: List[ExpressionAST])  extends ExpressionAST
+case class SetExpressionAST(elems: List[ExpressionAST])   extends ExpressionAST
 case class TupleExpressionAST(elems: List[ExpressionAST]) extends ExpressionAST
 case class MapExpressionAST(MapExpressionAST: List[(ExpressionAST, ExpressionAST)])
     extends ExpressionAST
 case class OrExpressionAST(left: ExpressionAST, right: ExpressionAST)  extends ExpressionAST
+case class XorExpressionAST(left: ExpressionAST, right: ExpressionAST) extends ExpressionAST
 case class AndExpressionAST(left: ExpressionAST, right: ExpressionAST) extends ExpressionAST
 case class NotExpressionAST(expr: ExpressionAST)                       extends ExpressionAST
 case class ConditionalExpressionAST(
@@ -117,6 +119,8 @@ case class RepeatExpressionAST(label: Option[String], body: ExpressionAST) exten
 case class ForYieldExpressionAST(gen: List[GeneratorExpressionAST], body: ExpressionAST)
     extends ExpressionAST
 case class ListComprehensionExpressionAST(expr: ExpressionAST, gen: List[GeneratorExpressionAST])
+    extends ExpressionAST
+case class SetComprehensionExpressionAST(expr: ExpressionAST, gen: List[GeneratorExpressionAST])
     extends ExpressionAST
 case class TypeExpressionAST(expr: ExpressionAST, typ: String) extends ExpressionAST
 case class ForExpressionAST(

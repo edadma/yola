@@ -2,7 +2,7 @@ package xyz.hyperreal.yola
 
 object YListType extends YType {
   val name   = "List"
-  val parent = YObject
+  val parent = YIterableType
 }
 
 case class YList(v: List[Value]) extends WrappedValue[List[Value]](YListType, null) {

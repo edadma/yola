@@ -333,7 +333,8 @@ class Interpreter(globalScope: Scope) {
 
       doUntilLoop
     case ForYieldExpressionAST(gen, body)          => YIterable(flatMap(gen, scope, body))
-    case ListComprehensionExpressionAST(expr, gen) => YList(flatMap(gen, scope, expr).toList)
+    case ListComprehensionExpressionAST(expr, gen) => YList(flatMap(gen, scope, expr) toList)
+    case SetComprehensionExpressionAST(expr, gen)  => YSet(flatMap(gen, scope, expr) toSet)
     case ForExpressionAST(label, gen, body, els) =>
       def foreach(gs: List[GeneratorExpressionAST], outer: Scope): Value =
         gs match {
@@ -393,6 +394,21 @@ class Interpreter(globalScope: Scope) {
           }
         case (s: YString, _) if op == "+" => s append r.toString
         case (_, s: YString) if op == "+" => s prepend l.toString
+        case (v, YSet(s)) =>
+          op match {
+            case "in"    => YBoolean(s(v))
+            case "notin" => YBoolean(!s(v))
+          }
+        case (v, YList(l)) =>
+          op match {
+            case "in"    => YBoolean(l contains v)
+            case "notin" => YBoolean(!l.contains(v))
+          }
+        case (v, YMap(m)) =>
+          op match {
+            case "in"    => YBoolean(m contains v)
+            case "notin" => YBoolean(!m.contains(v))
+          }
       }
     case VariableExpressionAST(pos, "_") =>
       problem(pos, "single underscore is not a legal identifier")
@@ -408,6 +424,7 @@ class Interpreter(globalScope: Scope) {
     case LiteralExpressionAST(null)          => YNull
     case TupleExpressionAST(elems)           => YTuple(elems map deval)
     case ListExpressionAST(l)                => YList(l map deval)
+    case SetExpressionAST(l)                 => YSet(l map deval toSet)
     case MapExpressionAST(entries) =>
       YMap(entries map {
         case (k, v) =>
@@ -424,6 +441,7 @@ class Interpreter(globalScope: Scope) {
       YRange(neval(from), neval(to), neval(by), incl)
     case AndExpressionAST(left, right) => YBoolean(beval(left) && beval(right))
     case OrExpressionAST(left, right)  => YBoolean(beval(left) || beval(right))
+    case XorExpressionAST(left, right) => YBoolean(beval(left) ^ beval(right))
     case NotExpressionAST(cond)        => YBoolean(!beval(cond))
     case f: FunctionExpressionAST =>
       if (f.scope eq null)
@@ -454,6 +472,11 @@ class Interpreter(globalScope: Scope) {
 
   def call(fpos: Position, f: Any, apos: Position, args: List[Value]): Value =
     f match {
+      case YSet(s) =>
+        args match {
+          case List(a) => YBoolean(s(a))
+          case _       => problem(apos, "expected one argument for set membership")
+        }
       case NativeFunction(func) => func(args)
       case Constructor(_, names, Nil) =>
         problem(fpos, "nullary constructors can't be applied")
