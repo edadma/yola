@@ -1,6 +1,6 @@
 val a = {1, 2, 3}
 val b = {2, 3, 4}
 
-val diff = {x | x <- a if x not in b}
+def diff(u, v) = {x | x <- u if x not in v}
 
-println( diff )
+println( diff(a, b), diff(b, a) )
